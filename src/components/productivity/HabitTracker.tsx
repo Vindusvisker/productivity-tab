@@ -3,23 +3,34 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, Circle, Flame } from 'lucide-react'
+import { CheckCircle, Circle, Flame, Dumbbell, Sun, BookOpen, Droplets, Utensils, X } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 
 interface Habit {
   id: string
   name: string
   completed: boolean
-  emoji?: string
+  iconName: string
+}
+
+// Icon mapping
+const iconMap = {
+  Dumbbell,
+  X,
+  Sun,
+  BookOpen,
+  Utensils,
+  Droplets,
 }
 
 export default function HabitTracker() {
   const [habits, setHabits] = useState<Habit[]>([
-    { id: 'no-snus', name: 'No snus today', completed: false, emoji: '🚭' },
-    { id: 'workout', name: 'Workout completed', completed: false, emoji: '💪' },
-    { id: 'shipped', name: 'Shipped something', completed: false, emoji: '🚀' },
-    { id: 'hydrated', name: 'Drank enough water', completed: false, emoji: '💧' },
-    { id: 'learning', name: 'Learned something new', completed: false, emoji: '📚' },
+    { id: 'workout1', name: 'First Workout', completed: true, iconName: 'Dumbbell' },
+    { id: 'alcohol', name: 'No Alcohol', completed: false, iconName: 'X' },
+    { id: 'workout2', name: 'Second Workout', completed: true, iconName: 'Sun' },
+    { id: 'reading', name: 'Read 10 pages', completed: true, iconName: 'BookOpen' },
+    { id: 'diet', name: 'Follow a healthy diet', completed: false, iconName: 'Utensils' },
+    { id: 'water', name: 'Drink water', completed: false, iconName: 'Droplets' },
   ])
   
   const [streak, setStreak] = useState(0)
@@ -112,75 +123,97 @@ export default function HabitTracker() {
   const completedCount = habits.filter(habit => habit.completed).length
   const completionPercentage = (completedCount / habits.length) * 100
   
-  // Get progress class based on completion
-  const getProgressClass = () => {
-    const percentage = Math.round(completionPercentage / 20) * 20; // Round to nearest 20%
-    switch (percentage) {
-      case 0: return 'w-0';
-      case 20: return 'w-1/5';
-      case 40: return 'w-2/5'; 
-      case 60: return 'w-3/5';
-      case 80: return 'w-4/5';
-      case 100: return 'w-full';
-      default: return 'w-0';
-    }
-  }
+  // Calculate stroke dash array for circular progress
+  const radius = 45
+  const circumference = 2 * Math.PI * radius
+  const strokeDasharray = circumference
+  const strokeDashoffset = circumference - (completionPercentage / 100) * circumference
 
   return (
-    <Card className="bg-gray-800/50 border-gray-700">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white">Daily Habits</h3>
-          {streak > 0 && (
-            <div className="flex items-center space-x-1 text-orange-400">
-              <Flame className="h-4 w-4" />
-              <span className="text-sm font-medium">{streak} day streak</span>
-            </div>
-          )}
-        </div>
-        
-        {/* Progress Bar */}
-        <div className="mb-4">
-          <div className="flex justify-between text-sm text-gray-400 mb-1">
-            <span>Progress</span>
-            <span>{completedCount}/{habits.length}</span>
+    <Card className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
+      <CardContent className="p-8">
+        {/* Header with circular progress */}
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <h2 className="text-3xl font-semibold text-white mb-2">Tasks</h2>
+            <p className="text-gray-400 text-lg">Great start to the day</p>
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-2 relative overflow-hidden">
-            <div 
-              className={`bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300 ${getProgressClass()}`}
-            />
+          
+          {/* Circular Progress Indicator */}
+          <div className="relative w-20 h-20">
+            <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+              {/* Background circle */}
+              <circle
+                cx="50"
+                cy="50"
+                r={radius}
+                stroke="currentColor"
+                strokeWidth="8"
+                fill="transparent"
+                className="text-gray-700"
+              />
+              {/* Progress circle */}
+              <circle
+                cx="50"
+                cy="50"
+                r={radius}
+                stroke="currentColor"
+                strokeWidth="8"
+                fill="transparent"
+                strokeDasharray={strokeDasharray}
+                strokeDashoffset={strokeDashoffset}
+                className="text-white transition-all duration-300 ease-in-out"
+                strokeLinecap="round"
+              />
+            </svg>
+            {/* Progress text */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">
+                {completedCount}/{habits.length}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Habit List */}
-        <div className="space-y-3">
-          {habits.map((habit) => (
-            <Button
-              key={habit.id}
-              variant="ghost"
-              className="w-full justify-start p-3 h-auto hover:bg-gray-700/50"
-              onClick={() => toggleHabit(habit.id)}
-            >
-              <div className="flex items-center space-x-3">
-                {habit.completed ? (
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                ) : (
-                  <Circle className="h-5 w-5 text-gray-400" />
-                )}
-                <span className="text-lg">{habit.emoji}</span>
-                <span className={`text-sm ${habit.completed ? 'text-green-400 line-through' : 'text-gray-200'}`}>
+        {/* Habit Pills Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          {habits.map((habit) => {
+            const Icon = iconMap[habit.iconName as keyof typeof iconMap] || Circle
+            return (
+              <button
+                key={habit.id}
+                onClick={() => toggleHabit(habit.id)}
+                className={`relative flex items-center space-x-4 px-6 py-4 rounded-full transition-all duration-200 hover:scale-105 ${
+                  habit.completed 
+                    ? 'bg-white text-black shadow-lg' 
+                    : 'bg-gray-800/60 text-white/70 hover:bg-gray-700/60'
+                }`}
+              >
+                <div className={`p-2 rounded-full ${
+                  habit.completed ? 'bg-black' : 'bg-white/20'
+                }`}>
+                  <Icon className={`h-5 w-5 ${
+                    habit.completed ? 'text-white' : 'text-white/70'
+                  }`} />
+                </div>
+                <span className={`text-sm font-medium flex-1 text-left ${
+                  habit.completed ? 'text-black' : 'text-white/90'
+                }`}>
                   {habit.name}
                 </span>
-              </div>
-            </Button>
-          ))}
+                {habit.completed && (
+                  <CheckCircle className="h-6 w-6 text-black ml-auto" />
+                )}
+              </button>
+            )
+          })}
         </div>
 
         {/* Completion Message */}
         {completedCount === habits.length && (
-          <div className="mt-4 p-3 bg-green-900/30 border border-green-700 rounded-lg">
-            <p className="text-green-400 text-sm text-center">
-              🎉 All habits completed! You&apos;re crushing it today!
+          <div className="mt-6 p-4 bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-400/30 rounded-2xl backdrop-blur-sm">
+            <p className="text-green-400 text-sm text-center font-medium">
+              🎉 All tasks completed! You&apos;re crushing it today!
             </p>
           </div>
         )}
