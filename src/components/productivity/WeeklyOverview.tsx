@@ -68,6 +68,23 @@ export default function WeeklyOverview() {
     const today = new Date().toDateString()
     const todayISO = new Date().toISOString().split('T')[0] // ISO format for daily-logs
     
+    // Check if today's data was manually edited recently (within last 5 minutes)
+    // If so, don't overwrite it with automatic data
+    const existingDayData = await storage.load(`day-data-${today}`)
+    const existingDailyLog = await storage.load('daily-logs') || {}
+    
+    // If we have manually edited data for today, preserve it
+    if (existingDayData && existingDayData.lastManualEdit) {
+      const lastEdit = new Date(existingDayData.lastManualEdit)
+      const now = new Date()
+      const timeDiff = now.getTime() - lastEdit.getTime()
+      
+      // If edited within last 5 minutes, don't overwrite
+      if (timeDiff < 5 * 60 * 1000) {
+        return existingDayData
+      }
+    }
+    
     // Get current habits data
     const currentHabits: Habit[] = await storage.load('habits') || []
     const completedHabits = currentHabits.filter(habit => habit.completed)
@@ -86,36 +103,59 @@ export default function WeeklyOverview() {
       lastDate: ''
     }
     
-    // Determine snus status for today
+    // Determine the actual snus count for today
+    let actualSnusCount = snusData.dailyCount
     let snusStatus: 'success' | 'failed' | 'pending' = 'pending'
     const SNUS_DAILY_LIMIT = 5
     
     if (snusData.lastDate === today) {
-      // Day is in progress
-      if (snusData.dailyCount === 0) {
+      // Day is in progress - use current count
+      actualSnusCount = snusData.dailyCount
+      if (actualSnusCount === 0) {
         snusStatus = 'success' // Clean day so far
-      } else if (snusData.dailyCount <= SNUS_DAILY_LIMIT) {
+      } else if (actualSnusCount <= SNUS_DAILY_LIMIT) {
         snusStatus = 'pending' // Within limit but not clean
       } else {
         snusStatus = 'failed' // Over limit
       }
     } else {
-      // Use historical data if available
-      const savedDayData = await storage.load(`day-data-${today}`)
-      if (savedDayData) {
-        snusStatus = savedDayData.snusStatus
+      // New day or different day - check if we have existing data
+      
+      if (existingDayData && typeof existingDayData.snusCount === 'number') {
+        // Use existing legacy data
+        actualSnusCount = existingDayData.snusCount
+        snusStatus = existingDayData.snusStatus || 'pending'
+      } else if (existingDailyLog[todayISO] && typeof existingDailyLog[todayISO].snusCount === 'number') {
+        // Use existing unified data
+        actualSnusCount = existingDailyLog[todayISO].snusCount
+        if (actualSnusCount === 0) {
+          snusStatus = 'success'
+        } else if (actualSnusCount <= SNUS_DAILY_LIMIT) {
+          snusStatus = 'pending'
+        } else {
+          snusStatus = 'failed'
+        }
+      } else {
+        // No existing data - start fresh (this is truly a new day)
+        actualSnusCount = snusData.dailyCount // Should be 0 for new day
+        snusStatus = actualSnusCount === 0 ? 'success' : 'pending'
       }
     }
     
     // Save to unified daily-logs format (same as JourneyHeatmap)
     const dailyLogsData = await storage.load('daily-logs') || {}
-    dailyLogsData[todayISO] = {
-      date: todayISO,
-      habitsCompleted: completedHabits.length,
-      focusSessions: focusSessions,
-      snusCount: snusData.dailyCount
+    
+    // Only update if we don't have existing data or if it's incomplete
+    if (!dailyLogsData[todayISO] || !dailyLogsData[todayISO].snusCount) {
+      dailyLogsData[todayISO] = {
+        date: todayISO,
+        habitsCompleted: completedHabits.length,
+        focusSessions: focusSessions,
+        snusCount: actualSnusCount,
+        ...(dailyLogsData[todayISO] || {}) // Preserve any existing data like completedHabits
+      }
+      await storage.save('daily-logs', dailyLogsData)
     }
-    await storage.save('daily-logs', dailyLogsData)
     
     // Also save legacy format for WeeklyOverview display
     const dayData = {
@@ -123,8 +163,9 @@ export default function WeeklyOverview() {
       habits: completedHabits.map(h => h.name),
       focusSessions: focusSessions,
       snusStatus: snusStatus,
-      snusCount: snusData.dailyCount,
-      allHabitsCompleted: allHabitsCompleted
+      snusCount: actualSnusCount,
+      allHabitsCompleted: allHabitsCompleted,
+      ...(existingDayData || {}) // Preserve existing data
     }
     
     await storage.save(`day-data-${today}`, dayData)
@@ -143,14 +184,19 @@ export default function WeeklyOverview() {
       // Load unified daily logs data from JourneyHeatmap
       const dailyLogsData = await storage.load('daily-logs') || {}
       
-      // Save current day data first
-      await saveCurrentDayData()
+      // Only save current day data if it's today and we don't have recent manual edits
+      const todayDate = new Date()
       
       for (let i = 6; i >= 0; i--) {
         const date = new Date(today)
         date.setDate(today.getDate() - i)
         const dateString = date.toDateString()
         const isoDateString = date.toISOString().split('T')[0] // ISO format for daily-logs
+        
+        // For today only, save current data if needed
+        if (i === 0) {
+          await saveCurrentDayData()
+        }
         
         // Try to load saved day data first (legacy format)
         let dayData = await storage.load(`day-data-${dateString}`)
@@ -164,9 +210,12 @@ export default function WeeklyOverview() {
             const SNUS_DAILY_LIMIT = 5
             let snusStatus: 'success' | 'failed' | 'pending' = 'pending'
             
-            if (unifiedLog.snusCount === 0) {
+            // Ensure snusCount is a valid number
+            const snusCount = typeof unifiedLog.snusCount === 'number' ? unifiedLog.snusCount : 0
+            
+            if (snusCount === 0) {
               snusStatus = 'success' // Clean day
-            } else if (unifiedLog.snusCount <= SNUS_DAILY_LIMIT) {
+            } else if (snusCount <= SNUS_DAILY_LIMIT) {
               snusStatus = 'pending' // Within limit but not clean
             } else {
               snusStatus = 'failed' // Over limit
@@ -187,14 +236,11 @@ export default function WeeklyOverview() {
             dayData = {
               date: dateString,
               habits: habitNames,
-              focusSessions: unifiedLog.focusSessions,
+              focusSessions: unifiedLog.focusSessions || 0,
               snusStatus: snusStatus,
-              snusCount: unifiedLog.snusCount,
+              snusCount: snusCount,
               allHabitsCompleted: false // Never claim "all" for backfilled data since we don't know the total
             }
-          } else if (i === 0) {
-            // Today - get current data
-            dayData = await saveCurrentDayData()
           } else {
             // Past days with no data - create empty data
             dayData = {
@@ -206,6 +252,11 @@ export default function WeeklyOverview() {
               allHabitsCompleted: false
             }
           }
+        }
+        
+        // Ensure snusCount is always a valid number
+        if (dayData && typeof dayData.snusCount !== 'number') {
+          dayData.snusCount = 0
         }
         
         days.push(dayData)
@@ -327,7 +378,9 @@ export default function WeeklyOverview() {
                       day.snusStatus === 'success' ? 'bg-green-500/20 text-green-400' :
                       day.snusStatus === 'failed' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'
                     }`}>
-                      {day.snusCount === 0 ? '🚭' : `${day.snusCount} snus`}
+                      {(typeof day.snusCount === 'number' && day.snusCount === 0) ? '🚭' : 
+                       (typeof day.snusCount === 'number' && day.snusCount > 0) ? `${day.snusCount} snus` : 
+                       '0 snus'}
                     </div>
                   </div>
                   <div>

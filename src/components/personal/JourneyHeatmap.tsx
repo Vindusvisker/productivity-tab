@@ -40,6 +40,17 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
   useEffect(() => {
     loadDailyLogs()
     loadAvailableHabits()
+    
+    // Listen for updates from other components (HabitTracker, SnusTracker, FocusTimer)
+    const handleDailyLogsUpdate = () => {
+      loadDailyLogs()
+    }
+    
+    window.addEventListener('dailyLogsUpdated', handleDailyLogsUpdate)
+    
+    return () => {
+      window.removeEventListener('dailyLogsUpdated', handleDailyLogsUpdate)
+    }
   }, [])
 
   const loadDailyLogs = async () => {
@@ -91,7 +102,38 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
     setDailyLogs(updatedLogs)
     await storage.save('daily-logs', updatedLogs)
     
-    // Dispatch event to trigger ProfileHeader XP recalculation
+    // Also save to legacy day-data format for WeeklyOverview compatibility
+    const dateObj = new Date(date)
+    const legacyDateString = dateObj.toDateString()
+    const SNUS_DAILY_LIMIT = 5
+    
+    // Determine snus status based on count
+    let snusStatus: 'success' | 'failed' | 'pending' = 'pending'
+    if (log.snusCount === 0) {
+      snusStatus = 'success'
+    } else if (log.snusCount <= SNUS_DAILY_LIMIT) {
+      snusStatus = 'pending'
+    } else {
+      snusStatus = 'failed'
+    }
+    
+    // Load existing legacy data to preserve other fields
+    const existingDayData = await storage.load(`day-data-${legacyDateString}`) || {}
+    
+    const legacyDayData = {
+      ...existingDayData,
+      date: legacyDateString,
+      habits: log.completedHabits || [],
+      focusSessions: log.focusSessions,
+      snusStatus: snusStatus,
+      snusCount: log.snusCount,
+      allHabitsCompleted: false, // We don't know the total habits available when editing manually
+      lastManualEdit: new Date().toISOString() // Timestamp to track manual edits
+    }
+    
+    await storage.save(`day-data-${legacyDateString}`, legacyDayData)
+    
+    // Dispatch event to trigger ProfileHeader XP recalculation and WeeklyOverview updates
     window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
   }
 
@@ -222,7 +264,18 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
       : ''
 
     const currentScore = getDailyScore({ date: selectedDate || '', ...editLog })
-    const isFutureDate = selectedDate ? new Date(selectedDate) > new Date() : false
+    
+    // Fix date comparison to only compare date parts, not time
+    const isFutureDate = selectedDate ? (() => {
+      const selected = new Date(selectedDate)
+      const today = new Date()
+      
+      // Compare only the date parts (year, month, day)
+      const selectedDateOnly = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate())
+      const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+      
+      return selectedDateOnly.getTime() > todayDateOnly.getTime()
+    })() : false
 
     return (
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
@@ -265,7 +318,7 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
                     <Target className="h-4 w-4 text-green-400" />
                     <span>Habits Completed ({editLog.completedHabits?.length || 0})</span>
                   </Label>
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                  <div className="space-y-2">
                     {availableHabits.map((habit) => (
                       <label key={habit} className="flex items-center space-x-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer">
                         <input
@@ -405,6 +458,18 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
                 const colorClass = getScoreColor(score, !!log)
                 const intensityClass = getScoreIntensity(score, !!log)
                 const dayNumber = new Date(date).getDate()
+                
+                // Fix future date detection for calendar
+                const isFutureDate = (() => {
+                  const selected = new Date(date)
+                  const today = new Date()
+                  
+                  // Compare only the date parts (year, month, day)
+                  const selectedDateOnly = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate())
+                  const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+                  
+                  return selectedDateOnly.getTime() > todayDateOnly.getTime()
+                })()
 
                 return (
                   <Tooltip key={date}>
@@ -414,7 +479,7 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
                         className={`
                           aspect-square rounded border cursor-pointer transition-all duration-200 hover:scale-105 hover:z-10 relative flex items-center justify-center text-xs font-medium
                           ${colorClass} ${intensityClass}
-                          ${new Date(date) > new Date() ? 'opacity-30 cursor-not-allowed' : ''}
+                          ${isFutureDate ? 'opacity-30 cursor-not-allowed' : ''}
                         `}
                       >
                         <span className="text-white drop-shadow-sm">{dayNumber}</span>
@@ -475,4 +540,4 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
       </Card>
     </TooltipProvider>
   )
-} 
+}

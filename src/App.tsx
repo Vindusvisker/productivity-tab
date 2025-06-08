@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Navigation from './components/Navigation';
+import StarButton from './components/StarButton';
 import HomeView from './views/HomeView';
 import ProductivityView from './views/ProductivityView';
 import PersonalView from './views/PersonalView';
@@ -39,6 +40,11 @@ export default function App() {
       <div className="relative z-10">
         <Navigation currentView={currentView} onViewChange={setCurrentView} />
         {renderView()}
+      </div>
+      
+      {/* Star Button - Fixed at bottom */}
+      <div className="fixed bottom-6 left-6 z-20">
+        <StarButton />
       </div>
     </div>
   );

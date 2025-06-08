@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { CheckCircle, Circle, Flame, Dumbbell, Sun, BookOpen, Droplets, Utensils, X } from 'lucide-react'
+import { CheckCircle, Circle, Flame, Dumbbell, Sun, BookOpen, Droplets, Utensils, X, Plus, Edit3, Trash2, Check } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 
 interface Habit {
@@ -13,6 +12,16 @@ interface Habit {
   iconName: string
 }
 
+// Default habits - only used on first time setup
+const DEFAULT_HABITS: Habit[] = [
+  { id: 'workout1', name: 'First Workout', completed: false, iconName: 'Dumbbell' },
+  { id: 'alcohol', name: 'No Alcohol', completed: false, iconName: 'X' },
+  { id: 'workout2', name: 'Second Workout', completed: false, iconName: 'Sun' },
+  { id: 'reading', name: 'Read 10 pages', completed: false, iconName: 'BookOpen' },
+  { id: 'diet', name: 'Follow a healthy diet', completed: false, iconName: 'Utensils' },
+  { id: 'water', name: 'Drink water', completed: false, iconName: 'Droplets' },
+]
+
 // Icon mapping
 const iconMap = {
   Dumbbell,
@@ -21,28 +30,33 @@ const iconMap = {
   BookOpen,
   Utensils,
   Droplets,
+  Plus,
+  Flame,
+  Circle,
 }
 
+// Available icons for selection
+const availableIcons = ['Dumbbell', 'X', 'Sun', 'BookOpen', 'Utensils', 'Droplets', 'Flame', 'Circle']
+
 export default function HabitTracker() {
-  const [habits, setHabits] = useState<Habit[]>([
-    { id: 'workout1', name: 'First Workout', completed: true, iconName: 'Dumbbell' },
-    { id: 'alcohol', name: 'No Alcohol', completed: false, iconName: 'X' },
-    { id: 'workout2', name: 'Second Workout', completed: true, iconName: 'Sun' },
-    { id: 'reading', name: 'Read 10 pages', completed: true, iconName: 'BookOpen' },
-    { id: 'diet', name: 'Follow a healthy diet', completed: false, iconName: 'Utensils' },
-    { id: 'water', name: 'Drink water', completed: false, iconName: 'Droplets' },
-  ])
-  
+  // Start with empty array - will be populated from storage or defaults
+  const [habits, setHabits] = useState<Habit[]>([])
   const [streak, setStreak] = useState(0)
   const [lastCompletedDate, setLastCompletedDate] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingHabit, setEditingHabit] = useState<string | null>(null)
+  const [newHabitName, setNewHabitName] = useState('')
 
   // Load data on mount
   useEffect(() => {
-    loadHabits()
+    initializeHabits()
   }, [])
 
   // Check if we need to reset daily (new day)
   useEffect(() => {
+    if (habits.length === 0) return // Don't run until habits are loaded
+    
     const checkAndReset = () => {
       const today = new Date().toDateString()
       const savedDate = localStorage.getItem('habit-date')
@@ -57,17 +71,57 @@ export default function HabitTracker() {
     // Check every minute for date change
     const interval = setInterval(checkAndReset, 60000)
     return () => clearInterval(interval)
-  }, [])
+  }, [habits])
 
-  const loadHabits = async () => {
+  const initializeHabits = async () => {
     try {
+      setIsLoading(true)
+      
+      // Try to load existing habit structure from storage
+      const savedHabitStructure = await storage.load('habit-structure')
       const savedHabits = await storage.load('habits')
       const savedStreak = await storage.load('habit-streak')
       const savedLastDate = await storage.load('last-completed-date')
       
-      if (savedHabits) {
-        setHabits(savedHabits)
+      let habitsToUse: Habit[] = []
+      
+      if (savedHabitStructure) {
+        // Use saved habit structure (preserves custom habits)
+        habitsToUse = savedHabitStructure
+        console.log('Loaded habit structure from storage:', habitsToUse)
+      } else if (savedHabits) {
+        // Legacy: migrate old habits format
+        habitsToUse = savedHabits
+        await storage.save('habit-structure', habitsToUse)
+        console.log('Migrated habits to new structure:', habitsToUse)
+      } else {
+        // First time setup: use defaults
+        habitsToUse = DEFAULT_HABITS
+        await storage.save('habit-structure', habitsToUse)
+        console.log('First time setup with defaults:', habitsToUse)
       }
+      
+      // Load today's completion status
+      const today = new Date().toDateString()
+      const todayData = await storage.load(`day-data-${today}`)
+      
+      if (todayData && todayData.habits) {
+        // Mark habits as completed based on today's data
+        habitsToUse = habitsToUse.map(habit => ({
+          ...habit,
+          completed: todayData.habits.includes(habit.name)
+        }))
+      } else {
+        // Reset all to uncompleted for new day
+        habitsToUse = habitsToUse.map(habit => ({
+          ...habit,
+          completed: false
+        }))
+      }
+      
+      setHabits(habitsToUse)
+      await storage.save('habits', habitsToUse)
+      
       if (savedStreak) {
         setStreak(savedStreak)
       }
@@ -75,7 +129,11 @@ export default function HabitTracker() {
         setLastCompletedDate(savedLastDate)
       }
     } catch (error) {
-      console.error('Error loading habits:', error)
+      console.error('Error initializing habits:', error)
+      // Fallback to defaults on error
+      setHabits(DEFAULT_HABITS)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -91,18 +149,69 @@ export default function HabitTracker() {
         date: yesterday,
         habits: completedHabits.map(h => h.name),
         focusSessions: await storage.load('focus-sessions') || 0,
-        snusStatus: 'pending' as const, // Will be determined by WeeklyOverview
+        snusStatus: 'pending' as const,
         allHabitsCompleted: completedHabits.length === habits.length
       }
       await storage.save(`day-data-${yesterday}`, yesterdayData)
     }
     
+    // Reset completion status but preserve habit structure
     const resetHabits = habits.map(habit => ({ ...habit, completed: false }))
     setHabits(resetHabits)
     await storage.save('habits', resetHabits)
+    
+    console.log('Daily habits reset for new day')
+  }
+
+  const saveHabitStructure = async (newHabits: Habit[]) => {
+    await storage.save('habit-structure', newHabits)
+    await storage.save('habits', newHabits)
+  }
+
+  const addNewHabit = async () => {
+    if (!newHabitName.trim()) return
+    
+    const newHabit: Habit = {
+      id: `habit-${Date.now()}`,
+      name: newHabitName.trim(),
+      completed: false,
+      iconName: 'Circle'
+    }
+    
+    const updatedHabits = [...habits, newHabit]
+    setHabits(updatedHabits)
+    await saveHabitStructure(updatedHabits)
+    setNewHabitName('')
+  }
+
+  const removeHabit = async (habitId: string) => {
+    const updatedHabits = habits.filter(habit => habit.id !== habitId)
+    setHabits(updatedHabits)
+    await saveHabitStructure(updatedHabits)
+  }
+
+  const updateHabitName = async (habitId: string, newName: string) => {
+    if (!newName.trim()) return
+    
+    const updatedHabits = habits.map(habit =>
+      habit.id === habitId ? { ...habit, name: newName.trim() } : habit
+    )
+    setHabits(updatedHabits)
+    await saveHabitStructure(updatedHabits)
+    setEditingHabit(null)
+  }
+
+  const updateHabitIcon = async (habitId: string, newIcon: string) => {
+    const updatedHabits = habits.map(habit =>
+      habit.id === habitId ? { ...habit, iconName: newIcon } : habit
+    )
+    setHabits(updatedHabits)
+    await saveHabitStructure(updatedHabits)
   }
 
   const toggleHabit = async (habitId: string) => {
+    if (isEditMode) return // Don't toggle in edit mode
+    
     const updatedHabits = habits.map(habit => 
       habit.id === habitId ? { ...habit, completed: !habit.completed } : habit
     )
@@ -111,7 +220,7 @@ export default function HabitTracker() {
     await storage.save('habits', updatedHabits)
     
     // Save current day data for real-time tracking
-    const today = new Date().toISOString().split('T')[0] // Use ISO date format like JourneyHeatmap
+    const today = new Date().toISOString().split('T')[0]
     const completedHabits = updatedHabits.filter(habit => habit.completed)
     const allCompleted = completedHabits.length === updatedHabits.length
     
@@ -119,7 +228,7 @@ export default function HabitTracker() {
     const focusSessions = await storage.load('focus-sessions') || 0
     const snusData = await storage.load('snus-data') || { dailyCount: 0 }
     
-    // Save to unified daily-logs format (same as JourneyHeatmap)
+    // Save to unified daily-logs format
     const dailyLogsData = await storage.load('daily-logs') || {}
     dailyLogsData[today] = {
       date: today,
@@ -178,8 +287,21 @@ export default function HabitTracker() {
     }
   }
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <Card className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
+        <CardContent className="p-8">
+          <div className="flex items-center justify-center h-40">
+            <div className="text-white/70">Loading habits...</div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const completedCount = habits.filter(habit => habit.completed).length
-  const completionPercentage = (completedCount / habits.length) * 100
+  const completionPercentage = habits.length > 0 ? (completedCount / habits.length) * 100 : 0
   
   // Calculate stroke dash array for circular progress
   const radius = 45
@@ -194,80 +316,177 @@ export default function HabitTracker() {
         <div className="flex items-start justify-between mb-8">
           <div>
             <h2 className="text-3xl font-semibold text-white mb-2">Tasks</h2>
-            <p className="text-gray-400 text-lg">Great start to the day</p>
+            <p className="text-gray-400 text-lg">
+              {completedCount === habits.length && habits.length > 0 
+                ? "Perfect day! 🎉" 
+                : "Great start to the day"}
+            </p>
           </div>
           
-          {/* Circular Progress Indicator */}
-          <div className="relative w-20 h-20">
-            <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-              {/* Background circle */}
-              <circle
-                cx="50"
-                cy="50"
-                r={radius}
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="transparent"
-                className="text-gray-700"
-              />
-              {/* Progress circle */}
-              <circle
-                cx="50"
-                cy="50"
-                r={radius}
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="transparent"
-                strokeDasharray={strokeDasharray}
-                strokeDashoffset={strokeDashoffset}
-                className="text-white transition-all duration-300 ease-in-out"
-                strokeLinecap="round"
-              />
-            </svg>
-            {/* Progress text */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-white text-xl font-semibold">
-                {completedCount}/{habits.length}
-              </span>
+          <div className="flex items-center space-x-4">
+            {/* Edit Mode Toggle */}
+            <button
+              onClick={() => {
+                setIsEditMode(!isEditMode)
+                setEditingHabit(null)
+                setNewHabitName('')
+              }}
+              className={`p-3 rounded-full transition-all duration-200 ${
+                isEditMode 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-white/10 text-white/70 hover:bg-white/20'
+              }`}
+            >
+              <Edit3 className="h-4 w-4" />
+            </button>
+            
+            {/* Circular Progress Indicator */}
+            <div className="relative w-20 h-20">
+              <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+                {/* Background circle */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  className="text-gray-700"
+                />
+                {/* Progress circle */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  strokeDasharray={strokeDasharray}
+                  strokeDashoffset={strokeDashoffset}
+                  className="text-white transition-all duration-300 ease-in-out"
+                  strokeLinecap="round"
+                />
+              </svg>
+              {/* Progress text */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white text-xl font-semibold">
+                  {completedCount}/{habits.length}
+                </span>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Add New Habit (Edit Mode) */}
+        {isEditMode && (
+          <div className="mb-6 p-4 bg-white/5 rounded-2xl border border-white/10">
+            <div className="flex items-center space-x-3">
+              <input
+                type="text"
+                value={newHabitName}
+                onChange={(e) => setNewHabitName(e.target.value)}
+                placeholder="Enter new habit name..."
+                className="flex-1 bg-black/30 text-white placeholder-white/50 border border-white/20 rounded-full px-4 py-2 focus:outline-none focus:border-blue-400"
+                onKeyPress={(e) => e.key === 'Enter' && addNewHabit()}
+              />
+              <button
+                onClick={addNewHabit}
+                disabled={!newHabitName.trim()}
+                className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white p-2 rounded-full transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Habit Pills Grid */}
         <div className="grid grid-cols-2 gap-4">
           {habits.map((habit) => {
             const Icon = iconMap[habit.iconName as keyof typeof iconMap] || Circle
+            const isEditing = editingHabit === habit.id
+            
             return (
-              <button
-                key={habit.id}
-                onClick={() => toggleHabit(habit.id)}
-                className={`relative flex items-center space-x-4 px-6 py-4 rounded-full transition-all duration-200 hover:scale-105 ${
-                  habit.completed 
-                    ? 'bg-white text-black shadow-lg' 
-                    : 'bg-gray-800/60 text-white/70 hover:bg-gray-700/60'
-                }`}
-              >
-                <div className={`p-2 rounded-full ${
-                  habit.completed ? 'bg-black' : 'bg-white/20'
-                }`}>
-                  <Icon className={`h-5 w-5 ${
-                    habit.completed ? 'text-white' : 'text-white/70'
-                  }`} />
-                </div>
-                <span className={`text-sm font-medium flex-1 text-left ${
-                  habit.completed ? 'text-black' : 'text-white/90'
-                }`}>
-                  {habit.name}
-                </span>
-                {habit.completed && (
-                  <CheckCircle className="h-6 w-6 text-black ml-auto" />
+              <div key={habit.id} className="relative">
+                {/* Main Habit Button */}
+                <button
+                  onClick={() => !isEditMode && toggleHabit(habit.id)}
+                  className={`relative flex items-center space-x-4 px-6 py-4 rounded-full transition-all duration-200 w-full ${
+                    isEditMode ? 'cursor-default' : 'hover:scale-105'
+                  } ${
+                    habit.completed && !isEditMode
+                      ? 'bg-white text-black shadow-lg' 
+                      : 'bg-gray-800/60 text-white/70 hover:bg-gray-700/60'
+                  }`}
+                >
+                  {/* Icon with click to change in edit mode */}
+                  <div 
+                    className={`p-2 rounded-full ${
+                      habit.completed && !isEditMode ? 'bg-black' : 'bg-white/20'
+                    } ${isEditMode ? 'cursor-pointer' : ''}`}
+                    onClick={isEditMode ? (e) => {
+                      e.stopPropagation()
+                      // Cycle through available icons
+                      const currentIndex = availableIcons.indexOf(habit.iconName)
+                      const nextIndex = (currentIndex + 1) % availableIcons.length
+                      updateHabitIcon(habit.id, availableIcons[nextIndex])
+                    } : undefined}
+                  >
+                    <Icon className={`h-5 w-5 ${
+                      habit.completed && !isEditMode ? 'text-white' : 'text-white/70'
+                    }`} />
+                  </div>
+                  
+                  {/* Habit Name */}
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      defaultValue={habit.name}
+                      autoFocus
+                      onBlur={(e) => updateHabitName(habit.id, e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          updateHabitName(habit.id, e.currentTarget.value)
+                        }
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-1 bg-transparent text-sm font-medium text-left border-none outline-none"
+                    />
+                  ) : (
+                    <span 
+                      className={`text-sm font-medium flex-1 text-left ${
+                        habit.completed && !isEditMode ? 'text-black' : 'text-white/90'
+                      } ${isEditMode ? 'cursor-pointer' : ''}`}
+                      onClick={isEditMode ? (e) => {
+                        e.stopPropagation()
+                        setEditingHabit(habit.id)
+                      } : undefined}
+                    >
+                      {habit.name}
+                    </span>
+                  )}
+                  
+                  {/* Completion Check */}
+                  {habit.completed && !isEditMode && (
+                    <CheckCircle className="h-6 w-6 text-black ml-auto" />
+                  )}
+                </button>
+                
+                {/* Delete Button (Edit Mode) */}
+                {isEditMode && (
+                  <button
+                    onClick={() => removeHabit(habit.id)}
+                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full transition-colors shadow-lg"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
                 )}
-              </button>
+              </div>
             )
           })}
           
-          {/* Success Message as 6th Grid Item */}
-          {completedCount === habits.length && (
+          {/* Success Message */}
+          {completedCount === habits.length && habits.length > 0 && !isEditMode && (
             <div className="flex items-center justify-center px-6 py-4 rounded-full bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-400/30 backdrop-blur-sm">
               <span className="text-green-400 text-sm font-medium">
                 🎉 All tasks completed! You're crushing it today!

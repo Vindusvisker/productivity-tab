@@ -28,9 +28,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange }) =>
   ];
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-xl border-b border-white/10">
-      <div className="flex items-center justify-center py-4 px-6">
-        <div className="flex items-center space-x-4 bg-black/30 backdrop-blur-md rounded-full p-2 border border-white/10">
+    <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50">
+      <div className="flex items-center justify-center">
+        <div className="flex items-center space-x-4 bg-black/20 backdrop-blur-xl rounded-full p-2 border border-white/10 shadow-2xl">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -49,11 +49,21 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange }) =>
                 {isActive && (
                   <>
                     {/* Gradient border */}
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 p-[1px]">
+                    <div 
+                      className="absolute inset-0 rounded-full p-[1px]"
+                      style={{
+                        background: 'linear-gradient(135deg, rgb(122, 105, 249), rgb(242, 99, 120), rgb(245, 131, 63))'
+                      }}
+                    >
                       <div className="h-full w-full rounded-full bg-black/50 backdrop-blur-sm" />
                     </div>
                     {/* Inner glow */}
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-cyan-500/20 blur-sm" />
+                    <div 
+                      className="absolute inset-0 rounded-full blur-sm opacity-50"
+                      style={{
+                        background: 'linear-gradient(135deg, rgb(122, 105, 249), rgb(242, 99, 120), rgb(245, 131, 63))'
+                      }}
+                    />
                   </>
                 )}
                 <Icon className={cn(

@@ -1,32 +1,145 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Play, Pause, Square, Clock } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
+
+interface TimerState {
+  startTime: number | null
+  duration: number // in seconds
+  isRunning: boolean
+  isBreak: boolean
+  pausedTime: number // accumulated paused time
+}
 
 export default function FocusTimer() {
   const [timeLeft, setTimeLeft] = useState(25 * 60) // 25 minutes in seconds
   const [isRunning, setIsRunning] = useState(false)
   const [isBreak, setIsBreak] = useState(false)
   const [sessionsCompleted, setSessionsCompleted] = useState(0)
+  
+  // Store timer state for background operation
+  const [startTime, setStartTime] = useState<number | null>(null)
+  const [pausedTime, setPausedTime] = useState(0) // Accumulated time spent paused
+  
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Calculate time remaining based on actual elapsed time
+  const calculateTimeLeft = (timerState: TimerState): number => {
+    if (!timerState.isRunning || !timerState.startTime) {
+      return timerState.duration
+    }
+    
+    const now = Date.now()
+    const elapsed = Math.floor((now - timerState.startTime - timerState.pausedTime) / 1000)
+    return Math.max(0, timerState.duration - elapsed)
+  }
+
+  // Load timer state from storage
+  const loadTimerState = async (): Promise<TimerState> => {
+    try {
+      const saved = await storage.load('timer-state')
+      if (saved) {
+        return saved
+      }
+    } catch (error) {
+      console.error('Error loading timer state:', error)
+    }
+    
+    return {
+      startTime: null,
+      duration: 25 * 60,
+      isRunning: false,
+      isBreak: false,
+      pausedTime: 0
+    }
+  }
+
+  // Save timer state to storage
+  const saveTimerState = async (state: TimerState) => {
+    try {
+      await storage.save('timer-state', state)
+    } catch (error) {
+      console.error('Error saving timer state:', error)
+    }
+  }
+
+  // Initialize timer from storage
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null
+    const initTimer = async () => {
+      const state = await loadTimerState()
+      const currentTimeLeft = calculateTimeLeft(state)
+      
+      setTimeLeft(currentTimeLeft)
+      setIsRunning(state.isRunning)
+      setIsBreak(state.isBreak)
+      setStartTime(state.startTime)
+      setPausedTime(state.pausedTime)
+      
+      // If timer was running and time is up, complete it
+      if (state.isRunning && currentTimeLeft <= 0) {
+        handleTimerComplete()
+      }
+    }
+    
+    initTimer()
+  }, [])
 
-    if (isRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(time => time - 1)
+  // Update timer every second, but calculate based on actual elapsed time
+  useEffect(() => {
+    if (isRunning && startTime) {
+      intervalRef.current = setInterval(() => {
+        const state = {
+          startTime,
+          duration: isBreak ? 5 * 60 : 25 * 60,
+          isRunning,
+          isBreak,
+          pausedTime
+        }
+        
+        const currentTimeLeft = calculateTimeLeft(state)
+        setTimeLeft(currentTimeLeft)
+        
+        if (currentTimeLeft <= 0) {
+          handleTimerComplete()
+        }
       }, 1000)
-    } else if (timeLeft === 0) {
-      handleTimerComplete()
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
     }
 
     return () => {
-      if (interval) clearInterval(interval)
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
     }
-  }, [isRunning, timeLeft])
+  }, [isRunning, startTime, isBreak, pausedTime])
+
+  // Handle page visibility changes (when user switches tabs)
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (!document.hidden && isRunning && startTime) {
+        // Tab became visible again - recalculate time
+        const state = await loadTimerState()
+        const currentTimeLeft = calculateTimeLeft(state)
+        setTimeLeft(currentTimeLeft)
+        
+        if (currentTimeLeft <= 0) {
+          handleTimerComplete()
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [isRunning, startTime])
 
   // Load sessions completed on mount
   useEffect(() => {
@@ -45,6 +158,8 @@ export default function FocusTimer() {
 
   const handleTimerComplete = async () => {
     setIsRunning(false)
+    setStartTime(null)
+    setPausedTime(0)
     
     if (!isBreak) {
       // Focus session completed - reward XP and increment counter
@@ -52,8 +167,25 @@ export default function FocusTimer() {
       setSessionsCompleted(newSessions)
       await storage.save('focus-sessions', newSessions)
       
-      // Save today's data for tracking
+      // Save to unified daily-logs format (same as JourneyHeatmap)
       const today = new Date().toDateString()
+      const todayISO = new Date().toISOString().split('T')[0]
+      
+      // Update unified format
+      const dailyLogsData = await storage.load('daily-logs') || {}
+      const existingLog = dailyLogsData[todayISO] || { 
+        date: todayISO, 
+        habitsCompleted: 0, 
+        focusSessions: 0, 
+        snusCount: 0 
+      }
+      dailyLogsData[todayISO] = {
+        ...existingLog,
+        focusSessions: newSessions
+      }
+      await storage.save('daily-logs', dailyLogsData)
+      
+      // Save legacy format for WeeklyOverview
       const existingDayData = await storage.load(`day-data-${today}`) || {}
       const updatedDayData = {
         ...existingDayData,
@@ -75,28 +207,98 @@ export default function FocusTimer() {
       const updatedFocusDetails = [...existingFocusDetails, sessionDetail]
       await storage.save(`focus-details-${today}`, updatedFocusDetails)
       
+      // Trigger updates to other components
+      window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
+      
       // Start break timer (5 minutes)
       setIsBreak(true)
       setTimeLeft(5 * 60)
+      
+      // Save new timer state for break
+      const breakState = {
+        startTime: Date.now(),
+        duration: 5 * 60,
+        isRunning: true,
+        isBreak: true,
+        pausedTime: 0
+      }
+      setStartTime(breakState.startTime)
+      setIsRunning(true)
+      await saveTimerState(breakState)
+      
     } else {
       // Break completed - reset to focus mode
       setIsBreak(false)
       setTimeLeft(25 * 60)
+      
+      // Clear timer state
+      await saveTimerState({
+        startTime: null,
+        duration: 25 * 60,
+        isRunning: false,
+        isBreak: false,
+        pausedTime: 0
+      })
     }
   }
 
-  const startTimer = () => {
+  const startTimer = async () => {
+    const now = Date.now()
+    const duration = isBreak ? 5 * 60 : 25 * 60
+    
     setIsRunning(true)
+    setStartTime(now)
+    setPausedTime(0)
+    
+    const state = {
+      startTime: now,
+      duration,
+      isRunning: true,
+      isBreak,
+      pausedTime: 0
+    }
+    
+    await saveTimerState(state)
   }
 
-  const pauseTimer = () => {
-    setIsRunning(false)
+  const pauseTimer = async () => {
+    if (startTime) {
+      // Calculate how much time has elapsed and add to pausedTime
+      const now = Date.now()
+      const elapsed = Math.floor((now - startTime) / 1000)
+      const newPausedTime = pausedTime + elapsed
+      
+      setIsRunning(false)
+      setPausedTime(newPausedTime)
+      
+      const state = {
+        startTime,
+        duration: isBreak ? 5 * 60 : 25 * 60,
+        isRunning: false,
+        isBreak,
+        pausedTime: newPausedTime
+      }
+      
+      await saveTimerState(state)
+    }
   }
 
-  const resetTimer = () => {
+  const resetTimer = async () => {
     setIsRunning(false)
     setIsBreak(false)
     setTimeLeft(25 * 60)
+    setStartTime(null)
+    setPausedTime(0)
+    
+    const state = {
+      startTime: null,
+      duration: 25 * 60,
+      isRunning: false,
+      isBreak: false,
+      pausedTime: 0
+    }
+    
+    await saveTimerState(state)
   }
 
   const formatTime = (seconds: number) => {
@@ -170,6 +372,9 @@ export default function FocusTimer() {
           </div>
           <div className="text-sm text-gray-400">
             {isBreak ? 'Time for a break!' : 'Stay focused'}
+            {isRunning && (
+              <span className="ml-2 text-green-400">• Running in background</span>
+            )}
           </div>
         </div>
 
@@ -211,7 +416,7 @@ export default function FocusTimer() {
           <div className="text-2xl font-bold text-blue-400 mb-1">{sessionsCompleted}</div>
           <div className="text-xs text-gray-400">Focus Sessions Today</div>
           {sessionsCompleted > 0 && (
-            <div className="text-xs text-green-400 mt-1">+{sessionsCompleted * 50} XP earned! 🚀</div>
+            <div className="text-xs text-green-400 mt-1">+{sessionsCompleted * 25} XP earned! 🚀</div>
           )}
         </div>
       </CardContent>

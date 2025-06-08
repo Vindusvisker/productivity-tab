@@ -73,8 +73,41 @@ export default function SnusTracker() {
 
   const handleDayEnd = async () => {
     const today = new Date().toDateString()
+    const todayISO = new Date().toISOString().split('T')[0]
     const wasSuccessful = dailyCount <= DAILY_LIMIT
     
+    // IMPORTANT: Save the final day's data before resetting the count
+    // This ensures WeeklyOverview can access yesterday's snus count
+    const finalSnusStatus = dailyCount === 0 ? 'success' : dailyCount <= DAILY_LIMIT ? 'pending' : 'failed'
+    
+    // Save to unified daily-logs format
+    const dailyLogsData = await storage.load('daily-logs') || {}
+    const existingLog = dailyLogsData[todayISO] || { 
+      date: todayISO, 
+      habitsCompleted: 0, 
+      focusSessions: 0, 
+      snusCount: 0 
+    }
+    dailyLogsData[todayISO] = {
+      ...existingLog,
+      snusCount: dailyCount // Save the final count for the day
+    }
+    await storage.save('daily-logs', dailyLogsData)
+    
+    // Save legacy day data format
+    const existingDayData = await storage.load(`day-data-${today}`) || {}
+    const finalDayData = {
+      ...existingDayData,
+      date: today,
+      snusCount: dailyCount, // Save the final count for the day
+      snusStatus: finalSnusStatus,
+      habits: existingDayData.habits || [],
+      focusSessions: existingDayData.focusSessions || 0,
+      allHabitsCompleted: existingDayData.allHabitsCompleted || false
+    }
+    await storage.save(`day-data-${today}`, finalDayData)
+    
+    // Now reset for the new day
     const newData: SnusData = {
       ...snusData,
       dailyCount: 0,
@@ -88,6 +121,9 @@ export default function SnusTracker() {
     await saveSnusData(newData)
     setDailyCount(0)
     setShowShame(false)
+    
+    // Trigger updates to other components so they can reload the saved data
+    window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
   }
 
   const getShameMessage = (count: number): string => {
@@ -100,18 +136,18 @@ export default function SnusTracker() {
       "Limit reached. Time to lock in 🔒", // 5
       "You've crossed the line today. Regain control 🧠⚔️", // 6
       "This is no longer 'just one more'. Recalibrate. ⛔", // 7
-      "You’re losing the mental edge. Turn it around. 🧭", // 8
-      "Momentum killer. You’re stronger than this 💢", // 9
-      "Double digits. You’re at a crossroads 🔻", // 10
+      "You're losing the mental edge. Turn it around. 🧭", // 8
+      "Momentum killer. You're stronger than this 💢", // 9
+      "Double digits. You're at a crossroads 🔻", // 10
       "You're not in control — the habit is. Flip the script 🔄", // 11
       "That's your future rent right there 💸", // 12
       "13 in. What story are you writing today? 📉", // 13
       "Your lungs and gums are waving the white flag 🫁", // 14
-      "15 hits. Your willpower didn’t sign up for this 🧱", // 15
+      "15 hits. Your willpower didn't sign up for this 🧱", // 15
       "You're spiraling. Is this how you want to show up? 🎭", // 16
-      "Seventeen. Let’s not make this your new normal 🛑", // 17
-      "You're not escaping. You’re looping 🌀", // 18
-      "This isn’t you. This is addiction running macros 🤖", // 19
+      "Seventeen. Let's not make this your new normal 🛑", // 17
+      "You're not escaping. You're looping 🌀", // 18
+      "This isn't you. This is addiction running macros 🤖", // 19
       "20 logged. Let this be your last rock bottom for the year 🧨" // 20
     ];
     
