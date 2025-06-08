@@ -68,7 +68,7 @@ export default function PowerGrid() {
           id: 'current-streak',
           title: 'Current Streak',
           value: currentStreak,
-          icon: <Flame className="h-6 w-6" />,
+          icon: <Flame className="h-4 w-4" />,
           color: 'from-orange-500 to-red-500',
           suffix: 'days',
           subtitle: `${longestStreak} best`
@@ -77,7 +77,7 @@ export default function PowerGrid() {
           id: 'focus-hours',
           title: 'Focus Hours',
           value: totalFocusHours,
-          icon: <Clock className="h-6 w-6" />,
+          icon: <Clock className="h-4 w-4" />,
           color: 'from-blue-500 to-cyan-500',
           suffix: 'hrs',
           subtitle: `${totalFocusSessions} sessions`
@@ -86,7 +86,7 @@ export default function PowerGrid() {
           id: 'total-habits',
           title: 'Total Habits',
           value: totalHabits,
-          icon: <Target className="h-6 w-6" />,
+          icon: <Target className="h-4 w-4" />,
           color: 'from-green-500 to-emerald-500',
           suffix: '',
           subtitle: 'completed'
@@ -95,7 +95,7 @@ export default function PowerGrid() {
           id: 'clean-days',
           title: 'Clean Days',
           value: cleanDays,
-          icon: <Star className="h-6 w-6" />,
+          icon: <Star className="h-4 w-4" />,
           color: 'from-purple-500 to-pink-500',
           suffix: '',
           subtitle: `${cleanDayRate}% rate`
@@ -186,70 +186,40 @@ export default function PowerGrid() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-4">
+      <div className="flex space-x-4">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl animate-pulse">
-            <CardContent className="p-6">
-              <div className="h-20 bg-white/5 rounded-xl"></div>
-            </CardContent>
-          </Card>
+          <div key={i} className="bg-white/5 rounded-xl px-4 py-3 flex-1 animate-pulse">
+            <div className="h-4 bg-white/10 rounded mb-2"></div>
+            <div className="h-6 bg-white/10 rounded"></div>
+          </div>
         ))}
       </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {stats.map((stat, index) => (
-        <Card 
+    <div className="grid grid-cols-4 gap-3">
+      {stats.map((stat) => (
+        <div 
           key={stat.id} 
-          className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden hover:border-white/20 transition-all group hover:scale-105"
-          style={{ animationDelay: `${index * 150}ms` }}
+          className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-3 py-3 hover:bg-white/10 transition-all group"
         >
-          <CardContent className="p-6">
-            {/* Icon with gradient background */}
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 bg-gradient-to-r ${stat.color} rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                {stat.icon}
-              </div>
-              
-              {/* Optional badge for high values */}
-              {stat.value > 10 && stat.id === 'current-streak' && (
-                <div className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-2 py-1 rounded-full text-xs font-medium">
-                  🔥 HOT
-                </div>
-              )}
-            </div>
-
-            {/* Title */}
-            <h3 className="text-sm font-medium text-gray-400 mb-1">{stat.title}</h3>
-            
-            {/* Main Value */}
-            <div className="text-2xl font-bold text-white mb-1">
-              <AnimatedCounter value={stat.value} suffix={stat.suffix} />
+          <div className="flex items-center space-x-2">
+            {/* Icon */}
+            <div className={`w-8 h-8 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center text-white flex-shrink-0`}>
+              {stat.icon}
             </div>
             
-            {/* Subtitle */}
-            {stat.subtitle && (
-              <p className="text-xs text-gray-500">{stat.subtitle}</p>
-            )}
-
-            {/* Progress indicator for streaks */}
-            {stat.id === 'current-streak' && stat.value > 0 && (
-              <div className="mt-3">
-                <div className="w-full bg-gray-800/60 rounded-full h-1">
-                  <div 
-                    className={`bg-gradient-to-r ${stat.color} h-full rounded-full transition-all duration-1000`}
-                    style={{ width: `${Math.min((stat.value / 30) * 100, 100)}%` }}
-                  />
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {stat.value < 30 ? `${30 - stat.value} to 30-day milestone` : '30+ day champion!'}
-                </div>
+            {/* Stats */}
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-gray-400 font-medium">{stat.title}</div>
+              <div className="text-lg font-bold text-white">
+                {stat.value.toLocaleString()}
+                {stat.suffix && <span className="text-xs ml-1 opacity-70">{stat.suffix}</span>}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          </div>
+        </div>
       ))}
     </div>
   )

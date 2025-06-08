@@ -15,6 +15,14 @@ type DailyLog = {
   habitsCompleted: number
   focusSessions: number
   snusCount: number
+  completedHabits?: string[]
+}
+
+interface Habit {
+  id: string
+  name: string
+  completed: boolean
+  iconName: string
 }
 
 interface JourneyHeatmapProps {
@@ -27,9 +35,11 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [loading, setLoading] = useState(true)
+  const [availableHabits, setAvailableHabits] = useState<string[]>([])
 
   useEffect(() => {
     loadDailyLogs()
+    loadAvailableHabits()
   }, [])
 
   const loadDailyLogs = async () => {
@@ -40,6 +50,36 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
       console.error('Error loading daily logs:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadAvailableHabits = async () => {
+    try {
+      const savedHabits: Habit[] = await storage.load('habits') || []
+      if (savedHabits.length > 0) {
+        setAvailableHabits(savedHabits.map(h => h.name))
+      } else {
+        // Fallback to default habits if none saved
+        setAvailableHabits([
+          'First Workout',
+          'No Alcohol', 
+          'Second Workout',
+          'Read 10 pages',
+          'Follow a healthy diet',
+          'Drink water'
+        ])
+      }
+    } catch (error) {
+      console.error('Error loading habits:', error)
+      // Fallback to default habits
+      setAvailableHabits([
+        'First Workout',
+        'No Alcohol', 
+        'Second Workout',
+        'Read 10 pages',
+        'Follow a healthy diet',
+        'Drink water'
+      ])
     }
   }
 
@@ -56,23 +96,25 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
   }
 
   const getDailyScore = (log: DailyLog | undefined): number => {
-    if (!log) return 0
-    return log.habitsCompleted * 2 + log.focusSessions * 1 - log.snusCount * 1
+    if (!log) return -999 // Special value for no data
+    return Math.max(0, log.habitsCompleted * 2 + log.focusSessions * 1 - log.snusCount * 1) // Ensure minimum 0
   }
 
-  const getScoreColor = (score: number): string => {
+  const getScoreColor = (score: number, hasData: boolean): string => {
+    if (!hasData || score === -999) return 'bg-gray-600 border-gray-700' // No data - gray
     if (score >= 5) return 'bg-green-500 border-green-600'
     if (score >= 3) return 'bg-lime-400 border-lime-500'
     if (score >= 1) return 'bg-yellow-400 border-yellow-500'
-    if (score === 0) return 'bg-gray-500 border-gray-600'
-    return 'bg-red-500 border-red-600'
+    if (score === 0) return 'bg-slate-600 border-slate-700' // Actual 0 score - dark blue
+    return 'bg-red-500 border-red-600' // Negative (shouldn't happen with Math.max but just in case)
   }
 
-  const getScoreIntensity = (score: number): string => {
+  const getScoreIntensity = (score: number, hasData: boolean): string => {
+    if (!hasData || score === -999) return 'opacity-20' // No data - very faint
     if (score >= 5) return 'opacity-100'
     if (score >= 3) return 'opacity-80'
     if (score >= 1) return 'opacity-60'
-    if (score === 0) return 'opacity-40'
+    if (score === 0) return 'opacity-50' // Actual 0 score - medium opacity
     return 'opacity-70'
   }
 
@@ -129,7 +171,8 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
     const [editLog, setEditLog] = useState<Omit<DailyLog, 'date'>>({
       habitsCompleted: 0,
       focusSessions: 0,
-      snusCount: 0
+      snusCount: 0,
+      completedHabits: []
     })
 
     useEffect(() => {
@@ -139,13 +182,27 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
           setEditLog({
             habitsCompleted: existingLog.habitsCompleted,
             focusSessions: existingLog.focusSessions,
-            snusCount: existingLog.snusCount
+            snusCount: existingLog.snusCount,
+            completedHabits: existingLog.completedHabits || []
           })
         } else {
-          setEditLog({ habitsCompleted: 0, focusSessions: 0, snusCount: 0 })
+          setEditLog({ habitsCompleted: 0, focusSessions: 0, snusCount: 0, completedHabits: [] })
         }
       }
     }, [selectedDate])
+
+    const handleHabitToggle = (habitName: string) => {
+      const currentHabits = editLog.completedHabits || []
+      const updatedHabits = currentHabits.includes(habitName)
+        ? currentHabits.filter(h => h !== habitName)
+        : [...currentHabits, habitName]
+      
+      setEditLog(prev => ({
+        ...prev,
+        completedHabits: updatedHabits,
+        habitsCompleted: updatedHabits.length
+      }))
+    }
 
     const handleSave = async () => {
       if (selectedDate) {
@@ -206,16 +263,21 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
                 <div className="space-y-2">
                   <Label className="text-sm text-gray-300 flex items-center space-x-2">
                     <Target className="h-4 w-4 text-green-400" />
-                    <span>Habits Completed</span>
+                    <span>Habits Completed ({editLog.completedHabits?.length || 0})</span>
                   </Label>
-                  <Input
-                    type="number"
-                    value={editLog.habitsCompleted}
-                    onChange={(e) => setEditLog(prev => ({ ...prev, habitsCompleted: parseInt(e.target.value) || 0 }))}
-                    className="bg-white/5 border-white/10 text-white"
-                    min="0"
-                    max="20"
-                  />
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {availableHabits.map((habit) => (
+                      <label key={habit} className="flex items-center space-x-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editLog.completedHabits?.includes(habit) || false}
+                          onChange={() => handleHabitToggle(habit)}
+                          className="w-4 h-4 text-green-400 bg-transparent border-gray-300 rounded focus:ring-green-400"
+                        />
+                        <span className="text-sm text-gray-300">{habit}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -340,8 +402,8 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
               {calendarDays.map((date) => {
                 const log = dailyLogs[date]
                 const score = getDailyScore(log)
-                const colorClass = getScoreColor(score)
-                const intensityClass = getScoreIntensity(score)
+                const colorClass = getScoreColor(score, !!log)
+                const intensityClass = getScoreIntensity(score, !!log)
                 const dayNumber = new Date(date).getDate()
 
                 return (
@@ -371,10 +433,11 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
           <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
             <span>Less</span>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 bg-gray-500 rounded border opacity-40" />
-              <div className="w-3 h-3 bg-yellow-400 rounded border opacity-60" />
-              <div className="w-3 h-3 bg-lime-400 rounded border opacity-80" />
-              <div className="w-3 h-3 bg-green-500 rounded border opacity-100" />
+              <div className="w-3 h-3 bg-gray-600 rounded border opacity-20" title="No data" />
+              <div className="w-3 h-3 bg-slate-600 rounded border opacity-50" title="Score: 0" />
+              <div className="w-3 h-3 bg-yellow-400 rounded border opacity-60" title="Score: 1-2" />
+              <div className="w-3 h-3 bg-lime-400 rounded border opacity-80" title="Score: 3-4" />
+              <div className="w-3 h-3 bg-green-500 rounded border opacity-100" title="Score: 5+" />
             </div>
             <span>More</span>
           </div>
@@ -384,7 +447,11 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
                 <div className="text-lg font-bold text-green-400">
-                  {calendarDays.filter(date => getDailyScore(dailyLogs[date]) >= 3).length}
+                  {calendarDays.filter(date => {
+                    const log = dailyLogs[date]
+                    const score = getDailyScore(log)
+                    return log && score >= 3 && score !== -999
+                  }).length}
                 </div>
                 <div className="text-xs text-gray-400">Great Days</div>
               </div>

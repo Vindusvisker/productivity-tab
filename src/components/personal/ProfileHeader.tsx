@@ -45,12 +45,19 @@ export default function ProfileHeader() {
       loadProfileData()
     }
     
+    // Listen for achievement unlocks from AchievementWall
+    const handleAchievementUnlocked = () => {
+      loadProfileData()
+    }
+    
     window.addEventListener('dailyLogsUpdated', handleDailyLogsUpdate)
     window.addEventListener('missionCompleted', handleMissionCompleted)
+    window.addEventListener('achievementUnlocked', handleAchievementUnlocked)
     
     return () => {
       window.removeEventListener('dailyLogsUpdated', handleDailyLogsUpdate)
       window.removeEventListener('missionCompleted', handleMissionCompleted)
+      window.removeEventListener('achievementUnlocked', handleAchievementUnlocked)
     }
   }, [])
 
@@ -77,12 +84,15 @@ export default function ProfileHeader() {
       // Add mission XP (from completed missions)
       const missionXP = await storage.load('mission-xp') || 0
       
+      // Add achievement XP (from unlocked achievements)
+      const achievementXP = await storage.load('achievement-xp') || 0
+      
       // Load completed missions count
       const completedMissionsArray = await storage.load('completed-missions') || []
       const completedMissions = completedMissionsArray.length
       
-      // Total XP = daily activity + streak bonuses + mission rewards
-      const totalXP = totalDailyXP + streakBonusXP + missionXP
+      // Total XP = daily activity + streak bonuses + mission rewards + achievement rewards
+      const totalXP = totalDailyXP + streakBonusXP + missionXP + achievementXP
       const level = Math.floor(totalXP / 1000) + 1
       const currentXP = totalXP % 1000
       
@@ -249,4 +259,4 @@ export default function ProfileHeader() {
       </CardContent>
     </Card>
   )
-} 
+}

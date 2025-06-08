@@ -125,7 +125,8 @@ export default function HabitTracker() {
       date: today,
       habitsCompleted: completedHabits.length,
       focusSessions: focusSessions,
-      snusCount: snusData.dailyCount
+      snusCount: snusData.dailyCount,
+      completedHabits: completedHabits.map(h => h.name)
     }
     await storage.save('daily-logs', dailyLogsData)
     
@@ -265,9 +266,9 @@ export default function HabitTracker() {
             )
           })}
           
-          {/* Completion Celebration Pill */}
+          {/* Success Message as 6th Grid Item */}
           {completedCount === habits.length && (
-            <div className="col-span-2 flex items-center justify-center px-6 py-4 rounded-full bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-400/30 backdrop-blur-sm">
+            <div className="flex items-center justify-center px-6 py-4 rounded-full bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-400/30 backdrop-blur-sm">
               <span className="text-green-400 text-sm font-medium">
                 🎉 All tasks completed! You're crushing it today!
               </span>

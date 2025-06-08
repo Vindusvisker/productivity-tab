@@ -5,6 +5,15 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Calendar, CheckCircle, Flame, TrendingUp } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 import DayDetailsDialog from './DayDetailsDialog'
+import PowerGrid from '@/components/personal/PowerGrid'
+
+type DailyLog = {
+  date: string
+  habitsCompleted: number
+  focusSessions: number
+  snusCount: number
+  completedHabits?: string[]
+}
 
 interface DayActivity {
   date: string
@@ -41,7 +50,18 @@ export default function WeeklyOverview() {
     loadWeeklyData()
     // Refresh data every 30 seconds to stay updated
     const interval = setInterval(loadWeeklyData, 30000)
-    return () => clearInterval(interval)
+    
+    // Listen for daily logs updates from JourneyHeatmap
+    const handleDailyLogsUpdate = () => {
+      loadWeeklyData()
+    }
+    
+    window.addEventListener('dailyLogsUpdated', handleDailyLogsUpdate)
+    
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('dailyLogsUpdated', handleDailyLogsUpdate)
+    }
   }, [])
 
   const saveCurrentDayData = async () => {
@@ -120,6 +140,9 @@ export default function WeeklyOverview() {
       const days: DayActivity[] = []
       const today = new Date()
       
+      // Load unified daily logs data from JourneyHeatmap
+      const dailyLogsData = await storage.load('daily-logs') || {}
+      
       // Save current day data first
       await saveCurrentDayData()
       
@@ -127,17 +150,53 @@ export default function WeeklyOverview() {
         const date = new Date(today)
         date.setDate(today.getDate() - i)
         const dateString = date.toDateString()
+        const isoDateString = date.toISOString().split('T')[0] // ISO format for daily-logs
         
-        // Try to load saved day data first
+        // Try to load saved day data first (legacy format)
         let dayData = await storage.load(`day-data-${dateString}`)
         
         if (!dayData) {
-          // If no saved data, reconstruct for today or use empty data for past days
-          if (i === 0) {
+          // Check unified daily-logs format from JourneyHeatmap
+          const unifiedLog = dailyLogsData[isoDateString]
+          
+          if (unifiedLog) {
+            // Convert unified format to WeeklyOverview format
+            const SNUS_DAILY_LIMIT = 5
+            let snusStatus: 'success' | 'failed' | 'pending' = 'pending'
+            
+            if (unifiedLog.snusCount === 0) {
+              snusStatus = 'success' // Clean day
+            } else if (unifiedLog.snusCount <= SNUS_DAILY_LIMIT) {
+              snusStatus = 'pending' // Within limit but not clean
+            } else {
+              snusStatus = 'failed' // Over limit
+            }
+            
+            // Use actual habit names if available, otherwise create generic ones
+            let habitNames: string[]
+            if (unifiedLog.completedHabits && unifiedLog.completedHabits.length > 0) {
+              habitNames = unifiedLog.completedHabits
+            } else {
+              // Fallback to generic names if no specific habits stored
+              habitNames = []
+              for (let h = 0; h < unifiedLog.habitsCompleted; h++) {
+                habitNames.push(`Habit ${h + 1}`)
+              }
+            }
+            
+            dayData = {
+              date: dateString,
+              habits: habitNames,
+              focusSessions: unifiedLog.focusSessions,
+              snusStatus: snusStatus,
+              snusCount: unifiedLog.snusCount,
+              allHabitsCompleted: false // Never claim "all" for backfilled data since we don't know the total
+            }
+          } else if (i === 0) {
             // Today - get current data
             dayData = await saveCurrentDayData()
           } else {
-            // Past days - create empty data
+            // Past days with no data - create empty data
             dayData = {
               date: dateString,
               habits: [],
@@ -154,24 +213,36 @@ export default function WeeklyOverview() {
       
       setWeekData(days)
       
-      // Calculate current streak based on habit completion and snus success
-      let streak = 0
-      for (let i = days.length - 1; i >= 0; i--) {
-        const day = days[i]
-        const isSuccessfulDay = (day.allHabitsCompleted || day.habits.length >= 3) && 
-                              (day.snusStatus === 'success' || (day.snusStatus === 'pending' && day.habits.includes('No Snus')))
-        
-        if (isSuccessfulDay) {
-          streak++
-        } else {
-          break
-        }
-      }
-      setCurrentStreak(streak)
+      // Calculate current streak using same logic as PowerGrid
+      const currentStreak = calculateCurrentStreak(Object.values(dailyLogsData))
+      setCurrentStreak(currentStreak)
       
     } catch (error) {
       console.error('Error loading weekly data:', error)
     }
+  }
+
+  // Use same streak calculation logic as PowerGrid
+  const calculateCurrentStreak = (logs: DailyLog[]): number => {
+    if (logs.length === 0) return 0
+    
+    // Sort logs by date (newest first)
+    const sortedLogs = logs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    
+    let streak = 0
+    
+    // Use same scoring system as PowerGrid: habits×2 + focus×1 - snus×1 >= 3
+    const getScore = (log: DailyLog) => log.habitsCompleted * 2 + log.focusSessions * 1 - log.snusCount * 1
+    
+    for (const log of sortedLogs) {
+      if (getScore(log) >= 3) {
+        streak++
+      } else {
+        break
+      }
+    }
+    
+    return streak
   }
 
   // Listen for habit and snus changes to update data in real-time
@@ -304,20 +375,14 @@ export default function WeeklyOverview() {
           ))}
         </div>
 
-        {/* Week Summary */}
-        <div className="mt-6 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-blue-500/20 rounded-2xl p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-blue-400" />
-              <span className="text-sm font-medium text-white">Week Progress</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Flame className="h-4 w-4 text-orange-400" />
-              <span className="text-sm text-orange-400">
-                {currentStreak > 0 ? 'Keep the momentum!' : 'Start your streak!'}
-              </span>
-            </div>
-          </div>
+
+        {/* Power Stats */}
+        <div className="mt-6">
+          <h3 className="text-sm font-bold text-white mb-3 flex items-center">
+            <span className="mr-2">⚡</span>
+            Power Stats
+          </h3>
+          <PowerGrid />
         </div>
       </CardContent>
 

@@ -17,7 +17,7 @@ interface SnusData {
 
 export default function SnusTracker() {
   const [dailyCount, setDailyCount] = useState(0)
-  const [showShame, setShowShame] = useState(false)
+  const [showShame, setShowShame] = useState(true)
   const [snusData, setSnusData] = useState<SnusData>({
     dailyCount: 0,
     totalDays: 0,
@@ -126,8 +126,8 @@ export default function SnusTracker() {
     
     setDailyCount(newCount)
     
-    // Always show message area when count > 0
-    setShowShame(newCount > 0)
+    // Always show message area (remove the condition)
+    setShowShame(true)
     
     const updatedData: SnusData = {
       ...snusData,
@@ -183,8 +183,8 @@ export default function SnusTracker() {
     
     setDailyCount(newCount)
     
-    // Show message area whenever count > 0, hide when count = 0
-    setShowShame(newCount > 0)
+    // Always show message area (remove the condition)
+    setShowShame(true)
     
     const updatedData: SnusData = {
       ...snusData,
@@ -334,33 +334,29 @@ export default function SnusTracker() {
           </div>
         </div>
 
-        {/* Message Notification */}
+        {/* Message Notification - Always visible */}
         {showShame && (
           <div className={`p-3 border rounded-2xl backdrop-blur-sm ${
-            dailyCount <= DAILY_LIMIT 
-              ? 'bg-blue-900/30 border-blue-500/50' // Safe zone: blue
-              : 'bg-red-900/30 border-red-500/50'   // Over limit: red
+            dailyCount === 0
+              ? 'bg-green-900/30 border-green-500/50' // Clean day: green
+              : dailyCount <= DAILY_LIMIT 
+                ? 'bg-blue-900/30 border-blue-500/50' // Safe zone: blue
+                : 'bg-red-900/30 border-red-500/50'   // Over limit: red
           }`}>
             <div className={`flex items-center space-x-2 ${
-              dailyCount <= DAILY_LIMIT 
-                ? 'text-blue-400'  // Safe zone: blue text
-                : 'text-red-400'   // Over limit: red text
+              dailyCount === 0
+                ? 'text-green-400'  // Clean day: green text
+                : dailyCount <= DAILY_LIMIT 
+                  ? 'text-blue-400'  // Safe zone: blue text
+                  : 'text-red-400'   // Over limit: red text
             }`}>
-              <AlertTriangle className="h-4 w-4" />
+              {dailyCount === 0 ? (
+                <CheckCircle className="h-4 w-4" />
+              ) : (
+                <AlertTriangle className="h-4 w-4" />
+              )}
               <span className="text-sm font-medium">
                 {getShameMessage(dailyCount)}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Success Message */}
-        {dailyCount === 0 && (
-          <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-2xl backdrop-blur-sm">
-            <div className="flex items-center space-x-2 text-green-400">
-              <CheckCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">
-                Great job! Keep it up! 🌟
               </span>
             </div>
           </div>
