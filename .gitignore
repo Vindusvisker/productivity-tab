@@ -13,6 +13,7 @@ extension-dist/
 
 # Production
 /build
+/dist
 
 # Misc
 .DS_Store
