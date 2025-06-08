@@ -1,11 +1,50 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Trophy, Star, Flame, Zap, Target, Calendar, Award, TrendingUp } from 'lucide-react';
+import { Trophy, Star, Flame, Zap, Target, Calendar, Award, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { storage } from '@/lib/chrome-storage';
+
+interface SnusData {
+  dailyCount: number
+  totalDays: number
+  successfulDays: number
+  failedDays: number
+  currentStreak: number
+  lastDate: string
+}
 
 const PersonalView: React.FC = () => {
   const currentLevel = 12;
   const currentXP = 2350;
   const nextLevelXP = 3000;
   const xpProgress = (currentXP / nextLevelXP) * 100;
+
+  const [snusData, setSnusData] = useState<SnusData>({
+    dailyCount: 0,
+    totalDays: 0,
+    successfulDays: 0,
+    failedDays: 0,
+    currentStreak: 0,
+    lastDate: ''
+  });
+
+  // Load snus data
+  useEffect(() => {
+    const loadSnusData = async () => {
+      try {
+        const saved = await storage.load('snus-data')
+        if (saved) {
+          setSnusData(saved)
+        }
+      } catch (error) {
+        console.error('Error loading snus data:', error)
+      }
+    }
+
+    loadSnusData()
+    // Refresh every 10 seconds to stay updated
+    const interval = setInterval(loadSnusData, 10000)
+    return () => clearInterval(interval)
+  }, [])
 
   const achievements = [
     { id: 1, name: 'Early Bird', description: 'Wake up before 7 AM for 7 days', icon: '🌅', unlocked: true },
@@ -34,6 +73,11 @@ const PersonalView: React.FC = () => {
   const getEnergyColor = (energy: number) => {
     const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500', 'bg-emerald-500'];
     return colors[energy - 1] || 'bg-gray-500';
+  };
+
+  const getSnusSuccessRate = () => {
+    if (snusData.totalDays === 0) return 0;
+    return Math.round((snusData.successfulDays / snusData.totalDays) * 100);
   };
 
   return (
@@ -86,6 +130,60 @@ const PersonalView: React.FC = () => {
           
           {/* Left Column */}
           <div className="space-y-6">
+            
+            {/* Snus Tracking Stats */}
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <AlertCircle className="h-5 w-5 mr-2 text-red-400" />
+                  Snus Tracking
+                </h3>
+                
+                {/* Overall Stats */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="text-center p-3 bg-green-900/30 border border-green-700 rounded-lg">
+                    <div className="text-2xl font-bold text-green-400">{snusData.successfulDays}</div>
+                    <div className="text-xs text-green-300">Success Days</div>
+                  </div>
+                  <div className="text-center p-3 bg-red-900/30 border border-red-700 rounded-lg">
+                    <div className="text-2xl font-bold text-red-400">{snusData.failedDays}</div>
+                    <div className="text-xs text-red-300">Failed Days</div>
+                  </div>
+                </div>
+
+                {/* Success Rate & Streak */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300 text-sm">Success Rate</span>
+                    <span className={`font-bold ${getSnusSuccessRate() >= 80 ? 'text-green-400' : getSnusSuccessRate() >= 60 ? 'text-yellow-400' : 'text-red-400'}`}>
+                      {getSnusSuccessRate()}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        getSnusSuccessRate() >= 80 ? 'bg-green-500' : 
+                        getSnusSuccessRate() >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${getSnusSuccessRate()}%` }}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between items-center mt-4">
+                    <span className="text-gray-300 text-sm">Current Streak</span>
+                    <div className="flex items-center space-x-1">
+                      <Flame className="h-4 w-4 text-orange-400" />
+                      <span className="font-bold text-orange-400">{snusData.currentStreak} days</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300 text-sm">Total Tracked Days</span>
+                    <span className="font-bold text-gray-200">{snusData.totalDays}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
             {/* Achievements */}
             <Card className="bg-gray-800/50 border-gray-700">
