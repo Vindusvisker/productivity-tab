@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "New Tab Extension",
+  "version": "1.0.0",
+  "description": "A beautiful new tab page built with React and Next.js",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  }
+} 

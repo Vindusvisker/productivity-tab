@@ -1,0 +1,38 @@
+{
+  "name": "new-tab-extension",
+  "version": "1.0.0",
+  "description": "A Chrome extension with React, Next.js, and Tailwind CSS",
+  "scripts": {
+    "dev": "bun run next dev",
+    "build": "bun run next build",
+    "extension:build": "bun run next build && bun run scripts/build-extension.js",
+    "start": "bun run next start",
+    "lint": "bun run next lint",
+    "type-check": "bunx tsc --noEmit",
+    "install:deps": "bun install"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "next": "^14.0.0",
+    "lucide-react": "^0.294.0",
+    "@radix-ui/react-slot": "^1.0.2",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@types/chrome": "^0.0.248",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.53.0",
+    "eslint-config-next": "^14.0.0",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.5",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.2.2",
+    "fs-extra": "^11.1.1"
+  }
+} 
