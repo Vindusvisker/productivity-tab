@@ -90,15 +90,44 @@ export default function SnusTracker() {
     setShowShame(false)
   }
 
+  const getShameMessage = (count: number): string => {
+    const messages = [
+      "Clean start — stay sharp and own the day 🧠", // 0
+      "Alright, first one down — stay mindful ⚠️", // 1
+      "Second hit logged. Keep your head in the game 📒", // 2
+      "Three deep. You're still in control — barely 🧩", // 3
+      "Four snus. Yellow zone now. Eyes on the mission 👁️", // 4
+      "Limit reached. Time to lock in 🔒", // 5
+      "You've crossed the line today. Regain control 🧠⚔️", // 6
+      "This is no longer 'just one more'. Recalibrate. ⛔", // 7
+      "You’re losing the mental edge. Turn it around. 🧭", // 8
+      "Momentum killer. You’re stronger than this 💢", // 9
+      "Double digits. You’re at a crossroads 🔻", // 10
+      "You're not in control — the habit is. Flip the script 🔄", // 11
+      "That's your future rent right there 💸", // 12
+      "13 in. What story are you writing today? 📉", // 13
+      "Your lungs and gums are waving the white flag 🫁", // 14
+      "15 hits. Your willpower didn’t sign up for this 🧱", // 15
+      "You're spiraling. Is this how you want to show up? 🎭", // 16
+      "Seventeen. Let’s not make this your new normal 🛑", // 17
+      "You're not escaping. You’re looping 🌀", // 18
+      "This isn’t you. This is addiction running macros 🤖", // 19
+      "20 logged. Let this be your last rock bottom for the year 🧨" // 20
+    ];
+    
+    if (count >= 20) return messages[20]
+    return messages[count] || messages[6] // fallback to first shame message
+  }
+
   const incrementSnus = async () => {
     const newCount = dailyCount + 1
     const today = new Date().toDateString()
+    const todayISO = new Date().toISOString().split('T')[0] // ISO format for daily-logs
     
     setDailyCount(newCount)
     
-    if (newCount > DAILY_LIMIT) {
-      setShowShame(true)
-    }
+    // Always show message area when count > 0
+    setShowShame(newCount > 0)
     
     const updatedData: SnusData = {
       ...snusData,
@@ -114,7 +143,21 @@ export default function SnusTracker() {
     const updatedTimestamps = [...existingTimestamps, currentTime]
     await storage.save(`snus-timestamps-${today}`, updatedTimestamps)
     
-    // Update day data with new snus count
+    // Save to unified daily-logs format (same as JourneyHeatmap)
+    const dailyLogsData = await storage.load('daily-logs') || {}
+    const existingLog = dailyLogsData[todayISO] || { 
+      date: todayISO, 
+      habitsCompleted: 0, 
+      focusSessions: 0, 
+      snusCount: 0 
+    }
+    dailyLogsData[todayISO] = {
+      ...existingLog,
+      snusCount: newCount
+    }
+    await storage.save('daily-logs', dailyLogsData)
+    
+    // Also update legacy day data for WeeklyOverview
     const existingDayData = await storage.load(`day-data-${today}`) || {}
     const updatedDayData = {
       ...existingDayData,
@@ -126,18 +169,59 @@ export default function SnusTracker() {
       allHabitsCompleted: existingDayData.allHabitsCompleted || false
     }
     await storage.save(`day-data-${today}`, updatedDayData)
+    
+    // Trigger updates to other components
+    window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
   }
 
-  const resetDay = async () => {
-    setDailyCount(0)
-    setShowShame(false)
+  const decrementSnus = async () => {
+    if (dailyCount <= 0) return // Don't go below 0
+    
+    const newCount = dailyCount - 1
+    const today = new Date().toDateString()
+    const todayISO = new Date().toISOString().split('T')[0]
+    
+    setDailyCount(newCount)
+    
+    // Show message area whenever count > 0, hide when count = 0
+    setShowShame(newCount > 0)
     
     const updatedData: SnusData = {
       ...snusData,
-      dailyCount: 0
+      dailyCount: newCount
     }
     
     await saveSnusData(updatedData)
+    
+    // Update unified daily-logs format
+    const dailyLogsData = await storage.load('daily-logs') || {}
+    const existingLog = dailyLogsData[todayISO] || { 
+      date: todayISO, 
+      habitsCompleted: 0, 
+      focusSessions: 0, 
+      snusCount: 0 
+    }
+    dailyLogsData[todayISO] = {
+      ...existingLog,
+      snusCount: newCount
+    }
+    await storage.save('daily-logs', dailyLogsData)
+    
+    // Also update legacy day data
+    const existingDayData = await storage.load(`day-data-${today}`) || {}
+    const updatedDayData = {
+      ...existingDayData,
+      date: today,
+      snusCount: newCount,
+      snusStatus: newCount === 0 ? 'success' : newCount <= DAILY_LIMIT ? 'pending' : 'failed',
+      habits: existingDayData.habits || [],
+      focusSessions: existingDayData.focusSessions || 0,
+      allHabitsCompleted: existingDayData.allHabitsCompleted || false
+    }
+    await storage.save(`day-data-${today}`, updatedDayData)
+    
+    // Trigger updates to other components
+    window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
   }
 
   const getStatusColor = () => {
@@ -223,11 +307,12 @@ export default function SnusTracker() {
           </Button>
           
           <Button
-            onClick={resetDay}
+            onClick={decrementSnus}
             variant="outline"
-            className="bg-gray-800/60 hover:bg-gray-700/60 border-gray-600 text-gray-300 hover:text-white rounded-2xl py-3"
+            className="bg-gray-800/60 hover:bg-gray-700/60 border-gray-600 text-gray-300 hover:text-white rounded-2xl py-3 disabled:opacity-50"
+            disabled={dailyCount <= 0}
           >
-            <X className="h-4 w-4" />
+            <span className="text-lg font-bold">−</span>
           </Button>
         </div>
 
@@ -249,13 +334,21 @@ export default function SnusTracker() {
           </div>
         </div>
 
-        {/* Shame Notification */}
+        {/* Message Notification */}
         {showShame && (
-          <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-2xl backdrop-blur-sm">
-            <div className="flex items-center space-x-2 text-red-400">
+          <div className={`p-3 border rounded-2xl backdrop-blur-sm ${
+            dailyCount <= DAILY_LIMIT 
+              ? 'bg-blue-900/30 border-blue-500/50' // Safe zone: blue
+              : 'bg-red-900/30 border-red-500/50'   // Over limit: red
+          }`}>
+            <div className={`flex items-center space-x-2 ${
+              dailyCount <= DAILY_LIMIT 
+                ? 'text-blue-400'  // Safe zone: blue text
+                : 'text-red-400'   // Over limit: red text
+            }`}>
               <AlertTriangle className="h-4 w-4" />
               <span className="text-sm font-medium">
-                Shame! You've exceeded your daily limit 😔
+                {getShameMessage(dailyCount)}
               </span>
             </div>
           </div>

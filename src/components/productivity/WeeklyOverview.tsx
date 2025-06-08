@@ -46,6 +46,7 @@ export default function WeeklyOverview() {
 
   const saveCurrentDayData = async () => {
     const today = new Date().toDateString()
+    const todayISO = new Date().toISOString().split('T')[0] // ISO format for daily-logs
     
     // Get current habits data
     const currentHabits: Habit[] = await storage.load('habits') || []
@@ -86,7 +87,17 @@ export default function WeeklyOverview() {
       }
     }
     
-    // Save today's data
+    // Save to unified daily-logs format (same as JourneyHeatmap)
+    const dailyLogsData = await storage.load('daily-logs') || {}
+    dailyLogsData[todayISO] = {
+      date: todayISO,
+      habitsCompleted: completedHabits.length,
+      focusSessions: focusSessions,
+      snusCount: snusData.dailyCount
+    }
+    await storage.save('daily-logs', dailyLogsData)
+    
+    // Also save legacy format for WeeklyOverview display
     const dayData = {
       date: today,
       habits: completedHabits.map(h => h.name),
@@ -97,6 +108,10 @@ export default function WeeklyOverview() {
     }
     
     await storage.save(`day-data-${today}`, dayData)
+    
+    // Trigger updates to other components
+    window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
+    
     return dayData
   }
 

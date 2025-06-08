@@ -111,26 +111,45 @@ export default function HabitTracker() {
     await storage.save('habits', updatedHabits)
     
     // Save current day data for real-time tracking
-    const today = new Date().toDateString()
+    const today = new Date().toISOString().split('T')[0] // Use ISO date format like JourneyHeatmap
     const completedHabits = updatedHabits.filter(habit => habit.completed)
     const allCompleted = completedHabits.length === updatedHabits.length
     
-    const todayData = {
+    // Get current focus sessions and snus count
+    const focusSessions = await storage.load('focus-sessions') || 0
+    const snusData = await storage.load('snus-data') || { dailyCount: 0 }
+    
+    // Save to unified daily-logs format (same as JourneyHeatmap)
+    const dailyLogsData = await storage.load('daily-logs') || {}
+    dailyLogsData[today] = {
       date: today,
+      habitsCompleted: completedHabits.length,
+      focusSessions: focusSessions,
+      snusCount: snusData.dailyCount
+    }
+    await storage.save('daily-logs', dailyLogsData)
+    
+    // Also keep legacy format for WeeklyOverview compatibility
+    const todayLegacy = new Date().toDateString()
+    const todayData = {
+      date: todayLegacy,
       habits: completedHabits.map(h => h.name),
-      focusSessions: await storage.load('focus-sessions') || 0,
-      snusStatus: 'pending' as const, // Will be determined by WeeklyOverview
-      snusCount: (await storage.load('snus-data') || { dailyCount: 0 }).dailyCount,
+      focusSessions: focusSessions,
+      snusStatus: 'pending' as const,
+      snusCount: snusData.dailyCount,
       allHabitsCompleted: allCompleted
     }
-    await storage.save(`day-data-${today}`, todayData)
+    await storage.save(`day-data-${todayLegacy}`, todayData)
     
     // Save detailed habit completion data with timestamps
     const habitDetails = updatedHabits.map(habit => ({
       ...habit,
       completedAt: habit.completed ? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : undefined
     }))
-    await storage.save(`habit-details-${today}`, habitDetails)
+    await storage.save(`habit-details-${todayLegacy}`, habitDetails)
+    
+    // Trigger updates to other components
+    window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
     
     // Check if all habits are completed
     if (allCompleted) {
