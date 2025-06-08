@@ -80,6 +80,23 @@ export default function HabitTracker() {
   }
 
   const resetDailyHabits = async () => {
+    const today = new Date().toDateString()
+    
+    // Before resetting, save yesterday's completed habits if it was a successful day
+    const yesterday = new Date(Date.now() - 86400000).toDateString()
+    const completedHabits = habits.filter(habit => habit.completed)
+    
+    if (completedHabits.length > 0) {
+      const yesterdayData = {
+        date: yesterday,
+        habits: completedHabits.map(h => h.name),
+        focusSessions: await storage.load('focus-sessions') || 0,
+        snusStatus: 'pending' as const, // Will be determined by WeeklyOverview
+        allHabitsCompleted: completedHabits.length === habits.length
+      }
+      await storage.save(`day-data-${yesterday}`, yesterdayData)
+    }
+    
     const resetHabits = habits.map(habit => ({ ...habit, completed: false }))
     setHabits(resetHabits)
     await storage.save('habits', resetHabits)
@@ -93,8 +110,29 @@ export default function HabitTracker() {
     setHabits(updatedHabits)
     await storage.save('habits', updatedHabits)
     
+    // Save current day data for real-time tracking
+    const today = new Date().toDateString()
+    const completedHabits = updatedHabits.filter(habit => habit.completed)
+    const allCompleted = completedHabits.length === updatedHabits.length
+    
+    const todayData = {
+      date: today,
+      habits: completedHabits.map(h => h.name),
+      focusSessions: await storage.load('focus-sessions') || 0,
+      snusStatus: 'pending' as const, // Will be determined by WeeklyOverview
+      snusCount: (await storage.load('snus-data') || { dailyCount: 0 }).dailyCount,
+      allHabitsCompleted: allCompleted
+    }
+    await storage.save(`day-data-${today}`, todayData)
+    
+    // Save detailed habit completion data with timestamps
+    const habitDetails = updatedHabits.map(habit => ({
+      ...habit,
+      completedAt: habit.completed ? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : undefined
+    }))
+    await storage.save(`habit-details-${today}`, habitDetails)
+    
     // Check if all habits are completed
-    const allCompleted = updatedHabits.every(habit => habit.completed)
     if (allCompleted) {
       await updateStreak()
     }
@@ -207,16 +245,16 @@ export default function HabitTracker() {
               </button>
             )
           })}
+          
+          {/* Completion Celebration Pill */}
+          {completedCount === habits.length && (
+            <div className="col-span-2 flex items-center justify-center px-6 py-4 rounded-full bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-400/30 backdrop-blur-sm">
+              <span className="text-green-400 text-sm font-medium">
+                🎉 All tasks completed! You're crushing it today!
+              </span>
+            </div>
+          )}
         </div>
-
-        {/* Completion Message */}
-        {completedCount === habits.length && (
-          <div className="mt-6 p-4 bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-400/30 rounded-2xl backdrop-blur-sm">
-            <p className="text-green-400 text-sm text-center font-medium">
-              🎉 All tasks completed! You&apos;re crushing it today!
-            </p>
-          </div>
-        )}
       </CardContent>
     </Card>
   )

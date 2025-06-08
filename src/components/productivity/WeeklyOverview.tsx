@@ -4,59 +4,149 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Calendar, CheckCircle, Flame, TrendingUp } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
+import DayDetailsDialog from './DayDetailsDialog'
 
 interface DayActivity {
   date: string
   habits: string[]
   focusSessions: number
   snusStatus: 'success' | 'failed' | 'pending'
+  snusCount: number
+  allHabitsCompleted: boolean
+}
+
+interface Habit {
+  id: string
+  name: string
+  completed: boolean
+  iconName: string
+}
+
+interface SnusData {
+  dailyCount: number
+  totalDays: number
+  successfulDays: number
+  failedDays: number
+  currentStreak: number
+  lastDate: string
 }
 
 export default function WeeklyOverview() {
   const [weekData, setWeekData] = useState<DayActivity[]>([])
   const [currentStreak, setCurrentStreak] = useState(0)
+  const [selectedDay, setSelectedDay] = useState<DayActivity | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   useEffect(() => {
     loadWeeklyData()
+    // Refresh data every 30 seconds to stay updated
+    const interval = setInterval(loadWeeklyData, 30000)
+    return () => clearInterval(interval)
   }, [])
+
+  const saveCurrentDayData = async () => {
+    const today = new Date().toDateString()
+    
+    // Get current habits data
+    const currentHabits: Habit[] = await storage.load('habits') || []
+    const completedHabits = currentHabits.filter(habit => habit.completed)
+    const allHabitsCompleted = currentHabits.length > 0 && completedHabits.length === currentHabits.length
+    
+    // Get current focus sessions
+    const focusSessions = await storage.load('focus-sessions') || 0
+    
+    // Get snus data to determine status
+    const snusData: SnusData = await storage.load('snus-data') || {
+      dailyCount: 0,
+      totalDays: 0,
+      successfulDays: 0,
+      failedDays: 0,
+      currentStreak: 0,
+      lastDate: ''
+    }
+    
+    // Determine snus status for today
+    let snusStatus: 'success' | 'failed' | 'pending' = 'pending'
+    const SNUS_DAILY_LIMIT = 5
+    
+    if (snusData.lastDate === today) {
+      // Day is in progress
+      if (snusData.dailyCount === 0) {
+        snusStatus = 'success' // Clean day so far
+      } else if (snusData.dailyCount <= SNUS_DAILY_LIMIT) {
+        snusStatus = 'pending' // Within limit but not clean
+      } else {
+        snusStatus = 'failed' // Over limit
+      }
+    } else {
+      // Use historical data if available
+      const savedDayData = await storage.load(`day-data-${today}`)
+      if (savedDayData) {
+        snusStatus = savedDayData.snusStatus
+      }
+    }
+    
+    // Save today's data
+    const dayData = {
+      date: today,
+      habits: completedHabits.map(h => h.name),
+      focusSessions: focusSessions,
+      snusStatus: snusStatus,
+      snusCount: snusData.dailyCount,
+      allHabitsCompleted: allHabitsCompleted
+    }
+    
+    await storage.save(`day-data-${today}`, dayData)
+    return dayData
+  }
 
   const loadWeeklyData = async () => {
     try {
-      // Get last 7 days
-      const days = []
+      const days: DayActivity[] = []
       const today = new Date()
+      
+      // Save current day data first
+      await saveCurrentDayData()
       
       for (let i = 6; i >= 0; i--) {
         const date = new Date(today)
         date.setDate(today.getDate() - i)
         const dateString = date.toDateString()
         
-        // Load habits data for this day
-        const habitsData = await storage.load(`habits-${dateString}`) || []
-        const focusData = await storage.load(`focus-sessions-${dateString}`) || 0
-        const snusData = await storage.load('snus-data') || { successfulDays: 0, failedDays: 0, currentStreak: 0 }
+        // Try to load saved day data first
+        let dayData = await storage.load(`day-data-${dateString}`)
         
-        // Simulate some completed habits for demo
-        const completedHabits = habitsData.length > 0 ? habitsData : [
-          i === 0 ? ['Workout', 'No Snus'] : [], // Today
-          i === 1 ? ['Drank Water', 'Learned Something New'] : [], // Yesterday
-          i === 2 ? ['Workout', 'No Snus', 'Read'] : [], // Day before
-        ][Math.min(i, 2)] || []
+        if (!dayData) {
+          // If no saved data, reconstruct for today or use empty data for past days
+          if (i === 0) {
+            // Today - get current data
+            dayData = await saveCurrentDayData()
+          } else {
+            // Past days - create empty data
+            dayData = {
+              date: dateString,
+              habits: [],
+              focusSessions: 0,
+              snusStatus: 'pending' as const,
+              snusCount: 0,
+              allHabitsCompleted: false
+            }
+          }
+        }
         
-        days.push({
-          date: dateString,
-          habits: completedHabits,
-          focusSessions: i <= 2 ? Math.floor(Math.random() * 4) : 0,
-          snusStatus: i === 0 ? 'pending' as const : (Math.random() > 0.3 ? 'success' as const : 'failed' as const)
-        })
+        days.push(dayData)
       }
       
       setWeekData(days)
       
-      // Calculate current streak
+      // Calculate current streak based on habit completion and snus success
       let streak = 0
       for (let i = days.length - 1; i >= 0; i--) {
-        if (days[i].snusStatus === 'success' || (days[i].snusStatus === 'pending' && days[i].habits.includes('No Snus'))) {
+        const day = days[i]
+        const isSuccessfulDay = (day.allHabitsCompleted || day.habits.length >= 3) && 
+                              (day.snusStatus === 'success' || (day.snusStatus === 'pending' && day.habits.includes('No Snus')))
+        
+        if (isSuccessfulDay) {
           streak++
         } else {
           break
@@ -68,6 +158,18 @@ export default function WeeklyOverview() {
       console.error('Error loading weekly data:', error)
     }
   }
+
+  // Listen for habit and snus changes to update data in real-time
+  useEffect(() => {
+    const handleStorageChange = () => {
+      saveCurrentDayData()
+      setTimeout(loadWeeklyData, 1000) // Small delay to ensure data is saved
+    }
+
+    // Listen for changes in habits and snus data
+    const checkForChanges = setInterval(handleStorageChange, 5000)
+    return () => clearInterval(checkForChanges)
+  }, [])
 
   const getDayName = (dateString: string) => {
     const date = new Date(dateString)
@@ -83,10 +185,17 @@ export default function WeeklyOverview() {
   }
 
   const getSuccessRate = () => {
-    const completedDays = weekData.filter(day => 
-      day.snusStatus === 'success' || (day.snusStatus === 'pending' && day.habits.length > 0)
-    ).length
+    const completedDays = weekData.filter(day => {
+      const hasGoodHabits = day.allHabitsCompleted || day.habits.length >= 3
+      const hasGoodSnus = day.snusStatus === 'success' || (day.snusStatus === 'pending' && day.habits.includes('No Snus'))
+      return hasGoodHabits && hasGoodSnus
+    }).length
     return weekData.length > 0 ? Math.round((completedDays / weekData.length) * 100) : 0
+  }
+
+  const handleDayClick = (day: DayActivity) => {
+    setSelectedDay(day)
+    setIsDialogOpen(true)
   }
 
   return (
@@ -117,25 +226,51 @@ export default function WeeklyOverview() {
           {weekData.map((day, index) => (
             <div
               key={day.date}
-              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all"
+              onClick={() => handleDayClick(day)}
+              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all cursor-pointer hover:border-white/20"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${
-                    day.snusStatus === 'success' ? 'bg-green-400' :
-                    day.snusStatus === 'failed' ? 'bg-red-400' : 'bg-yellow-400'
-                  }`} />
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${
+                      day.snusStatus === 'success' ? 'bg-green-400' :
+                      day.snusStatus === 'failed' ? 'bg-red-400' : 'bg-yellow-400'
+                    }`} />
+                    {/* Snus Count Display */}
+                    <div className={`text-xs px-2 py-1 rounded-full ${
+                      day.snusStatus === 'success' ? 'bg-green-500/20 text-green-400' :
+                      day.snusStatus === 'failed' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'
+                    }`}>
+                      {day.snusCount === 0 ? '🚭' : `${day.snusCount} snus`}
+                    </div>
+                  </div>
                   <div>
-                    <div className="text-sm font-medium text-white">
+                    <div className="text-sm font-medium text-white flex items-center">
                       🗓️ {getDayName(day.date)}
+                      {day.allHabitsCompleted && (
+                        <span className="ml-2 text-green-400">✨</span>
+                      )}
                     </div>
                     <div className="text-xs text-gray-400">
                       {day.habits.length > 0 ? (
-                        day.habits.map((habit, idx) => (
-                          <span key={idx} className="mr-2">
-                            ✅ {habit}
+                        day.allHabitsCompleted ? (
+                          // Clean summary when all habits completed
+                          <span className="text-green-400 font-medium">
+                            🎯 All {day.habits.length} habits completed
                           </span>
-                        ))
+                        ) : day.habits.length <= 2 ? (
+                          // Show individual habits if 2 or fewer
+                          day.habits.map((habit, idx) => (
+                            <span key={idx} className="mr-2">
+                              ✅ {habit}
+                            </span>
+                          ))
+                        ) : (
+                          // Show compact summary for partial completion
+                          <span className="text-blue-400">
+                            ✅ {day.habits.length} habits completed
+                          </span>
+                        )
                       ) : (
                         <span className="text-gray-500">No activities logged</span>
                       )}
@@ -163,11 +298,20 @@ export default function WeeklyOverview() {
             </div>
             <div className="flex items-center space-x-2">
               <Flame className="h-4 w-4 text-orange-400" />
-              <span className="text-sm text-orange-400">Keep the momentum!</span>
+              <span className="text-sm text-orange-400">
+                {currentStreak > 0 ? 'Keep the momentum!' : 'Start your streak!'}
+              </span>
             </div>
           </div>
         </div>
       </CardContent>
+
+      {/* Day Details Dialog */}
+      <DayDetailsDialog 
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        dayData={selectedDay}
+      />
     </Card>
   )
 } 

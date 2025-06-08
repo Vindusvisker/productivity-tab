@@ -107,6 +107,25 @@ export default function SnusTracker() {
     }
     
     await saveSnusData(updatedData)
+    
+    // Save timestamp for detailed tracking
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const existingTimestamps = await storage.load(`snus-timestamps-${today}`) || []
+    const updatedTimestamps = [...existingTimestamps, currentTime]
+    await storage.save(`snus-timestamps-${today}`, updatedTimestamps)
+    
+    // Update day data with new snus count
+    const existingDayData = await storage.load(`day-data-${today}`) || {}
+    const updatedDayData = {
+      ...existingDayData,
+      date: today,
+      snusCount: newCount,
+      snusStatus: newCount === 0 ? 'success' : newCount <= DAILY_LIMIT ? 'pending' : 'failed',
+      habits: existingDayData.habits || [],
+      focusSessions: existingDayData.focusSessions || 0,
+      allHabitsCompleted: existingDayData.allHabitsCompleted || false
+    }
+    await storage.save(`day-data-${today}`, updatedDayData)
   }
 
   const resetDay = async () => {

@@ -4,7 +4,7 @@ import WeeklyOverview from '@/components/productivity/WeeklyOverview';
 
 const ProductivityView: React.FC = () => {
   return (
-    <div className="min-h-screen pt-24 pb-8 mt-6">
+    <div className="min-h-screen pt-24 pb-8 mt-6 overflow-hidden">
       <div className="container mx-auto px-6 max-w-7xl">
 
         {/* Main Productivity Grid */}

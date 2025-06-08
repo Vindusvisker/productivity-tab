@@ -52,6 +52,29 @@ export default function FocusTimer() {
       setSessionsCompleted(newSessions)
       await storage.save('focus-sessions', newSessions)
       
+      // Save today's data for tracking
+      const today = new Date().toDateString()
+      const existingDayData = await storage.load(`day-data-${today}`) || {}
+      const updatedDayData = {
+        ...existingDayData,
+        date: today,
+        focusSessions: newSessions,
+        habits: existingDayData.habits || [],
+        snusStatus: existingDayData.snusStatus || 'pending',
+        snusCount: existingDayData.snusCount || 0,
+        allHabitsCompleted: existingDayData.allHabitsCompleted || false
+      }
+      await storage.save(`day-data-${today}`, updatedDayData)
+      
+      // Save detailed focus session data
+      const existingFocusDetails = await storage.load(`focus-details-${today}`) || []
+      const sessionDetail = {
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        duration: 25 // 25-minute session
+      }
+      const updatedFocusDetails = [...existingFocusDetails, sessionDetail]
+      await storage.save(`focus-details-${today}`, updatedFocusDetails)
+      
       // Start break timer (5 minutes)
       setIsBreak(true)
       setTimeLeft(5 * 60)

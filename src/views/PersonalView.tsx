@@ -1,327 +1,172 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Trophy, Star, Flame, Zap, Target, Calendar, Award, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { storage } from '@/lib/chrome-storage';
-
-interface SnusData {
-  dailyCount: number
-  totalDays: number
-  successfulDays: number
-  failedDays: number
-  currentStreak: number
-  lastDate: string
-}
+import { useState } from 'react';
+import ProfileHeader from '@/components/personal/ProfileHeader';
+import ActiveMissions from '@/components/personal/ActiveMissions';
+import PowerGrid from '@/components/personal/PowerGrid';
+import JourneyHeatmap from '@/components/personal/JourneyHeatmap';
 
 const PersonalView: React.FC = () => {
-  const currentLevel = 12;
-  const currentXP = 2350;
-  const nextLevelXP = 3000;
-  const xpProgress = (currentXP / nextLevelXP) * 100;
+  const [openDialog, setOpenDialog] = useState<string | null>(null);
 
-  const [snusData, setSnusData] = useState<SnusData>({
-    dailyCount: 0,
-    totalDays: 0,
-    successfulDays: 0,
-    failedDays: 0,
-    currentStreak: 0,
-    lastDate: ''
-  });
-
-  // Load snus data
-  useEffect(() => {
-    const loadSnusData = async () => {
-      try {
-        const saved = await storage.load('snus-data')
-        if (saved) {
-          setSnusData(saved)
-        }
-      } catch (error) {
-        console.error('Error loading snus data:', error)
-      }
+  const previewCards = [
+    {
+      id: 'achievements',
+      title: 'Achievement Wall',
+      icon: '🏆',
+      description: 'Badges & rewards',
+      color: 'from-yellow-500 to-orange-500'
+    },
+    {
+      id: 'reflection',
+      title: 'Weekly Reflection',
+      icon: '💭',
+      description: 'Mood & energy trends',
+      color: 'from-purple-500 to-pink-500'
     }
-
-    loadSnusData()
-    // Refresh every 10 seconds to stay updated
-    const interval = setInterval(loadSnusData, 10000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const achievements = [
-    { id: 1, name: 'Early Bird', description: 'Wake up before 7 AM for 7 days', icon: '🌅', unlocked: true },
-    { id: 2, name: 'Habit Master', description: 'Complete 50 habits', icon: '🎯', unlocked: true },
-    { id: 3, name: 'Focus Zone', description: '4+ hours of focus time', icon: '🧠', unlocked: true },
-    { id: 4, name: 'Streak Lord', description: '30-day streak', icon: '🔥', unlocked: false },
-    { id: 5, name: 'Goal Crusher', description: 'Complete 10 goals in a week', icon: '💪', unlocked: false },
-    { id: 6, name: 'Zen Master', description: 'Meditate for 100 days', icon: '🧘', unlocked: false },
   ];
-
-  const weeklyMood = [
-    { day: 'Mon', mood: 4, energy: 3 },
-    { day: 'Tue', mood: 5, energy: 4 },
-    { day: 'Wed', mood: 3, energy: 3 },
-    { day: 'Thu', mood: 5, energy: 5 },
-    { day: 'Fri', mood: 4, energy: 4 },
-    { day: 'Sat', mood: 5, energy: 4 },
-    { day: 'Sun', mood: 4, energy: 3 },
-  ];
-
-  const getMoodEmoji = (mood: number) => {
-    const moods = ['😫', '😔', '😐', '😊', '😄'];
-    return moods[mood - 1] || '😐';
-  };
-
-  const getEnergyColor = (energy: number) => {
-    const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500', 'bg-emerald-500'];
-    return colors[energy - 1] || 'bg-gray-500';
-  };
-
-  const getSnusSuccessRate = () => {
-    if (snusData.totalDays === 0) return 0;
-    return Math.round((snusData.successfulDays / snusData.totalDays) * 100);
-  };
 
   return (
-    <div className="min-h-screen pt-24 pb-8">
-      <div className="container mx-auto px-6 max-w-7xl">
+    <div className="h-screen pt-28 pb-16 overflow-hidden">
+      <div className="container mx-auto px-6 max-w-7xl h-full flex flex-col">
         
-        {/* Profile Header */}
-        <div className="text-center mb-8">
-          <div className="relative inline-block">
-            <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-3xl font-bold text-white mb-4 mx-auto">
-              {currentLevel}
+        {/* Top Row - Profile Header + Active Missions */}
+        <div className="mb-4 flex-shrink-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Profile Header */}
+            <div>
+              <ProfileHeader />
             </div>
-            <div className="absolute -top-2 -right-2 bg-yellow-500 rounded-full p-1">
-              <Star className="h-4 w-4 text-white" />
+            
+            {/* Active Missions */}
+            <div>
+              <ActiveMissions />
             </div>
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Level {currentLevel} Productivity Master</h2>
-          <div className="flex items-center justify-center space-x-4 text-gray-400">
-            <span className="flex items-center">
-              <Zap className="h-4 w-4 mr-1 text-yellow-400" />
-              {currentXP} XP
-            </span>
-            <span className="flex items-center">
-              <Flame className="h-4 w-4 mr-1 text-orange-400" />
-              7 day streak
-            </span>
           </div>
         </div>
 
-        {/* XP Progress */}
-        <Card className="bg-gray-800/50 border-gray-700 mb-8">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-gray-300">Progress to Level {currentLevel + 1}</span>
-              <span className="text-blue-400">{currentXP} / {nextLevelXP} XP</span>
-            </div>
-            <div className="w-full bg-gray-700 rounded-full h-3 relative overflow-hidden">
-              <div 
-                className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 h-3 rounded-full transition-all duration-500 relative"
-                style={{ width: `${xpProgress}%` }}
-              >
-                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-              </div>
-            </div>
-            <p className="text-sm text-gray-400 mt-2">{nextLevelXP - currentXP} XP until next level</p>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Main Content Grid - Flexible height */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
           
-          {/* Left Column */}
-          <div className="space-y-6">
-            
-            {/* Snus Tracking Stats */}
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                  <AlertCircle className="h-5 w-5 mr-2 text-red-400" />
-                  Snus Tracking
-                </h3>
-                
-                {/* Overall Stats */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="text-center p-3 bg-green-900/30 border border-green-700 rounded-lg">
-                    <div className="text-2xl font-bold text-green-400">{snusData.successfulDays}</div>
-                    <div className="text-xs text-green-300">Success Days</div>
-                  </div>
-                  <div className="text-center p-3 bg-red-900/30 border border-red-700 rounded-lg">
-                    <div className="text-2xl font-bold text-red-400">{snusData.failedDays}</div>
-                    <div className="text-xs text-red-300">Failed Days</div>
-                  </div>
-                </div>
-
-                {/* Success Rate & Streak */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300 text-sm">Success Rate</span>
-                    <span className={`font-bold ${getSnusSuccessRate() >= 80 ? 'text-green-400' : getSnusSuccessRate() >= 60 ? 'text-yellow-400' : 'text-red-400'}`}>
-                      {getSnusSuccessRate()}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full transition-all duration-300 ${
-                        getSnusSuccessRate() >= 80 ? 'bg-green-500' : 
-                        getSnusSuccessRate() >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}
-                      style={{ width: `${getSnusSuccessRate()}%` }}
-                    />
-                  </div>
-                  
-                  <div className="flex justify-between items-center mt-4">
-                    <span className="text-gray-300 text-sm">Current Streak</span>
-                    <div className="flex items-center space-x-1">
-                      <Flame className="h-4 w-4 text-orange-400" />
-                      <span className="font-bold text-orange-400">{snusData.currentStreak} days</span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-300 text-sm">Total Tracked Days</span>
-                    <span className="font-bold text-gray-200">{snusData.totalDays}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Achievements */}
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                  <Trophy className="h-5 w-5 mr-2 text-yellow-400" />
-                  Achievements
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {achievements.map((achievement) => (
-                    <div
-                      key={achievement.id}
-                      className={`p-3 rounded-lg border transition-all ${
-                        achievement.unlocked
-                          ? 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-yellow-500/50'
-                          : 'bg-gray-700/50 border-gray-600 opacity-60'
-                      }`}
-                    >
-                      <div className="text-2xl mb-1">{achievement.icon}</div>
-                      <div className="text-sm font-medium text-white mb-1">{achievement.name}</div>
-                      <div className="text-xs text-gray-400">{achievement.description}</div>
-                      {achievement.unlocked && (
-                        <div className="flex items-center mt-2">
-                          <Award className="h-3 w-3 text-yellow-400 mr-1" />
-                          <span className="text-xs text-yellow-400">Unlocked!</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Weekly Challenge */}
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                  <Target className="h-5 w-5 mr-2 text-purple-400" />
-                  Weekly Challenge
-                </h3>
-                <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-white">Complete 35 Habits</span>
-                    <span className="text-purple-400">23/35</span>
-                  </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full w-2/3"></div>
-                  </div>
-                  <div className="text-sm text-gray-300">Reward: +500 XP + Bonus Badge 🏆</div>
-                </div>
-              </CardContent>
-            </Card>
-
+          {/* Left Column - Power Stats */}
+          <div className="lg:col-span-1">
+            <h2 className="text-base font-bold text-white mb-2 flex items-center">
+              <span className="mr-2">⚡</span>
+              Power Stats
+            </h2>
+            <PowerGrid />
           </div>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            
-            {/* Mood & Energy Tracker */}
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                  <TrendingUp className="h-5 w-5 mr-2 text-green-400" />
-                  Weekly Insights
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-sm text-gray-300 mb-2">Mood & Energy</div>
-                    <div className="grid grid-cols-7 gap-2">
-                      {weeklyMood.map((day, index) => (
-                        <div key={index} className="text-center">
-                          <div className="text-xs text-gray-400 mb-1">{day.day}</div>
-                          <div className="text-lg mb-1">{getMoodEmoji(day.mood)}</div>
-                          <div className={`h-2 rounded-full ${getEnergyColor(day.energy)}`}></div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Middle Column - Journey Heatmap */}
+          <div className="lg:col-span-1">
+            <h2 className="text-base font-bold text-white mb-2 flex items-center">
+              <span className="mr-2">📅</span>
+              Journey Heatmap
+            </h2>
+            <JourneyHeatmap className="h-full" />
+          </div>
 
-            {/* Personal Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-gray-800/50 border-gray-700">
-                <CardContent className="p-4 text-center">
-                  <Flame className="h-8 w-8 text-orange-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-orange-400 mb-1">7</div>
-                  <div className="text-xs text-gray-400">Current Streak</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-gray-800/50 border-gray-700">
-                <CardContent className="p-4 text-center">
-                  <Star className="h-8 w-8 text-yellow-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-yellow-400 mb-1">23</div>
-                  <div className="text-xs text-gray-400">Total Badges</div>
-                </CardContent>
-              </Card>
+          {/* Right Column - Preview Cards */}
+          <div className="lg:col-span-1">
+            <h2 className="text-base font-bold text-white mb-2 flex items-center">
+              <span className="mr-2">🚀</span>
+              Coming Soon
+            </h2>
+            <div className="grid grid-cols-1 gap-3 h-full">
+              {previewCards.map((card) => (
+                <Card 
+                  key={card.id}
+                  className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden hover:border-white/20 transition-all cursor-pointer group hover:scale-105"
+                  onClick={() => setOpenDialog(card.id)}
+                >
+                  <CardContent className="p-4 h-full flex flex-col justify-center items-center text-center">
+                    {/* Icon */}
+                    <div className={`w-12 h-12 bg-gradient-to-r ${card.color} rounded-2xl flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform`}>
+                      {card.icon}
+                    </div>
+                    
+                    {/* Title */}
+                    <h3 className="text-base font-bold text-white mb-1">{card.title}</h3>
+                    
+                    {/* Description */}
+                    <p className="text-xs text-gray-400 mb-3">{card.description}</p>
+                    
+                    {/* Coming Soon Badge */}
+                    <div className="bg-white/10 border border-white/20 text-white text-xs px-3 py-1 rounded-full">
+                      Coming Soon
+                    </div>
+                    
+                    {/* Click hint */}
+                    <div className="text-xs text-gray-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Click to preview
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-
-            {/* Daily Reflection */}
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-blue-400" />
-                  Daily Reflection
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-gray-300 block mb-2">How was your day? (1-5)</label>
-                    <div className="flex space-x-2">
-                      {[1, 2, 3, 4, 5].map((rating) => (
-                        <button
-                          key={rating}
-                          className="w-8 h-8 rounded-full bg-gray-700 hover:bg-blue-600 transition-colors flex items-center justify-center text-sm"
-                        >
-                          {rating}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-300 block mb-2">Energy Level?</label>
-                    <div className="flex space-x-1">
-                      {[1, 2, 3, 4, 5].map((level) => (
-                        <div
-                          key={level}
-                          className={`w-4 h-6 rounded ${getEnergyColor(level)} opacity-60 hover:opacity-100 cursor-pointer`}
-                        ></div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
           </div>
         </div>
+
+        {/* Simple Dialog Overlay */}
+        {openDialog && (
+          <div 
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setOpenDialog(null)}
+          >
+            <Card className="bg-black/90 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  {/* Find the card data */}
+                  {(() => {
+                    const card = previewCards.find(c => c.id === openDialog)
+                    return (
+                      <>
+                        <div className={`w-16 h-16 bg-gradient-to-r ${card?.color} rounded-3xl flex items-center justify-center text-3xl mb-4 mx-auto`}>
+                          {card?.icon}
+                        </div>
+                        <h2 className="text-2xl font-bold text-white mb-2">{card?.title}</h2>
+                        <p className="text-gray-400 mb-6">{card?.description}</p>
+                        
+                        {/* Preview content based on type */}                        
+                        {openDialog === 'achievements' && (
+                          <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+                            <div className="text-4xl mb-4">🎖️</div>
+                            <p className="text-gray-300 mb-4">
+                              Unlock badges and achievements as you reach milestones. 
+                              From "First Week Warrior" to "Productivity Legend".
+                            </p>
+                            <div className="text-sm text-gray-500">
+                              Features: Badge showcase, progress tracking, milestone rewards
+                            </div>
+                          </div>
+                        )}
+                        
+                        {openDialog === 'reflection' && (
+                          <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+                            <div className="text-4xl mb-4">📊</div>
+                            <p className="text-gray-300 mb-4">
+                              Weekly mood and energy tracking with visual trends. 
+                              Optional daily reflections to understand your patterns.
+                            </p>
+                            <div className="text-sm text-gray-500">
+                              Features: Mood charts, energy levels, weekly insights
+                            </div>
+                          </div>
+                        )}
+                        
+                        <button 
+                          onClick={() => setOpenDialog(null)}
+                          className="mt-6 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-2 rounded-xl transition-colors"
+                        >
+                          Close Preview
+                        </button>
+                      </>
+                    )
+                  })()}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
       </div>
     </div>
