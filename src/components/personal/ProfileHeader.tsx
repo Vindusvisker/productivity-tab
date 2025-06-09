@@ -13,6 +13,7 @@ interface ProfileData {
   title: string
   rank: string
   completedMissions: number
+  daysActive: number
 }
 
 type DailyLog = {
@@ -29,7 +30,8 @@ export default function ProfileHeader() {
     totalXP: 0,
     title: 'Novice Achiever',
     rank: 'Bronze',
-    completedMissions: 0
+    completedMissions: 0,
+    daysActive: 0
   })
 
   useEffect(() => {
@@ -100,13 +102,17 @@ export default function ProfileHeader() {
       const title = getTitleForLevel(level)
       const rank = getRankForLevel(level)
       
+      // Calculate daysActive
+      const daysActive = Object.keys(dailyLogs).length
+      
       setProfile({
         level,
         currentXP,
         totalXP,
         title,
         rank,
-        completedMissions
+        completedMissions,
+        daysActive
       })
     } catch (error) {
       console.error('Error loading profile data:', error)
@@ -250,7 +256,7 @@ export default function ProfileHeader() {
             <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 border border-orange-500/20 rounded-xl px-3 py-2 text-center backdrop-blur-sm flex-1">
               <div className="flex items-center justify-center space-x-1 mb-0.5">
                 <Star className="h-3 w-3 text-orange-400" />
-                <div className="text-sm font-bold text-orange-400">{Math.floor(profile.totalXP / 150)}</div>
+                <div className="text-sm font-bold text-orange-400">{profile.daysActive}</div>
               </div>
               <div className="text-xs text-gray-400 font-medium">Days Active</div>
             </div>

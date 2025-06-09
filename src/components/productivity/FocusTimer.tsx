@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, Pause, Square, Clock } from 'lucide-react'
+import { Play, Square, Clock } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 
 interface TimerState {
@@ -23,17 +23,19 @@ export default function FocusTimer() {
   // Store timer state for background operation
   const [startTime, setStartTime] = useState<number | null>(null)
   const [pausedTime, setPausedTime] = useState(0) // Accumulated time spent paused
+  const sessionDurationRef = useRef<number>(25 * 60) // Store the duration when session starts
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Calculate time remaining based on actual elapsed time
   const calculateTimeLeft = (timerState: TimerState): number => {
     if (!timerState.isRunning || !timerState.startTime) {
+      // When paused or not started, return the stored duration (remaining time)
       return timerState.duration
     }
     
     const now = Date.now()
-    const elapsed = Math.floor((now - timerState.startTime - timerState.pausedTime) / 1000)
+    const elapsed = Math.floor((now - timerState.startTime) / 1000)
     return Math.max(0, timerState.duration - elapsed)
   }
 
@@ -91,15 +93,10 @@ export default function FocusTimer() {
   useEffect(() => {
     if (isRunning && startTime) {
       intervalRef.current = setInterval(() => {
-        const state = {
-          startTime,
-          duration: isBreak ? 5 * 60 : 25 * 60,
-          isRunning,
-          isBreak,
-          pausedTime
-        }
+        const now = Date.now()
+        const elapsed = Math.floor((now - startTime) / 1000)
+        const currentTimeLeft = Math.max(0, sessionDurationRef.current - elapsed)
         
-        const currentTimeLeft = calculateTimeLeft(state)
         setTimeLeft(currentTimeLeft)
         
         if (currentTimeLeft <= 0) {
@@ -118,7 +115,7 @@ export default function FocusTimer() {
         clearInterval(intervalRef.current)
       }
     }
-  }, [isRunning, startTime, isBreak, pausedTime])
+  }, [isRunning, startTime])
 
   // Handle page visibility changes (when user switches tabs)
   useEffect(() => {
@@ -210,28 +207,26 @@ export default function FocusTimer() {
       // Trigger updates to other components
       window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
       
-      // Start break timer (5 minutes)
-      setIsBreak(true)
-      setTimeLeft(5 * 60)
-      
-      // Save new timer state for break
-      const breakState = {
-        startTime: Date.now(),
-        duration: 5 * 60,
-        isRunning: true,
-        isBreak: true,
-        pausedTime: 0
-      }
-      setStartTime(breakState.startTime)
-      setIsRunning(true)
-      await saveTimerState(breakState)
-      
-    } else {
-      // Break completed - reset to focus mode
+      // Focus session completed - stay in focus mode but stopped
+      // User can choose to start break or continue with another focus session
       setIsBreak(false)
       setTimeLeft(25 * 60)
       
-      // Clear timer state
+      // Clear timer state - wait for user to manually start next session
+      await saveTimerState({
+        startTime: null,
+        duration: 25 * 60,
+        isRunning: false,
+        isBreak: false,
+        pausedTime: 0
+      })
+      
+    } else {
+      // Break completed - reset to focus mode but stay stopped
+      setIsBreak(false)
+      setTimeLeft(25 * 60)
+      
+      // Clear timer state - wait for user to manually start next session
       await saveTimerState({
         startTime: null,
         duration: 25 * 60,
@@ -244,7 +239,8 @@ export default function FocusTimer() {
 
   const startTimer = async () => {
     const now = Date.now()
-    const duration = isBreak ? 5 * 60 : 25 * 60
+    // Store the current timeLeft as the session duration
+    sessionDurationRef.current = timeLeft
     
     setIsRunning(true)
     setStartTime(now)
@@ -252,7 +248,7 @@ export default function FocusTimer() {
     
     const state = {
       startTime: now,
-      duration,
+      duration: timeLeft,
       isRunning: true,
       isBreak,
       pausedTime: 0
@@ -261,44 +257,78 @@ export default function FocusTimer() {
     await saveTimerState(state)
   }
 
-  const pauseTimer = async () => {
-    if (startTime) {
-      // Calculate how much time has elapsed and add to pausedTime
-      const now = Date.now()
-      const elapsed = Math.floor((now - startTime) / 1000)
-      const newPausedTime = pausedTime + elapsed
-      
-      setIsRunning(false)
-      setPausedTime(newPausedTime)
-      
-      const state = {
-        startTime,
-        duration: isBreak ? 5 * 60 : 25 * 60,
-        isRunning: false,
-        isBreak,
-        pausedTime: newPausedTime
-      }
-      
-      await saveTimerState(state)
-    }
-  }
-
-  const resetTimer = async () => {
-    setIsRunning(false)
-    setIsBreak(false)
-    setTimeLeft(25 * 60)
-    setStartTime(null)
+  const startBreak = async () => {
+    setIsBreak(true)
+    setTimeLeft(5 * 60)
+    
+    const now = Date.now()
+    sessionDurationRef.current = 5 * 60
+    
+    setIsRunning(true)
+    setStartTime(now)
     setPausedTime(0)
     
     const state = {
-      startTime: null,
+      startTime: now,
+      duration: 5 * 60,
+      isRunning: true,
+      isBreak: true,
+      pausedTime: 0
+    }
+    
+    await saveTimerState(state)
+  }
+
+  const startFocus = async () => {
+    setIsBreak(false)
+    setTimeLeft(25 * 60)
+    
+    const now = Date.now()
+    sessionDurationRef.current = 25 * 60
+    
+    setIsRunning(true)
+    setStartTime(now)
+    setPausedTime(0)
+    
+    const state = {
+      startTime: now,
       duration: 25 * 60,
-      isRunning: false,
+      isRunning: true,
       isBreak: false,
       pausedTime: 0
     }
     
     await saveTimerState(state)
+  }
+
+  const stopTimer = async () => {
+    if (startTime) {
+      // Calculate current time left and save it as the new duration
+      const state = {
+        startTime,
+        duration: isBreak ? 5 * 60 : 25 * 60,
+        isRunning: true, // Still running to get accurate calculation
+        isBreak,
+        pausedTime
+      }
+      
+      const currentTimeLeft = calculateTimeLeft(state)
+      
+      setIsRunning(false)
+      setTimeLeft(currentTimeLeft)
+      setStartTime(null) // Clear start time when stopped
+      setPausedTime(0) // Reset paused time since we're storing the remaining time directly
+      
+      const stoppedState = {
+        startTime: null,
+        duration: currentTimeLeft, // Save the remaining time as the new duration
+        isRunning: false,
+        isBreak,
+        pausedTime: 0
+      }
+      
+      await saveTimerState(stoppedState)
+    }
   }
 
   const formatTime = (seconds: number) => {
@@ -381,34 +411,32 @@ export default function FocusTimer() {
         {/* Controls */}
         <div className="flex space-x-3 mb-6">
           {!isRunning ? (
-            <Button
-              onClick={startTimer}
-              className={`flex-1 ${
-                isBreak 
-                  ? 'bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 text-green-400'
-                  : 'bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-400'
-              } rounded-2xl py-3`}
-            >
-              <Play className="h-4 w-4 mr-2" />
-              Start
-            </Button>
+            <>
+              {/* Focus/Break selection when stopped */}
+              <Button
+                onClick={startFocus}
+                className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-400 rounded-2xl py-3"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Focus (25min)
+              </Button>
+              <Button
+                onClick={startBreak}
+                className="flex-1 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 text-green-400 rounded-2xl py-3"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Break (5min)
+              </Button>
+            </>
           ) : (
             <Button
-              onClick={pauseTimer}
+              onClick={stopTimer}
               className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 text-orange-400 rounded-2xl py-3"
             >
-              <Pause className="h-4 w-4 mr-2" />
-              Pause
+              <Square className="h-4 w-4 mr-2" />
+              Stop
             </Button>
           )}
-          
-          <Button
-            onClick={resetTimer}
-            variant="outline"
-            className="bg-gray-800/60 hover:bg-gray-700/60 border-gray-600 text-gray-300 hover:text-white rounded-2xl py-3"
-          >
-            <Square className="h-4 w-4" />
-          </Button>
         </div>
 
         {/* Sessions Count */}

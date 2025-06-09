@@ -401,17 +401,22 @@ export default function HabitTracker() {
         )}
 
         {/* Habit Pills Grid */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className={`grid gap-4 ${
+          habits.length > 6 ? 'grid-cols-3' : 'grid-cols-2'
+        }`}>
           {habits.map((habit) => {
             const Icon = iconMap[habit.iconName as keyof typeof iconMap] || Circle
             const isEditing = editingHabit === habit.id
+            const isCompact = habits.length > 6
             
             return (
               <div key={habit.id} className="relative">
                 {/* Main Habit Button */}
                 <button
                   onClick={() => !isEditMode && toggleHabit(habit.id)}
-                  className={`relative flex items-center space-x-4 px-6 py-4 rounded-full transition-all duration-200 w-full ${
+                  className={`relative flex items-center space-x-3 rounded-full transition-all duration-200 w-full ${
+                    isCompact ? 'px-4 py-3' : 'px-6 py-4'
+                  } ${
                     isEditMode ? 'cursor-default' : 'hover:scale-105'
                   } ${
                     habit.completed && !isEditMode
@@ -421,7 +426,9 @@ export default function HabitTracker() {
                 >
                   {/* Icon with click to change in edit mode */}
                   <div 
-                    className={`p-2 rounded-full ${
+                    className={`rounded-full ${
+                      isCompact ? 'p-1.5' : 'p-2'
+                    } ${
                       habit.completed && !isEditMode ? 'bg-black' : 'bg-white/20'
                     } ${isEditMode ? 'cursor-pointer' : ''}`}
                     onClick={isEditMode ? (e) => {
@@ -432,7 +439,9 @@ export default function HabitTracker() {
                       updateHabitIcon(habit.id, availableIcons[nextIndex])
                     } : undefined}
                   >
-                    <Icon className={`h-5 w-5 ${
+                    <Icon className={`${
+                      isCompact ? 'h-4 w-4' : 'h-5 w-5'
+                    } ${
                       habit.completed && !isEditMode ? 'text-white' : 'text-white/70'
                     }`} />
                   </div>
@@ -450,11 +459,15 @@ export default function HabitTracker() {
                         }
                       }}
                       onClick={(e) => e.stopPropagation()}
-                      className="flex-1 bg-transparent text-sm font-medium text-left border-none outline-none"
+                      className={`flex-1 bg-transparent font-medium text-left border-none outline-none ${
+                        isCompact ? 'text-xs' : 'text-sm'
+                      }`}
                     />
                   ) : (
                     <span 
-                      className={`text-sm font-medium flex-1 text-left ${
+                      className={`font-medium flex-1 text-left ${
+                        isCompact ? 'text-xs' : 'text-sm'
+                      } ${
                         habit.completed && !isEditMode ? 'text-black' : 'text-white/90'
                       } ${isEditMode ? 'cursor-pointer' : ''}`}
                       onClick={isEditMode ? (e) => {
@@ -468,7 +481,9 @@ export default function HabitTracker() {
                   
                   {/* Completion Check */}
                   {habit.completed && !isEditMode && (
-                    <CheckCircle className="h-6 w-6 text-black ml-auto" />
+                    <CheckCircle className={`text-black ml-auto ${
+                      isCompact ? 'h-5 w-5' : 'h-6 w-6'
+                    }`} />
                   )}
                 </button>
                 
@@ -476,23 +491,16 @@ export default function HabitTracker() {
                 {isEditMode && (
                   <button
                     onClick={() => removeHabit(habit.id)}
-                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full transition-colors shadow-lg"
+                    className={`absolute bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow-lg ${
+                      isCompact ? '-top-1 -right-1 p-1' : '-top-2 -right-2 p-1.5'
+                    }`}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className={isCompact ? 'h-2.5 w-2.5' : 'h-3 w-3'} />
                   </button>
                 )}
               </div>
             )
           })}
-          
-          {/* Success Message */}
-          {completedCount === habits.length && habits.length > 0 && !isEditMode && (
-            <div className="flex items-center justify-center px-6 py-4 rounded-full bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-400/30 backdrop-blur-sm">
-              <span className="text-green-400 text-sm font-medium">
-                🎉 All tasks completed! You're crushing it today!
-              </span>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>

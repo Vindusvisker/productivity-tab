@@ -48,19 +48,41 @@ export default function WeeklyOverview() {
 
   useEffect(() => {
     loadWeeklyData()
-    // Refresh data every 30 seconds to stay updated
-    const interval = setInterval(loadWeeklyData, 30000)
     
-    // Listen for daily logs updates from JourneyHeatmap
+    // Listen for daily logs updates from other components (debounced to prevent flickering)
+    let updateTimeout: NodeJS.Timeout | null = null
+    
     const handleDailyLogsUpdate = () => {
-      loadWeeklyData()
+      // Debounce rapid updates to prevent flickering
+      if (updateTimeout) {
+        clearTimeout(updateTimeout)
+      }
+      
+      updateTimeout = setTimeout(() => {
+        loadWeeklyData()
+      }, 300) // Wait 300ms before updating to batch rapid changes
     }
     
     window.addEventListener('dailyLogsUpdated', handleDailyLogsUpdate)
     
+    // Only check for day changes, not constant polling
+    const checkDayChange = () => {
+      const today = new Date().toDateString()
+      const lastCheckedDate = localStorage.getItem('weekly-overview-date')
+      
+      if (lastCheckedDate !== today) {
+        localStorage.setItem('weekly-overview-date', today)
+        loadWeeklyData()
+      }
+    }
+    
+    // Check for day change every 30 seconds instead of constant polling
+    const dayChangeInterval = setInterval(checkDayChange, 30000)
+    
     return () => {
-      clearInterval(interval)
       window.removeEventListener('dailyLogsUpdated', handleDailyLogsUpdate)
+      clearInterval(dayChangeInterval)
+      if (updateTimeout) clearTimeout(updateTimeout)
     }
   }, [])
 
@@ -296,17 +318,10 @@ export default function WeeklyOverview() {
     return streak
   }
 
-  // Listen for habit and snus changes to update data in real-time
-  useEffect(() => {
-    const handleStorageChange = () => {
-      saveCurrentDayData()
-      setTimeout(loadWeeklyData, 1000) // Small delay to ensure data is saved
-    }
-
-    // Listen for changes in habits and snus data
-    const checkForChanges = setInterval(handleStorageChange, 5000)
-    return () => clearInterval(checkForChanges)
-  }, [])
+  // Removed conflicting polling interval that was causing flickering:
+  // - No more 5-second polling for storage changes
+  // - Event-driven updates are sufficient and more efficient
+  // - Day changes are still monitored with a longer interval
 
   const getDayName = (dateString: string) => {
     const date = new Date(dateString)

@@ -32,24 +32,30 @@ const HomeView: React.FC = () => {
         
         {/* Top Row: Time Display & Snus Tracker */}
         <div className="grid grid-cols-2 gap-8 mb-12">
-          {/* Time Display */}
+          {/* Time Display - Hero element with gentle fade */}
           <div className="flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-8xl font-light text-white mb-2">
+            <div className="text-center opacity-0 animate-gentle-fade" style={{ animationDelay: '50ms', animationFillMode: 'forwards' }}>
+              {/* Main time - smooth fade up */}
+              <div className="text-8xl font-light text-white mb-2 opacity-0 animate-smooth-fade-up" style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}>
                 {time}
               </div>
-              <div className="text-xl text-white/80">
+              {/* Date - subtle slide up */}
+              <div className="text-xl text-white/80 opacity-0 animate-smooth-fade-up" style={{ animationDelay: '350ms', animationFillMode: 'forwards' }}>
                 {date}
               </div>
             </div>
           </div>
           
-          {/* Snus Tracker */}
-          <SnusTracker />
+          {/* Snus Tracker - iOS slide up from right side */}
+          <div className="opacity-0 animate-ios-slide-up" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>
+            <SnusTracker />
+          </div>
         </div>
 
-        {/* Bottom Row: Quick Access */}
-        <QuickAccess />
+        {/* Bottom Row: Quick Access - Final elegant entrance */}
+        <div className="opacity-0 animate-ios-slide-up" style={{ animationDelay: '450ms', animationFillMode: 'forwards' }}>
+          <QuickAccess />
+        </div>
 
       </div>
     </div>

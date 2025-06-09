@@ -12,13 +12,23 @@ const ProductivityView: React.FC = () => {
           
           {/* Left Column */}
           <div className="space-y-6">
-            <HabitTracker />
-            <FocusTimer />
+            {/* HabitTracker - First to appear */}
+            <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
+              <HabitTracker />
+            </div>
+            
+            {/* FocusTimer - Second to appear */}
+            <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
+              <FocusTimer />
+            </div>
           </div>
 
           {/* Right Column */}
           <div className="space-y-6">
-            <WeeklyOverview />
+            {/* WeeklyOverview - Third to appear */}
+            <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'forwards' }}>
+              <WeeklyOverview />
+            </div>
           </div>
         </div>
 
