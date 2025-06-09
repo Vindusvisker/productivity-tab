@@ -272,7 +272,7 @@ export default function WeeklyReflection({ className }: WeeklyReflectionProps) {
       {/* Mood Slider Dialog - iPhone-sized centered modal */}
       {showMoodDialog && (
         <Dialog open={showMoodDialog} onOpenChange={setShowMoodDialog}>
-          <DialogContent className="max-w-sm w-[375px] h-[667px] p-0 border-none bg-transparent overflow-hidden rounded-3xl">
+          <DialogContent className="max-w-sm w-[375px] h-[667px] p-0 border-4 border-white/30 bg-black/10 backdrop-blur-md overflow-hidden rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.4)] ring-1 ring-white/10 [&>button]:hidden">
             <MoodSlider
               initialValue={3}
               onComplete={handleMoodComplete}
