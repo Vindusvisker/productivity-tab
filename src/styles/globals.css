@@ -4,13 +4,13 @@
 
 @layer base {
   html {
-    background-color: rgb(17 24 39); /* gray-900 */
+    background-color: #313131;
   }
   
   body {
     margin: 0;
     padding: 0;
-    background-color: rgb(17 24 39); /* gray-900 */
+    background-color: #313131;
     overflow-x: hidden;
   }
   
