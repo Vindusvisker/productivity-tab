@@ -21,15 +21,15 @@ const MOOD_LABELS = [
   'Very Pleasant'
 ]
 
-// Color stops for smooth interpolation (0-100 range)
+// Color stops for smooth interpolation (0-100 range) - Apple Health sophisticated palette
 const COLOR_STOPS = [
-  { position: 0, bg: [239, 68, 68], blob: [248, 113, 113] },      // red-500, red-400
-  { position: 16.67, bg: [249, 115, 22], blob: [251, 146, 60] },  // orange-500, orange-400
-  { position: 33.33, bg: [234, 179, 8], blob: [250, 204, 21] },   // yellow-500, yellow-400
-  { position: 50, bg: [59, 130, 246], blob: [96, 165, 250] },     // blue-500, blue-400
-  { position: 66.67, bg: [34, 197, 94], blob: [74, 222, 128] },   // green-500, green-400
-  { position: 83.33, bg: [34, 197, 94], blob: [34, 197, 94] },    // green-500, green-500
-  { position: 100, bg: [16, 185, 129], blob: [52, 211, 153] }     // emerald-500, emerald-400
+  { position: 0, bg: [140, 120, 120], blob: [155, 135, 135] },      // Sophisticated muted red-gray
+  { position: 16.67, bg: [150, 130, 115], blob: [165, 145, 130] },  // Warm muted brown-orange
+  { position: 33.33, bg: [145, 140, 125], blob: [160, 155, 140] },  // Sophisticated warm gray-yellow
+  { position: 50, bg: [125, 135, 155], blob: [140, 150, 170] },     // Cool sophisticated blue-gray
+  { position: 66.67, bg: [130, 145, 135], blob: [145, 160, 150] },  // Elegant muted green-gray
+  { position: 83.33, bg: [135, 150, 140], blob: [150, 165, 155] },  // Refined sage green
+  { position: 100, bg: [140, 155, 145], blob: [155, 170, 160] }     // Premium mint-gray
 ]
 
 // Interpolate between two colors
@@ -69,24 +69,6 @@ const getFluidColors = (sliderValue: number) => {
   }
 }
 
-const MOOD_COLORS = [
-  { bg: 'from-red-500 to-red-600', blob: 'fill-red-400' },
-  { bg: 'from-orange-500 to-red-500', blob: 'fill-orange-400' },
-  { bg: 'from-yellow-500 to-orange-500', blob: 'fill-yellow-400' },
-  { bg: 'from-blue-400 to-blue-500', blob: 'fill-blue-400' },
-  { bg: 'from-green-400 to-blue-400', blob: 'fill-green-400' },
-  { bg: 'from-green-500 to-green-400', blob: 'fill-green-500' },
-  { bg: 'from-emerald-500 to-green-500', blob: 'fill-emerald-400' }
-]
-
-// Apple Health-style feeling tags
-const FEELING_TAGS = [
-  'Fantastic', 'Excited', 'Surprised', 'Engaged', 'Happy', 'Lucky', 'Brave',
-  'Proud', 'Confident', 'Hopeful', 'Calm', 'Peaceful', 'Relieved', 'Grateful',
-  'Content', 'Satisfied', 'Amused', 'Playful', 'Curious', 'Inspired', 'Creative',
-  'Energetic', 'Focused', 'Determined', 'Accomplished'
-]
-
 // Context/impact tags  
 const CONTEXT_TAGS = [
   'Health', 'Exercise', 'Self-care', 'Hobbies', 'Identity', 'Spirituality',
@@ -96,6 +78,55 @@ const CONTEXT_TAGS = [
 
 type FlowStep = 'mood' | 'feeling' | 'context' | 'complete'
 
+// Dynamic feeling tags based on mood level
+const getMoodSpecificFeelings = (moodIndex: number): string[] => {
+  const moodFeelings = {
+    0: [ // Very Unpleasant
+      'Angry', 'Frustrated', 'Devastated', 'Hopeless', 'Overwhelmed', 
+      'Anxious', 'Depressed', 'Irritated', 'Furious', 'Miserable',
+      'Distressed', 'Exhausted', 'Bitter', 'Resentful', 'Helpless',
+      'Defeated', 'Isolated', 'Worried', 'Panicked', 'Discouraged'
+    ],
+    1: [ // Unpleasant
+      'Sad', 'Disappointed', 'Stressed', 'Uncomfortable', 'Uneasy',
+      'Troubled', 'Bothered', 'Concerned', 'Disheartened', 'Gloomy',
+      'Tense', 'Restless', 'Unsatisfied', 'Drained', 'Weary',
+      'Cautious', 'Skeptical', 'Uncertain', 'Doubtful', 'Melancholy'
+    ],
+    2: [ // Slightly Unpleasant
+      'Tired', 'Bored', 'Restless', 'Indifferent', 'Sluggish',
+      'Unmotivated', 'Apathetic', 'Listless', 'Distracted', 'Disconnected',
+      'Uninspired', 'Passive', 'Withdrawn', 'Reserved', 'Hesitant',
+      'Lackluster', 'Mild', 'Vacant', 'Detached', 'Flat'
+    ],
+    3: [ // Neutral
+      'Calm', 'Balanced', 'Steady', 'Centered', 'Stable',
+      'Composed', 'Tranquil', 'Even-tempered', 'Neutral', 'Clear-minded',
+      'Focused', 'Present', 'Grounded', 'Relaxed', 'At ease',
+      'Settled', 'Objective', 'Contemplative', 'Mindful', 'Serene'
+    ],
+    4: [ // Slightly Pleasant
+      'Content', 'Satisfied', 'Pleasant', 'Comfortable', 'Peaceful',
+      'Optimistic', 'Hopeful', 'Positive', 'Encouraged', 'Uplifted',
+      'Gentle', 'Warm', 'Friendly', 'Appreciative', 'Grateful',
+      'Kind', 'Soft', 'Tender', 'Understanding', 'Accepting'
+    ],
+    5: [ // Pleasant
+      'Happy', 'Cheerful', 'Delighted', 'Pleased', 'Joyful',
+      'Upbeat', 'Bright', 'Enthusiastic', 'Energetic', 'Lively',
+      'Excited', 'Engaged', 'Confident', 'Proud', 'Accomplished',
+      'Successful', 'Fulfilled', 'Thriving', 'Vibrant', 'Radiant'
+    ],
+    6: [ // Very Pleasant
+      'Ecstatic', 'Euphoric', 'Blissful', 'Overjoyed', 'Elated',
+      'Fantastic', 'Amazing', 'Incredible', 'Wonderful', 'Magnificent',
+      'Brilliant', 'Spectacular', 'Triumphant', 'Victorious', 'Inspired',
+      'Exhilarated', 'Passionate', 'Loving', 'Blessed', 'Transcendent'
+    ]
+  }
+  
+  return moodFeelings[moodIndex as keyof typeof moodFeelings] || moodFeelings[3]
+}
 export default function MoodSlider({ initialValue = 3, onComplete, onSkip }: MoodSliderProps) {
   const [currentStep, setCurrentStep] = useState<FlowStep>('mood')
   const [sliderValue, setSliderValue] = useState(initialValue * 16.67) // Convert 0-6 to 0-100 scale
@@ -190,32 +221,153 @@ export default function MoodSlider({ initialValue = 3, onComplete, onSkip }: Moo
 
   const currentLabel = MOOD_LABELS[currentMoodIndex] || MOOD_LABELS[3]
 
-  // Create blob path that changes based on mood value
-  const getBlobPath = (moodValue: number) => {
-    const intensity = moodValue / 6 // 0-1 scale
-    const baseRadius = 80
-    const variation = 20 + (intensity * 15) // More variation for higher moods
+  // Create Apple Health-style organic blob patterns
+  const getMoodBlobPattern = (moodValue: number, size: number = 200) => {
+    const centerX = size / 2
+    const centerY = size / 2
     
-    // Create organic blob shape
+    switch (moodValue) {
+      case 0: // Very Unpleasant - Jagged organic shape
+        return {
+          main: createOrganicShape(centerX, centerY, 70, 8, 0.4, 0),
+          layer1: createOrganicShape(centerX, centerY, 55, 8, 0.3, 25),
+          layer2: createOrganicShape(centerX, centerY, 40, 8, 0.25, 50),
+          center: createSoftCircle(centerX, centerY, 12)
+        }
+      
+      case 1: // Unpleasant - Multi-layered organic flower  
+        return {
+          main: createOrganicShape(centerX, centerY, 75, 12, 0.3, 0),
+          layer1: createOrganicShape(centerX, centerY, 60, 12, 0.25, 15),
+          layer2: createOrganicShape(centerX, centerY, 45, 12, 0.2, 30),
+          center: createSoftCircle(centerX, centerY, 15)
+        }
+      
+      case 2: // Slightly Unpleasant - Flowing organic blob
+        return {
+          main: createOrganicShape(centerX, centerY, 65, 6, 0.25, 0),
+          layer1: createOrganicShape(centerX, centerY, 50, 6, 0.2, 30),
+          layer2: createOrganicShape(centerX, centerY, 35, 6, 0.15, 60),
+          center: createSoftCircle(centerX, centerY, 14)
+        }
+      
+      case 3: // Neutral - Concentric circles (Apple Health style)
+        return {
+          main: createSoftCircle(centerX, centerY, 70),
+          layer1: createSoftCircle(centerX, centerY, 55),
+          layer2: createSoftCircle(centerX, centerY, 40),
+          center: createSoftCircle(centerX, centerY, 15)
+        }
+      
+      case 4: // Slightly Pleasant - Soft rounded petals
+        return {
+          main: createOrganicShape(centerX, centerY, 68, 5, 0.15, 0),
+          layer1: createOrganicShape(centerX, centerY, 54, 5, 0.12, 36),
+          layer2: createOrganicShape(centerX, centerY, 40, 5, 0.1, 72),
+          center: createSoftCircle(centerX, centerY, 16)
+        }
+      
+      case 5: // Pleasant - Flower with soft petals (like Apple Health)
+        return {
+          main: createOrganicShape(centerX, centerY, 72, 8, 0.2, 0),
+          layer1: createOrganicShape(centerX, centerY, 58, 8, 0.15, 22.5),
+          layer2: createOrganicShape(centerX, centerY, 44, 8, 0.12, 45),
+          center: createSoftCircle(centerX, centerY, 18)
+        }
+      
+      case 6: // Very Pleasant - Bright layered flower
+        return {
+          main: createOrganicShape(centerX, centerY, 75, 10, 0.18, 0),
+          layer1: createOrganicShape(centerX, centerY, 62, 10, 0.14, 18),
+          layer2: createOrganicShape(centerX, centerY, 48, 10, 0.11, 36),
+          center: createSoftCircle(centerX, centerY, 20)
+        }
+      
+      default:
+        return {
+          main: createSoftCircle(centerX, centerY, 60),
+          layer1: createSoftCircle(centerX, centerY, 45),
+          layer2: createSoftCircle(centerX, centerY, 30),
+          center: createSoftCircle(centerX, centerY, 15)
+        }
+    }
+  }
+
+  // Create smooth organic shapes (Apple Health style)
+  const createOrganicShape = (centerX: number, centerY: number, baseRadius: number, lobes: number, variation: number, rotation: number = 0) => {
     const points = []
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2
-      const radius = baseRadius + Math.sin(angle * 3 + moodValue) * variation
-      const x = 150 + Math.cos(angle) * radius
-      const y = 150 + Math.sin(angle) * radius
+    const angleStep = (Math.PI * 2) / (lobes * 4) // More points for smoother curves
+    const rotationRad = (rotation * Math.PI) / 180
+    
+    // Generate organic points with smooth variation
+    for (let i = 0; i < lobes * 4; i++) {
+      const angle = (i * angleStep) + rotationRad
+      
+      // Create petal-like lobes with smooth transitions
+      const lobePhase = (i / 4) % 1
+      const lobeFactor = Math.pow(Math.sin(lobePhase * Math.PI), 0.6) // Petal shape
+      
+      // Add organic variation
+      const organicVariation = Math.sin(angle * lobes + variation * 10) * variation
+      const radius = baseRadius * (0.6 + 0.4 * lobeFactor + organicVariation)
+      
+      const x = centerX + Math.cos(angle) * radius
+      const y = centerY + Math.sin(angle) * radius
       points.push([x, y])
     }
     
-    // Create smooth curved path
+    // Create smooth curved path using bezier curves
     let path = `M ${points[0][0]} ${points[0][1]}`
-    for (let i = 0; i < points.length; i++) {
-      const nextIndex = (i + 1) % points.length
-      const cpx = (points[i][0] + points[nextIndex][0]) / 2
-      const cpy = (points[i][1] + points[nextIndex][1]) / 2
-      path += ` Q ${points[i][0]} ${points[i][1]} ${cpx} ${cpy}`
-    }
-    path += ' Z'
     
+    for (let i = 0; i < points.length; i++) {
+      const current = points[i]
+      const next = points[(i + 1) % points.length]
+      const nextNext = points[(i + 2) % points.length]
+      
+      // Calculate smooth control points
+      const cp1x = current[0] + (next[0] - current[0]) * 0.3
+      const cp1y = current[1] + (next[1] - current[1]) * 0.3
+      const cp2x = next[0] - (nextNext[0] - current[0]) * 0.15
+      const cp2y = next[1] - (nextNext[1] - current[1]) * 0.15
+      
+      path += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${next[0]} ${next[1]}`
+    }
+    
+    path += ' Z'
+    return path
+  }
+
+  // Create soft circle with slight organic variation
+  const createSoftCircle = (centerX: number, centerY: number, radius: number) => {
+    const points = 32 // High point count for smooth circle
+    let path = ''
+    
+    for (let i = 0; i <= points; i++) {
+      const angle = (i / points) * Math.PI * 2
+      const organicRadius = radius + Math.sin(angle * 3) * (radius * 0.02) // Very subtle variation
+      
+      const x = centerX + Math.cos(angle) * organicRadius
+      const y = centerY + Math.sin(angle) * organicRadius
+      
+      if (i === 0) {
+        path += `M ${x} ${y}`
+      } else {
+        // Use smooth curves for organic feel
+        const prevAngle = ((i - 1) / points) * Math.PI * 2
+        const prevRadius = radius + Math.sin(prevAngle * 3) * (radius * 0.02)
+        const prevX = centerX + Math.cos(prevAngle) * prevRadius
+        const prevY = centerY + Math.sin(prevAngle) * prevRadius
+        
+        const cp1x = prevX + Math.cos(prevAngle + Math.PI / 2) * (prevRadius * 0.2)
+        const cp1y = prevY + Math.sin(prevAngle + Math.PI / 2) * (prevRadius * 0.2)
+        const cp2x = x - Math.cos(angle + Math.PI / 2) * (organicRadius * 0.2)
+        const cp2y = y - Math.sin(angle + Math.PI / 2) * (organicRadius * 0.2)
+        
+        path += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${x} ${y}`
+      }
+    }
+    
+    path += ' Z'
     return path
   }
 
@@ -269,14 +421,118 @@ export default function MoodSlider({ initialValue = 3, onComplete, onSkip }: Moo
           <div className="flex-1 flex flex-col px-4 overflow-y-auto">
             {/* Mood blob - smaller */}
             <div className="flex justify-center mb-4">
-              <svg width="80" height="80" viewBox="0 0 300 300" className="scale-50">
-                <path
-                  d={getBlobPath(moodValue)}
-                  className="opacity-80 transition-all duration-300 ease-out"
-                  style={{
-                    fill: `rgb(${fluidColors.blob.match(/\d+/g)?.join(',') || '96,165,250'})`
-                  }}
-                />
+              <svg width="60" height="60" viewBox="0 0 120 120" className="transition-all duration-500 ease-out">
+                {(() => {
+                  const pattern = getMoodBlobPattern(currentMoodIndex, 120)
+                  const mainColor = fluidColors.blob.match(/\d+/g)?.join(',') || '96,165,250'
+                  
+                  return (
+                    <>
+                      {/* Outermost ambient glow */}
+                      <path
+                        d={pattern.main}
+                        className="mood-blob-glow"
+                        style={{
+                          fill: `rgba(${mainColor}, 0.06)`,
+                          filter: 'blur(16px)',
+                          transform: 'scale(1.8)',
+                          transformOrigin: '100px 100px'
+                        }}
+                      />
+                      
+                      {/* Secondary ambient glow */}
+                      <path
+                        d={pattern.layer1}
+                        className="mood-blob-glow"
+                        style={{
+                          fill: `rgba(${mainColor}, 0.12)`,
+                          filter: 'blur(10px)',
+                          transform: 'scale(1.5)',
+                          transformOrigin: '100px 100px'
+                        }}
+                      />
+                      
+                      {/* Third glow layer */}
+                      <path
+                        d={pattern.layer2}
+                        className="mood-blob-glow"
+                        style={{
+                          fill: `rgba(${mainColor}, 0.18)`,
+                          filter: 'blur(6px)',
+                          transform: 'scale(1.3)',
+                          transformOrigin: '100px 100px'
+                        }}
+                      />
+                      
+                      {/* Outer glass layer */}
+                      <path
+                        d={pattern.main}
+                        className={`mood-blob-main transition-all duration-500 ease-out ${
+                          currentMoodIndex >= 4 ? 'mood-blob-pleasant' : ''
+                        }`}
+                        style={{
+                          fill: `rgba(${mainColor}, 0.65)`,
+                          filter: 'blur(1px)'
+                        }}
+                      />
+                      
+                      {/* Second glass layer - Warmer tint */}
+                      <path
+                        d={pattern.layer1}
+                        className={`mood-blob-layer1 transition-all duration-500 ease-out ${
+                          currentMoodIndex >= 5 ? 'mood-blob-petals' : ''
+                        }`}
+                        style={{
+                          fill: `rgba(${Math.round(parseInt(mainColor.split(',')[0]) * 1.25)}, ${Math.round(parseInt(mainColor.split(',')[1]) * 1.1)}, ${Math.round(parseInt(mainColor.split(',')[2]) * 0.75)}, 0.75)`
+                        }}
+                      />
+                      
+                      {/* Third glass layer - Cooler tint */}
+                      <path
+                        d={pattern.layer2}
+                        className="mood-blob-layer2 transition-all duration-500 ease-out"
+                        style={{
+                          fill: `rgba(${Math.round(parseInt(mainColor.split(',')[0]) * 0.75)}, ${Math.round(parseInt(mainColor.split(',')[1]) * 1.25)}, ${Math.round(parseInt(mainColor.split(',')[2]) * 1.15)}, 0.65)`
+                        }}
+                      />
+                      
+                      {/* Inner glass layer */}
+                      <path
+                        d={pattern.center}
+                        className="mood-blob-float transition-all duration-500 ease-out"
+                        style={{
+                          fill: `rgba(${Math.round(parseInt(mainColor.split(',')[0]) * 1.1)}, ${Math.round(parseInt(mainColor.split(',')[1]) * 1.2)}, ${Math.round(parseInt(mainColor.split(',')[2]) * 1.05)}, 0.8)`,
+                          transform: 'scale(0.6)',
+                          transformOrigin: '100px 100px'
+                        }}
+                      />
+                      
+                      {/* Core bright layer */}
+                      <path
+                        d={pattern.center}
+                        className="mood-blob-float transition-all duration-500 ease-out"
+                        style={{
+                          fill: `rgba(255, 255, 255, 0.7)`,
+                          transform: 'scale(0.3)',
+                          transformOrigin: '100px 100px'
+                        }}
+                      />
+                      
+                      {/* Central bright dot */}
+                      <circle
+                        cx="100"
+                        cy="100"
+                        r={3 + currentMoodIndex * 0.3}
+                        className={`transition-all duration-500 ease-out mood-blob-float ${
+                          currentMoodIndex === 6 ? 'mood-blob-shimmer' : ''
+                        }`}
+                        style={{
+                          fill: `rgba(255, 255, 255, 0.9)`
+                        }}
+                      />
+                    </>
+                  )
+                })()}
               </svg>
             </div>
 
@@ -357,14 +613,89 @@ export default function MoodSlider({ initialValue = 3, onComplete, onSkip }: Moo
           <div className="flex-1 flex flex-col px-4 overflow-y-auto">
             {/* Mood blob - smaller */}
             <div className="flex justify-center mb-4">
-              <svg width="80" height="80" viewBox="0 0 300 300" className="scale-50">
-                <path
-                  d={getBlobPath(moodValue)}
-                  className="opacity-80 transition-all duration-300 ease-out"
-                  style={{
-                    fill: `rgb(${fluidColors.blob.match(/\d+/g)?.join(',') || '96,165,250'})`
-                  }}
-                />
+              <svg width="60" height="60" viewBox="0 0 120 120" className="transition-all duration-500 ease-out">
+                {(() => {
+                  const pattern = getMoodBlobPattern(currentMoodIndex, 120)
+                  const mainColor = fluidColors.blob.match(/\d+/g)?.join(',') || '96,165,250'
+                  
+                  return (
+                    <>
+                      {/* Outermost glow - Apple Health style */}
+                      <path
+                        d={pattern.main}
+                        className="mood-blob-glow"
+                        style={{
+                          fill: `rgba(${mainColor}, 0.08)`,
+                          filter: 'blur(8px)',
+                          transform: 'scale(1.5)',
+                          transformOrigin: '60px 60px'
+                        }}
+                      />
+                      
+                      {/* Secondary glow layer */}
+                      <path
+                        d={pattern.layer1}
+                        className="mood-blob-glow"
+                        style={{
+                          fill: `rgba(${mainColor}, 0.15)`,
+                          filter: 'blur(4px)',
+                          transform: 'scale(1.3)',
+                          transformOrigin: '60px 60px'
+                        }}
+                      />
+                      
+                      {/* Outer glass layer */}
+                      <path
+                        d={pattern.main}
+                        className="mood-blob-main"
+                        style={{
+                          fill: `rgba(${mainColor}, 0.6)`,
+                          filter: 'blur(1px)'
+                        }}
+                      />
+                      
+                      {/* Second glass layer - Warmer tint */}
+                      <path
+                        d={pattern.layer1}
+                        className="mood-blob-layer1"
+                        style={{
+                          fill: `rgba(${Math.round(parseInt(mainColor.split(',')[0]) * 1.2)}, ${Math.round(parseInt(mainColor.split(',')[1]) * 1.1)}, ${Math.round(parseInt(mainColor.split(',')[2]) * 0.8)}, 0.7)`
+                        }}
+                      />
+                      
+                      {/* Third glass layer - Cooler tint */}
+                      <path
+                        d={pattern.layer2}
+                        className="mood-blob-layer2"
+                        style={{
+                          fill: `rgba(${Math.round(parseInt(mainColor.split(',')[0]) * 0.8)}, ${Math.round(parseInt(mainColor.split(',')[1]) * 1.2)}, ${Math.round(parseInt(mainColor.split(',')[2]) * 1.1)}, 0.6)`
+                        }}
+                      />
+                      
+                      {/* Inner glass layer */}
+                      <path
+                        d={pattern.center}
+                        className="mood-blob-float"
+                        style={{
+                          fill: `rgba(${Math.round(parseInt(mainColor.split(',')[0]) * 1.1)}, ${Math.round(parseInt(mainColor.split(',')[1]) * 1.15)}, ${Math.round(parseInt(mainColor.split(',')[2]) * 1.05)}, 0.8)`,
+                          transform: 'scale(0.7)',
+                          transformOrigin: '60px 60px'
+                        }}
+                      />
+                      
+                      {/* Core highlight */}
+                      <path
+                        d={pattern.center}
+                        className="mood-blob-float"
+                        style={{
+                          fill: `rgba(255, 255, 255, 0.6)`,
+                          transform: 'scale(0.4)',
+                          transformOrigin: '60px 60px'
+                        }}
+                      />
+                    </>
+                  )
+                })()}
               </svg>
             </div>
 
@@ -384,7 +715,7 @@ export default function MoodSlider({ initialValue = 3, onComplete, onSkip }: Moo
               </h3>
 
               <div className="grid grid-cols-3 gap-2 max-h-80 overflow-y-auto">
-                {FEELING_TAGS.map((tag) => (
+                {getMoodSpecificFeelings(currentMoodIndex).map((tag) => (
                   <button
                     key={tag}
                     onClick={() => toggleFeelingTag(tag)}
@@ -453,46 +784,121 @@ export default function MoodSlider({ initialValue = 3, onComplete, onSkip }: Moo
               <svg 
                 width="200" 
                 height="200" 
-                viewBox="0 0 300 300"
-                className={`transition-all duration-300 ease-out ${isAnimating ? 'scale-110' : 'scale-100'}`}
+                viewBox="0 0 200 200"
+                className={`transition-all duration-500 ease-out ${isAnimating ? 'scale-110' : 'scale-100'}`}
               >
-                {/* Outer glow layers */}
-                <path
-                  d={getBlobPath(moodValue)}
-                  className="opacity-20 transition-all duration-300 ease-out"
-                  transform="scale(1.3) translate(-45, -45)"
-                  style={{
-                    fill: `rgb(${fluidColors.blob.match(/\d+/g)?.join(',') || '96,165,250'})`
-                  }}
-                />
-                <path
-                  d={getBlobPath(moodValue)}
-                  className="opacity-40 transition-all duration-300 ease-out"
-                  transform="scale(1.15) translate(-22.5, -22.5)"
-                  style={{
-                    fill: `rgb(${fluidColors.blob.match(/\d+/g)?.join(',') || '96,165,250'})`
-                  }}
-                />
-                
-                {/* Main blob */}
-                <path
-                  d={getBlobPath(moodValue)}
-                  className="transition-all duration-300 ease-out"
-                  style={{
-                    fill: `rgb(${fluidColors.blob.match(/\d+/g)?.join(',') || '96,165,250'})`,
-                    filter: 'blur(0.5px)',
-                    transform: `scale(${0.8 + moodValue * 0.05})`,
-                    transformOrigin: '150px 150px'
-                  }}
-                />
-                
-                {/* Center highlight */}
-                <circle
-                  cx="150"
-                  cy="150"
-                  r={20 + moodValue * 3}
-                  className="fill-white opacity-30 transition-all duration-300"
-                />
+                {/* Get current mood pattern */}
+                {(() => {
+                  const pattern = getMoodBlobPattern(currentMoodIndex, 200)
+                  const mainColor = fluidColors.blob.match(/\d+/g)?.join(',') || '96,165,250'
+                  
+                  return (
+                    <>
+                      {/* Outermost ambient glow */}
+                      <path
+                        d={pattern.main}
+                        className="mood-blob-glow"
+                        style={{
+                          fill: `rgba(${mainColor}, 0.06)`,
+                          filter: 'blur(16px)',
+                          transform: 'scale(1.8)',
+                          transformOrigin: '100px 100px'
+                        }}
+                      />
+                      
+                      {/* Secondary ambient glow */}
+                      <path
+                        d={pattern.layer1}
+                        className="mood-blob-glow"
+                        style={{
+                          fill: `rgba(${mainColor}, 0.12)`,
+                          filter: 'blur(10px)',
+                          transform: 'scale(1.5)',
+                          transformOrigin: '100px 100px'
+                        }}
+                      />
+                      
+                      {/* Third glow layer */}
+                      <path
+                        d={pattern.layer2}
+                        className="mood-blob-glow"
+                        style={{
+                          fill: `rgba(${mainColor}, 0.18)`,
+                          filter: 'blur(6px)',
+                          transform: 'scale(1.3)',
+                          transformOrigin: '100px 100px'
+                        }}
+                      />
+                      
+                      {/* Outer glass layer */}
+                      <path
+                        d={pattern.main}
+                        className={`mood-blob-main transition-all duration-500 ease-out ${
+                          currentMoodIndex >= 4 ? 'mood-blob-pleasant' : ''
+                        }`}
+                        style={{
+                          fill: `rgba(${mainColor}, 0.65)`,
+                          filter: 'blur(1px)'
+                        }}
+                      />
+                      
+                      {/* Second glass layer - Warmer tint */}
+                      <path
+                        d={pattern.layer1}
+                        className={`mood-blob-layer1 transition-all duration-500 ease-out ${
+                          currentMoodIndex >= 5 ? 'mood-blob-petals' : ''
+                        }`}
+                        style={{
+                          fill: `rgba(${Math.round(parseInt(mainColor.split(',')[0]) * 1.25)}, ${Math.round(parseInt(mainColor.split(',')[1]) * 1.1)}, ${Math.round(parseInt(mainColor.split(',')[2]) * 0.75)}, 0.75)`
+                        }}
+                      />
+                      
+                      {/* Third glass layer - Cooler tint */}
+                      <path
+                        d={pattern.layer2}
+                        className="mood-blob-layer2 transition-all duration-500 ease-out"
+                        style={{
+                          fill: `rgba(${Math.round(parseInt(mainColor.split(',')[0]) * 0.75)}, ${Math.round(parseInt(mainColor.split(',')[1]) * 1.25)}, ${Math.round(parseInt(mainColor.split(',')[2]) * 1.15)}, 0.65)`
+                        }}
+                      />
+                      
+                      {/* Inner glass layer */}
+                      <path
+                        d={pattern.center}
+                        className="mood-blob-float transition-all duration-500 ease-out"
+                        style={{
+                          fill: `rgba(${Math.round(parseInt(mainColor.split(',')[0]) * 1.1)}, ${Math.round(parseInt(mainColor.split(',')[1]) * 1.2)}, ${Math.round(parseInt(mainColor.split(',')[2]) * 1.05)}, 0.8)`,
+                          transform: 'scale(0.6)',
+                          transformOrigin: '100px 100px'
+                        }}
+                      />
+                      
+                      {/* Core bright layer */}
+                      <path
+                        d={pattern.center}
+                        className="mood-blob-float transition-all duration-500 ease-out"
+                        style={{
+                          fill: `rgba(255, 255, 255, 0.7)`,
+                          transform: 'scale(0.3)',
+                          transformOrigin: '100px 100px'
+                        }}
+                      />
+                      
+                      {/* Central bright dot */}
+                      <circle
+                        cx="100"
+                        cy="100"
+                        r={3 + currentMoodIndex * 0.3}
+                        className={`transition-all duration-500 ease-out mood-blob-float ${
+                          currentMoodIndex === 6 ? 'mood-blob-shimmer' : ''
+                        }`}
+                        style={{
+                          fill: `rgba(255, 255, 255, 0.9)`
+                        }}
+                      />
+                    </>
+                  )
+                })()}
               </svg>
             </div>
 
