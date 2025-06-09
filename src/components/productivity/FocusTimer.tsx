@@ -349,7 +349,7 @@ export default function FocusTimer() {
   const strokeDashoffset = circumference - (getProgress() / 100) * circumference
 
   return (
-    <Card className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
+    <Card className="bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
       <CardContent className="p-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

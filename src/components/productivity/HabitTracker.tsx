@@ -290,7 +290,7 @@ export default function HabitTracker() {
   // Show loading state
   if (isLoading) {
     return (
-      <Card className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
+      <Card className="bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
         <CardContent className="p-8">
           <div className="flex items-center justify-center h-40">
             <div className="text-white/70">Loading habits...</div>

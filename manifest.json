@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "A beautiful new tab page built with React",
   "permissions": [
-    "storage"
+    "storage",
+    "tabs"
   ],
   "chrome_url_overrides": {
     "newtab": "index.html"

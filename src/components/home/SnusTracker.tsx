@@ -283,7 +283,7 @@ export default function SnusTracker() {
   const strokeDashoffset = circumference - (getProgressPercentage() / 100) * circumference
 
   return (
-    <Card className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
+    <Card className="bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
       <CardContent className="p-6">
         {/* Header with circular progress */}
         <div className="flex items-start justify-between mb-6">

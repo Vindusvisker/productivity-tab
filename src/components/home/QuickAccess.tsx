@@ -44,7 +44,7 @@ export default function QuickAccess() {
   ];
 
   return (
-    <Card className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
+    <Card className="bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
       <CardContent className="p-8">
         <h3 className="text-2xl font-semibold text-white mb-6 text-center">Quick Access</h3>
         <div className="grid grid-cols-3 gap-6">
