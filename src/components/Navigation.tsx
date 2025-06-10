@@ -65,7 +65,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange, curr
     },
     {
       id: 'financial' as ViewType,
-      label: 'Financial',
+      label: 'Expenses',
       icon: DollarSign,
     }
   ];
