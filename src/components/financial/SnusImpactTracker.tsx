@@ -243,17 +243,6 @@ export default function SnusImpactTracker() {
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
   }
 
-  const getMotivationalMessage = () => {
-    const messages = [
-      `${impactData.packetsBought} packets bought = ${formatCurrency(impactData.packetsBought * PACKET_COST_NOK)}`,
-      `Each snus costs ${MINUTES_PER_SNUS.toFixed(1)} minutes of your life`,
-      `${impactData.snusAvoided} snus avoided = ${formatCurrency(impactData.snusAvoided * SNUS_COST_NOK)} saved!`,
-      `You've worked ${formatTime(impactData.costTotal / HOURLY_RATE_NOK * 60)} just for snus`,
-      `${impactData.totalCount} snus over ${impactData.daysTracked} days tracked`
-    ]
-    return messages[Math.floor(Date.now() / 10000) % messages.length] // Rotate every 10 seconds
-  }
-
   if (loading) {
     return (
       <Card className="bg-black/60 border border-white/10 backdrop-blur-xl h-full overflow-hidden rounded-xl">
@@ -360,27 +349,6 @@ export default function SnusImpactTracker() {
           </div>
         </div>
 
-        {/* Work Time Wasted */}
-        <div className="mb-4">
-          <h4 className="text-sm font-bold text-white mb-2 flex items-center">
-            <Clock className="h-3 w-3 mr-1 text-blue-400" />
-            Work Time Wasted
-          </h4>
-          
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2">
-            <div className="grid grid-cols-2 gap-2 text-center">
-              <div>
-                <div className="text-xs text-gray-400">This week</div>
-                <div className="text-sm font-bold text-blue-400">{formatTime(impactData.minutesWeek)}</div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-400">This month</div>
-                <div className="text-sm font-bold text-blue-400">{formatTime(impactData.minutesMonth)}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Positive Progress */}
         <div className="mb-4">
           <h4 className="text-sm font-bold text-white mb-2 flex items-center">
@@ -428,15 +396,23 @@ export default function SnusImpactTracker() {
           </div>
         </div>
 
-        {/* Dynamic Motivational Message */}
-        <div className="flex-1 flex items-end">
-          <div className="w-full bg-white/5 border border-white/10 rounded-lg p-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <Calendar className="h-3 w-3 text-purple-400" />
-              <span className="text-xs text-purple-400 font-medium">Reality Check</span>
-            </div>
-            <div className="text-sm text-white">
-              {getMotivationalMessage()}
+        {/* Work Time Wasted */}
+        <div className="mb-4">
+          <h4 className="text-sm font-bold text-white mb-2 flex items-center">
+            <Clock className="h-3 w-3 mr-1 text-blue-400" />
+            Work Time Wasted
+          </h4>
+          
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2">
+            <div className="grid grid-cols-2 gap-2 text-center">
+              <div>
+                <div className="text-xs text-gray-400">This week</div>
+                <div className="text-sm font-bold text-blue-400">{formatTime(impactData.minutesWeek)}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-400">This month</div>
+                <div className="text-sm font-bold text-blue-400">{formatTime(impactData.minutesMonth)}</div>
+              </div>
             </div>
           </div>
         </div>

@@ -4,16 +4,18 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Plus, ChevronRight, TrendingUp } from 'lucide-react'
+import { Plus, ChevronRight, TrendingUp, Filter, History } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 import AddSubscriptionDialog from './AddSubscriptionDialog'
 import SubscriptionDetailsDialog from './SubscriptionDetailsDialog'
+import SubscriptionHistoryDialog from './SubscriptionHistoryDialog'
 
 interface Subscription {
   id: string
   name: string
   price: number
   renewalDate: string
+  startDate: string
   icon: string
   color: string
   status: 'active' | 'upcoming' | 'overdue'
@@ -24,90 +26,28 @@ interface Subscription {
   reminderEnabled: boolean
 }
 
-// Fallback data for first-time users
-const defaultSubscriptions: Subscription[] = [
-  {
-    id: '1',
-    name: 'Forsikring',
-    price: 210.00,
-    renewalDate: '2024-01-18',
-    icon: '🏥',
-    color: 'bg-blue-500',
-    status: 'upcoming',
-    daysUntilRenewal: 3,
-    billingCycle: 'monthly',
-    reminderEnabled: true
-  },
-  {
-    id: '2',
-    name: 'Ice Mobil',
-    price: 428.00,
-    renewalDate: '2024-06-17',
-    icon: '📱',
-    color: 'bg-orange-500',
-    status: 'active',
-    daysUntilRenewal: 150,
-    billingCycle: 'monthly',
-    reminderEnabled: true
-  },
-  {
-    id: '3',
-    name: 'Cursor',
-    price: 216.00,
-    renewalDate: '2024-06-25',
-    icon: '💻',
-    color: 'bg-purple-500',
-    status: 'active',
-    daysUntilRenewal: 158,
-    billingCycle: 'monthly',
-    reminderEnabled: true
-  },
-  {
-    id: '4',
-    name: 'Trene Sammen',
-    price: 250.00,
-    renewalDate: '2024-06-28',
-    icon: '🏃',
-    color: 'bg-red-500',
-    status: 'active',
-    daysUntilRenewal: 161,
-    billingCycle: 'monthly',
-    reminderEnabled: true
-  },
-  {
-    id: '5',
-    name: 'ChatGPT',
-    price: 270.00,
-    renewalDate: '2024-06-30',
-    icon: '🤖',
-    color: 'bg-gray-800',
-    status: 'active',
-    daysUntilRenewal: 163,
-    billingCycle: 'monthly',
-    reminderEnabled: true
-  },
-  {
-    id: '6',
-    name: 'Spotify',
-    price: 169.00,
-    renewalDate: '2024-07-06',
-    icon: '🎵',
-    color: 'bg-green-500',
-    status: 'active',
-    daysUntilRenewal: 169,
-    billingCycle: 'monthly',
-    reminderEnabled: true
-  }
-]
+// No default data - users start with empty list
+const defaultSubscriptions: Subscription[] = []
 
 export default function SubscriptionTracker() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [monthlyTotal, setMonthlyTotal] = useState(0)
   const [dueThisMonth, setDueThisMonth] = useState(0)
+  const [dueThisYear, setDueThisYear] = useState(0)
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showDetailsDialog, setShowDetailsDialog] = useState(false)
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
+  const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
+  const [currentFilter, setCurrentFilter] = useState<'name' | 'price' | 'renewal'>('name')
+  const [showFilterPicker, setShowFilterPicker] = useState(false)
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false)
+
+  const filterOptions = [
+    { value: 'name', label: 'Name' },
+    { value: 'price', label: 'Price' },
+    { value: 'renewal', label: 'Renewal' }
+  ]
 
   useEffect(() => {
     loadSubscriptions()
@@ -132,18 +72,12 @@ export default function SubscriptionTracker() {
         }))
         setSubscriptions(updatedSubscriptions)
       } else {
-        // First time user - use default data and save it
-        const initialSubscriptions = defaultSubscriptions.map(sub => ({
-          ...sub,
-          daysUntilRenewal: calculateDaysUntilRenewal(sub.renewalDate),
-          status: getSubscriptionStatus(sub.renewalDate)
-        }))
-        setSubscriptions(initialSubscriptions)
-        await storage.save('subscriptions', initialSubscriptions)
+        // Start with empty list for new users
+        setSubscriptions([])
       }
     } catch (error) {
       console.error('Error loading subscriptions:', error)
-      setSubscriptions(defaultSubscriptions)
+      setSubscriptions([])
     } finally {
       setLoading(false)
     }
@@ -151,9 +85,15 @@ export default function SubscriptionTracker() {
 
   const calculateDaysUntilRenewal = (renewalDate: string): number => {
     const today = new Date()
+    today.setHours(0, 0, 0, 0) // Start of day to avoid timezone issues
+    
     const renewal = new Date(renewalDate)
+    renewal.setHours(0, 0, 0, 0) // Start of day to avoid timezone issues
+    
     const diffTime = renewal.getTime() - today.getTime()
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const daysDiff = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    return daysDiff // Allow negative values for overdue subscriptions
   }
 
   const getSubscriptionStatus = (renewalDate: string): 'active' | 'upcoming' | 'overdue' => {
@@ -173,6 +113,13 @@ export default function SubscriptionTracker() {
       .filter(sub => sub.daysUntilRenewal <= 30)
       .reduce((sum, sub) => sum + sub.price, 0)
     setDueThisMonth(thisMonth)
+    
+    // Calculate due this year (monthly total * months left in year including current month)
+    const now = new Date()
+    const currentMonth = now.getMonth() // 0-11
+    const monthsLeftInYear = 12 - currentMonth // Including current month
+    const thisYear = total * monthsLeftInYear
+    setDueThisYear(thisYear)
   }
 
   const handleSubscriptionAdded = async (newSubscription: Subscription) => {
@@ -193,13 +140,78 @@ export default function SubscriptionTracker() {
     setSubscriptions(updatedSubscriptions)
   }
 
-  const handleSubscriptionDeleted = (subscriptionId: string) => {
-    const updatedSubscriptions = subscriptions.filter(sub => sub.id !== subscriptionId)
-    setSubscriptions(updatedSubscriptions)
+  const handleSubscriptionDeleted = async (subscriptionId: string) => {
+    try {
+      // Find the subscription to delete
+      const subscriptionToDelete = subscriptions.find(sub => sub.id === subscriptionId)
+      
+      if (subscriptionToDelete) {
+        // Calculate duration and total paid
+        const startDate = new Date(subscriptionToDelete.renewalDate)
+        const endDate = new Date()
+        const durationDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+        
+        // Estimate total paid (rough calculation)
+        const monthlyPrice = subscriptionToDelete.price
+        const totalPaid = Math.max(monthlyPrice, (durationDays / 30) * monthlyPrice)
+        
+        // Create history entry
+        const historyEntry = {
+          id: subscriptionToDelete.id,
+          name: subscriptionToDelete.name,
+          price: subscriptionToDelete.price,
+          icon: subscriptionToDelete.icon,
+          color: subscriptionToDelete.color,
+          startDate: subscriptionToDelete.renewalDate,
+          endDate: endDate.toISOString().split('T')[0],
+          category: subscriptionToDelete.category,
+          billingCycle: subscriptionToDelete.billingCycle,
+          totalPaid: totalPaid,
+          durationDays: Math.max(1, durationDays)
+        }
+        
+        // Save to history
+        const existingHistory = await storage.load('subscription-history') || []
+        await storage.save('subscription-history', [...existingHistory, historyEntry])
+      }
+      
+      // Remove from active subscriptions
+      const updatedSubscriptions = subscriptions.filter(sub => sub.id !== subscriptionId)
+      setSubscriptions(updatedSubscriptions)
+      await storage.save('subscriptions', updatedSubscriptions)
+    } catch (error) {
+      console.error('Error deleting subscription:', error)
+    }
+  }
+
+  const handleEditSubscription = (subscription: Subscription) => {
+    setEditingSubscription(subscription)
+    setShowDetailsDialog(false)
+    setShowAddDialog(true)
+  }
+
+  const handleSubscriptionEdited = (updatedSubscription: Subscription) => {
+    handleSubscriptionUpdated(updatedSubscription)
+    setEditingSubscription(null)
+  }
+
+  const getSortedSubscriptions = () => {
+    const sorted = [...subscriptions]
+    
+    switch (currentFilter) {
+      case 'name':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name))
+      case 'price':
+        return sorted.sort((a, b) => b.price - a.price) // High to low
+      case 'renewal':
+        return sorted.sort((a, b) => a.daysUntilRenewal - b.daysUntilRenewal) // Soonest first
+      default:
+        return sorted
+    }
   }
 
   const formatCurrency = (amount: number) => {
-    return `kr${amount.toFixed(0).replace('.', ',')}`
+    return `kr ${amount.toFixed(0).replace('.', ',')}`
   }
 
   const formatDate = (dateString: string) => {
@@ -245,9 +257,13 @@ export default function SubscriptionTracker() {
                 <p className="text-xs text-gray-400">Monthly subscriptions</p>
               </div>
             </div>
-            <Badge className="bg-blue-500/20 text-blue-400 px-2 py-1 text-xs rounded">
-              {subscriptions.length} active
-            </Badge>
+            <button
+              onClick={() => setShowHistoryDialog(true)}
+              className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-2 py-1 text-xs rounded flex items-center space-x-1 transition-colors"
+            >
+              <History className="h-3 w-3" />
+              <span>History</span>
+            </button>
           </div>
 
           {/* Overview Section - Compact */}
@@ -266,10 +282,16 @@ export default function SubscriptionTracker() {
               </div>
             </div>
 
-            {/* Due This Month - Smaller */}
-            <div className="bg-white/5 border border-white/10 rounded-lg p-2">
-              <div className="text-xs text-gray-400 mb-1">Due this month</div>
-              <div className="text-lg font-bold text-white">{formatCurrency(dueThisMonth)}</div>
+            {/* Due This Month & Year - 2x1 Grid */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-white/5 border border-white/10 rounded-lg p-2">
+                <div className="text-xs text-gray-400 mb-1">Due this month</div>
+                <div className="text-lg font-bold text-white">{formatCurrency(dueThisMonth)}</div>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-2">
+                <div className="text-xs text-gray-400 mb-1">Due this year</div>
+                <div className="text-lg font-bold text-white">{formatCurrency(dueThisYear)}</div>
+              </div>
             </div>
           </div>
 
@@ -309,11 +331,40 @@ export default function SubscriptionTracker() {
           <div className="flex-1 overflow-y-auto">
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-sm font-bold text-white">Subscriptions</h4>
-              <ChevronRight className="h-3 w-3 text-gray-400" />
+              <div className="relative">
+                <button
+                  onClick={() => setShowFilterPicker(!showFilterPicker)}
+                  className="flex items-center space-x-1 text-gray-400 hover:text-white transition-colors"
+                >
+                  <Filter className="h-3 w-3" />
+                  <span className="text-xs">{filterOptions.find(f => f.value === currentFilter)?.label}</span>
+                </button>
+                
+                {showFilterPicker && (
+                  <div className="absolute right-0 top-6 bg-gray-800 border border-white/20 rounded-lg p-2 z-10 min-w-[80px]">
+                    {filterOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setCurrentFilter(option.value as 'name' | 'price' | 'renewal')
+                          setShowFilterPicker(false)
+                        }}
+                        className={`w-full text-left px-2 py-1 text-xs rounded transition-colors ${
+                          currentFilter === option.value 
+                            ? 'bg-blue-500/20 text-blue-400' 
+                            : 'text-gray-400 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
-              {subscriptions.map((sub) => {
+              {getSortedSubscriptions().map((sub) => {
                 const renewalInfo = getRenewalText(sub)
                 return (
                   <div
@@ -347,8 +398,13 @@ export default function SubscriptionTracker() {
       {/* Add Subscription Dialog */}
       <AddSubscriptionDialog
         isOpen={showAddDialog}
-        onClose={() => setShowAddDialog(false)}
+        onClose={() => {
+          setShowAddDialog(false)
+          setEditingSubscription(null)
+        }}
         onSubscriptionAdded={handleSubscriptionAdded}
+        editingSubscription={editingSubscription}
+        onSubscriptionUpdated={handleSubscriptionEdited}
       />
 
       {/* Subscription Details Dialog */}
@@ -358,7 +414,16 @@ export default function SubscriptionTracker() {
         subscription={selectedSubscription}
         onSubscriptionUpdated={handleSubscriptionUpdated}
         onSubscriptionDeleted={handleSubscriptionDeleted}
+        onEdit={handleEditSubscription}
       />
+
+      {/* Subscription History Dialog */}
+      {showHistoryDialog && (
+        <SubscriptionHistoryDialog
+          isOpen={showHistoryDialog}
+          onClose={() => setShowHistoryDialog(false)}
+        />
+      )}
     </>
   )
 } 

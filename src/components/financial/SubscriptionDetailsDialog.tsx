@@ -11,6 +11,7 @@ interface Subscription {
   name: string
   price: number
   renewalDate: string
+  startDate: string
   icon: string
   color: string
   status: 'active' | 'upcoming' | 'overdue'
@@ -27,6 +28,7 @@ interface SubscriptionDetailsDialogProps {
   subscription: Subscription | null
   onSubscriptionUpdated: (updatedSubscription: Subscription) => void
   onSubscriptionDeleted: (subscriptionId: string) => void
+  onEdit: (subscription: Subscription) => void
 }
 
 export default function SubscriptionDetailsDialog({ 
@@ -34,7 +36,8 @@ export default function SubscriptionDetailsDialog({
   onClose, 
   subscription,
   onSubscriptionUpdated,
-  onSubscriptionDeleted
+  onSubscriptionDeleted,
+  onEdit
 }: SubscriptionDetailsDialogProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
@@ -82,10 +85,7 @@ export default function SubscriptionDetailsDialog({
 
   const handleDelete = async () => {
     try {
-      const subscriptions = await storage.load('subscriptions') || []
-      const updatedSubscriptions = subscriptions.filter((sub: Subscription) => sub.id !== subscription.id)
-      await storage.save('subscriptions', updatedSubscriptions)
-      onSubscriptionDeleted(subscription.id)
+      await onSubscriptionDeleted(subscription.id)
       onClose()
     } catch (error) {
       console.error('Error deleting subscription:', error)
@@ -117,13 +117,18 @@ export default function SubscriptionDetailsDialog({
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <span className="text-white/80 text-lg">Edit</span>
+            <button 
+              onClick={() => onEdit(subscription)}
+              className="text-white/80 hover:text-white text-lg"
+            >
+              Edit
+            </button>
           </div>
 
           {/* Large Icon */}
           <div className="flex flex-col items-center mb-4">
             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg">
-              <div className={`w-12 h-12 ${subscription.color} rounded-lg flex items-center justify-center text-2xl`}>
+              <div className={`w-12 h-12 ${subscription.color} rounded-full flex items-center justify-center text-2xl`}>
                 {subscription.icon}
               </div>
             </div>
@@ -201,13 +206,6 @@ export default function SubscriptionDetailsDialog({
 
           {/* Action Buttons */}
           <div className="space-y-3 pt-4">
-            <Button
-              onClick={handleMarkAsCancelled}
-              className="w-full bg-white/10 hover:bg-white/20 text-white py-4 rounded-2xl text-lg font-medium border border-white/20"
-            >
-              Mark as cancelled
-            </Button>
-
             <Button
               onClick={() => setShowDeleteConfirm(true)}
               className="w-full bg-transparent hover:bg-red-500/20 text-red-400 py-4 rounded-2xl text-lg font-medium border border-red-500/30"

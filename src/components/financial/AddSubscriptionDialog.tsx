@@ -13,6 +13,7 @@ interface Subscription {
   name: string
   price: number
   renewalDate: string
+  startDate: string
   icon: string
   color: string
   status: 'active' | 'upcoming' | 'overdue'
@@ -27,6 +28,8 @@ interface AddSubscriptionDialogProps {
   isOpen: boolean
   onClose: () => void
   onSubscriptionAdded: (subscription: Subscription) => void
+  editingSubscription?: Subscription | null
+  onSubscriptionUpdated?: (subscription: Subscription) => void
 }
 
 const iconOptions = ['💻', '📱', '🎵', '🎬', '🏃', '☁️', '🛡️', '🏠', '📚', '🤖']
@@ -44,7 +47,7 @@ const colorOptions = [
 const categories = ['Entertainment', 'Productivity', 'Health & Fitness', 'Utilities', 'Food & Drink', 'Transportation', 'Other']
 const paymentMethods = ['Credit Card', 'Debit Card', 'PayPal', 'Bank Transfer', 'Other']
 
-export default function AddSubscriptionDialog({ isOpen, onClose, onSubscriptionAdded }: AddSubscriptionDialogProps) {
+export default function AddSubscriptionDialog({ isOpen, onClose, onSubscriptionAdded, editingSubscription, onSubscriptionUpdated }: AddSubscriptionDialogProps) {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -83,70 +86,184 @@ export default function AddSubscriptionDialog({ isOpen, onClose, onSubscriptionA
   useEffect(() => {
     if (!isOpen) {
       resetForm()
+    } else if (editingSubscription) {
+      // Pre-fill form with existing subscription data
+      setFormData({
+        name: editingSubscription.name,
+        price: editingSubscription.price.toString(),
+        icon: editingSubscription.icon,
+        color: editingSubscription.color,
+        startDate: editingSubscription.startDate || editingSubscription.renewalDate,
+        billingCycle: editingSubscription.billingCycle,
+        category: editingSubscription.category || '',
+        paymentMethod: editingSubscription.paymentMethod || '',
+        reminderEnabled: editingSubscription.reminderEnabled,
+        isPaid: editingSubscription.price > 0
+      })
     }
-  }, [isOpen])
+  }, [isOpen, editingSubscription])
 
   const calculateRenewalDate = () => {
     const startDate = new Date(formData.startDate)
-    const renewalDate = new Date(startDate)
+    startDate.setHours(0, 0, 0, 0)
     
-    if (formData.billingCycle === 'monthly') {
-      renewalDate.setMonth(renewalDate.getMonth() + 1)
-    } else if (formData.billingCycle === 'yearly') {
-      renewalDate.setFullYear(renewalDate.getFullYear() + 1)
-    } else if (formData.billingCycle === 'weekly') {
-      renewalDate.setDate(renewalDate.getDate() + 7)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    // If start date is in the future, just add one billing cycle
+    if (startDate > today) {
+      const nextRenewal = new Date(startDate)
+      if (formData.billingCycle === 'monthly') {
+        nextRenewal.setMonth(nextRenewal.getMonth() + 1)
+      } else if (formData.billingCycle === 'yearly') {
+        nextRenewal.setFullYear(nextRenewal.getFullYear() + 1)
+      } else if (formData.billingCycle === 'weekly') {
+        nextRenewal.setDate(nextRenewal.getDate() + 7)
+      }
+      return nextRenewal.toISOString().split('T')[0]
     }
     
-    return renewalDate.toISOString().split('T')[0]
+    // For past/current dates, calculate the next renewal based on billing cycles
+    let nextRenewal = new Date(startDate)
+    
+    if (formData.billingCycle === 'weekly') {
+      // Calculate how many weeks have passed
+      const weeksPassed = Math.floor((today.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000))
+      nextRenewal.setDate(startDate.getDate() + (weeksPassed + 1) * 7)
+    } else if (formData.billingCycle === 'monthly') {
+      // Better monthly calculation - preserve the day of month
+      const startDay = startDate.getDate()
+      const startMonth = startDate.getMonth()
+      const startYear = startDate.getFullYear()
+      
+      let targetMonth = startMonth
+      let targetYear = startYear
+      
+      // Keep adding months until we get a future date
+      do {
+        targetMonth++
+        if (targetMonth > 11) {
+          targetMonth = 0
+          targetYear++
+        }
+        
+        // Create the renewal date for this month
+        nextRenewal = new Date(targetYear, targetMonth, 1) // Start with 1st of month
+        nextRenewal.setDate(startDay) // Set to the same day
+        
+        // Handle cases where the day doesn't exist (e.g., Feb 30th -> Feb 28th/29th)
+        if (nextRenewal.getDate() !== startDay) {
+          // Go to the last day of the month
+          nextRenewal = new Date(targetYear, targetMonth + 1, 0)
+        }
+        
+      } while (nextRenewal <= today)
+      
+    } else if (formData.billingCycle === 'yearly') {
+      // Calculate how many years have passed
+      let yearsPassed = 0
+      const tempDate = new Date(startDate)
+      while (tempDate <= today) {
+        tempDate.setFullYear(tempDate.getFullYear() + 1)
+        yearsPassed++
+      }
+      nextRenewal.setFullYear(startDate.getFullYear() + yearsPassed)
+    }
+    
+    return nextRenewal.toISOString().split('T')[0]
   }
 
   const calculateDaysUntilRenewal = () => {
     const today = new Date()
-    const renewal = new Date(calculateRenewalDate())
+    today.setHours(0, 0, 0, 0) // Start of day
+    
+    const renewalDateString = calculateRenewalDate()
+    const renewal = new Date(renewalDateString)
+    renewal.setHours(0, 0, 0, 0) // Start of day
+    
     const diffTime = renewal.getTime() - today.getTime()
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const daysDiff = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    return Math.max(0, daysDiff) // Never return negative days
   }
 
   const handleSubmit = async () => {
-    if (!formData.name.trim() || (!formData.isPaid && !formData.price)) {
+    if (!formData.name.trim() || (formData.isPaid && !formData.price)) {
       return // Basic validation
     }
 
-    const newSubscription: Subscription = {
-      id: Date.now().toString(),
-      name: formData.name.trim(),
-      price: formData.isPaid ? parseFloat(formData.price) || 0 : 0,
-      renewalDate: calculateRenewalDate(),
-      icon: formData.icon,
-      color: formData.color,
-      status: 'active',
-      daysUntilRenewal: calculateDaysUntilRenewal(),
-      category: formData.category,
-      paymentMethod: formData.paymentMethod,
-      billingCycle: formData.billingCycle,
-      reminderEnabled: formData.reminderEnabled
-    }
+    const renewalDate = calculateRenewalDate()
+    const daysUntilRenewal = calculateDaysUntilRenewal()
 
-    try {
-      // Save to storage
-      const existingSubscriptions = await storage.load('subscriptions') || []
-      const updatedSubscriptions = [...existingSubscriptions, newSubscription]
-      await storage.save('subscriptions', updatedSubscriptions)
-      
-      // Notify parent component
-      onSubscriptionAdded(newSubscription)
-      onClose()
-    } catch (error) {
-      console.error('Error saving subscription:', error)
+    if (editingSubscription) {
+      // Update existing subscription
+      const updatedSubscription: Subscription = {
+        ...editingSubscription,
+        name: formData.name.trim(),
+        price: formData.isPaid ? parseFloat(formData.price) || 0 : 0,
+        renewalDate: renewalDate,
+        startDate: formData.startDate,
+        icon: formData.icon,
+        color: formData.color,
+        category: formData.category,
+        paymentMethod: formData.paymentMethod,
+        billingCycle: formData.billingCycle,
+        reminderEnabled: formData.reminderEnabled,
+        daysUntilRenewal: daysUntilRenewal,
+        status: daysUntilRenewal <= 0 ? 'overdue' : daysUntilRenewal <= 7 ? 'upcoming' : 'active'
+      }
+
+      try {
+        const subscriptions = await storage.load('subscriptions') || []
+        const updatedSubscriptions = subscriptions.map((sub: Subscription) => 
+          sub.id === editingSubscription.id ? updatedSubscription : sub
+        )
+        await storage.save('subscriptions', updatedSubscriptions)
+        
+        if (onSubscriptionUpdated) {
+          onSubscriptionUpdated(updatedSubscription)
+        }
+        onClose()
+      } catch (error) {
+        console.error('Error updating subscription:', error)
+      }
+    } else {
+      // Create new subscription
+      const newSubscription: Subscription = {
+        id: Date.now().toString(),
+        name: formData.name.trim(),
+        price: formData.isPaid ? parseFloat(formData.price) || 0 : 0,
+        renewalDate: renewalDate,
+        startDate: formData.startDate,
+        icon: formData.icon,
+        color: formData.color,
+        status: daysUntilRenewal <= 0 ? 'overdue' : daysUntilRenewal <= 7 ? 'upcoming' : 'active',
+        daysUntilRenewal: daysUntilRenewal,
+        category: formData.category,
+        paymentMethod: formData.paymentMethod,
+        billingCycle: formData.billingCycle,
+        reminderEnabled: formData.reminderEnabled
+      }
+
+      try {
+        const existingSubscriptions = await storage.load('subscriptions') || []
+        const updatedSubscriptions = [...existingSubscriptions, newSubscription]
+        await storage.save('subscriptions', updatedSubscriptions)
+        
+        onSubscriptionAdded(newSubscription)
+        onClose()
+      } catch (error) {
+        console.error('Error saving subscription:', error)
+      }
     }
   }
 
   const formatDateForDisplay = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-GB', { 
-      day: 'numeric',
-      month: 'short',
+    // European format: DD/MM/YYYY
+    return date.toLocaleDateString('no-NO', { 
+      day: '2-digit',
+      month: '2-digit',
       year: 'numeric'
     })
   }
@@ -167,7 +284,9 @@ export default function AddSubscriptionDialog({ isOpen, onClose, onSubscriptionA
               <ArrowLeft className="h-4 w-4 mr-1" />
               Back
             </Button>
-            <DialogTitle className="text-lg font-bold">Add Subscription</DialogTitle>
+            <DialogTitle className="text-lg font-bold">
+              {editingSubscription ? 'Edit Subscription' : 'Add Subscription'}
+            </DialogTitle>
             <div className="w-12" /> {/* Spacer */}
           </div>
         </DialogHeader>
@@ -401,7 +520,7 @@ export default function AddSubscriptionDialog({ isOpen, onClose, onSubscriptionA
             disabled={!formData.name.trim() || (formData.isPaid && !formData.price)}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed mt-4"
           >
-            Add Subscription
+            {editingSubscription ? 'Update Subscription' : 'Add Subscription'}
           </Button>
         </div>
       </DialogContent>
