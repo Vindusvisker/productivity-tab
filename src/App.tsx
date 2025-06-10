@@ -5,8 +5,10 @@ import StarButton from './components/StarButton';
 import HomeView from './views/HomeView';
 import ProductivityView from './views/ProductivityView';
 import PersonalView from './views/PersonalView';
+import VisionView from './views/VisionView';
+import FinancialView from './views/FinancialView';
 
-type ViewType = 'home' | 'productivity' | 'personal';
+type ViewType = 'home' | 'productivity' | 'personal' | 'vision' | 'financial';
 
 // All theme definitions in one place (Chrome extension friendly)
 const themes = {
@@ -165,6 +167,10 @@ export default function App() {
         return <ProductivityView />;
       case 'personal':
         return <PersonalView />;
+      case 'vision':
+        return <VisionView />;
+      case 'financial':
+        return <FinancialView />;
       default:
         return <HomeView />;
     }

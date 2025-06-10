@@ -1,7 +1,7 @@
-import { Search, BarChart3, Trophy } from 'lucide-react';
+import { Search, BarChart3, Trophy, Eye, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type ViewType = 'home' | 'productivity' | 'personal';
+type ViewType = 'home' | 'productivity' | 'personal' | 'vision' | 'financial';
 
 interface NavigationProps {
   currentView: ViewType;
@@ -57,6 +57,16 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange, curr
       id: 'personal' as ViewType,
       label: 'Personal',
       icon: Trophy,
+    },
+    {
+      id: 'vision' as ViewType,
+      label: 'Vision',
+      icon: Eye,
+    },
+    {
+      id: 'financial' as ViewType,
+      label: 'Financial',
+      icon: DollarSign,
     }
   ];
 
