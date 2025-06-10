@@ -47,6 +47,7 @@ import {
   FaceSmileIcon,
   CheckBadgeIcon
 } from '@heroicons/react/24/solid'
+import { Crown } from 'lucide-react'
 
 interface HeroIconProps {
   level: number
@@ -99,8 +100,8 @@ export default function HeroIcon({ level, className = "h-6 w-6" }: HeroIconProps
     if (level >= 70 && level <= 89) return <CpuChipIcon className={className} />
     if (level >= 90 && level <= 99) return <CloudIcon className={className} />
     
-    // Transcendent (100+)
-    if (level >= 100) return <CheckBadgeIcon className={className} />
+    // Transcendent (100+) - Ultimate Achievement
+    if (level >= 100) return <Crown className={className} />
     
     // Fallback for any missed levels
     return <HandRaisedIcon className={className} />
@@ -139,6 +140,6 @@ export function getLevelTierInfo(level: number) {
   if (level <= 39) return { tier: 'Legend', color: 'text-red-400', bgColor: 'from-red-400 to-red-600' }
   if (level <= 49) return { tier: 'Mythic', color: 'text-purple-400', bgColor: 'from-purple-400 to-purple-600' }
   if (level <= 99) return { tier: 'Godlike', color: 'text-pink-400', bgColor: 'from-pink-400 to-pink-600' }
-  return { tier: 'Transcendent', color: 'text-white', bgColor: 'from-white to-gray-200' }
+  return { tier: 'Transcendent', color: 'text-yellow-300', bgColor: 'from-yellow-400 via-yellow-500 to-yellow-600' }
 } 
 

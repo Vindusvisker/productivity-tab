@@ -389,7 +389,7 @@ export default function AchievementWall() {
         if (isJustUnlocked) {
           newlyUnlocked.push(achievement.id)
           totalAwardedXP += achievement.xpReward
-          console.log(`🏆 Achievement unlocked: ${achievement.title} (+${achievement.xpReward} XP)`)
+          console.log(`🎉 Achievement unlocked: ${achievement.title} (+${achievement.xpReward} XP)`)
         }
       }
 
@@ -418,9 +418,19 @@ export default function AchievementWall() {
     const sortedLogs = logs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     const getScore = (log: DailyLog) => log.habitsCompleted * 2 + log.focusSessions * 1 - log.snusCount * 1
     
+    const today = new Date().toISOString().split('T')[0]
+    
     let streak = 0
     for (const log of sortedLogs) {
-      if (getScore(log) >= 3) {
+      const score = getScore(log)
+      const isToday = log.date === today
+      
+      // Skip today if it has a low score (day might not be complete)
+      if (isToday && score < 3) {
+        continue
+      }
+      
+      if (score >= 3) {
         streak++
       } else {
         break

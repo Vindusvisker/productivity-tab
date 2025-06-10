@@ -243,8 +243,52 @@ export default function ActiveMissions() {
   const getWeeklyMission = (weekLogs: DailyLog[]): Mission => {
     const templates = getWeeklyMissionTemplates()
     const weekNumber = getWeekNumber()
-    const template = templates[weekNumber % templates.length] // Rotate based on week
     
+    // Get days remaining in the week
+    const today = new Date()
+    const dayOfWeek = today.getDay() // 0 = Sunday, 1 = Monday, etc.
+    const daysLeftInWeek = dayOfWeek === 0 ? 1 : 7 - dayOfWeek + 1 // Include today
+    
+    // Filter out impossible missions
+    const achievableTemplates = templates.filter(template => {
+      // If it's a streak mission, make sure it's achievable
+      if (template.id === 'streak-builder') {
+        return daysLeftInWeek >= template.target
+      }
+      return true // All other missions are achievable
+    })
+    
+    // If no achievable missions, fallback to a simple one
+    if (achievableTemplates.length === 0) {
+      // Create a fallback mission that's always achievable
+      const fallbackTemplate = {
+        id: 'daily-boost',
+        title: 'Daily Boost',
+        description: `Complete ${Math.min(3, daysLeftInWeek * 2)} habits this week`,
+        target: Math.min(10, daysLeftInWeek * 2),
+        xpReward: 300,
+        icon: '⚡',
+        color: 'from-yellow-500 to-orange-500',
+        calculateProgress: (logs: DailyLog[]) => logs.reduce((sum, log) => sum + log.habitsCompleted, 0)
+      }
+      
+      const progress = fallbackTemplate.calculateProgress(weekLogs)
+      
+      return {
+        id: fallbackTemplate.id,
+        title: fallbackTemplate.title,
+        description: fallbackTemplate.description,
+        progress,
+        target: fallbackTemplate.target,
+        xpReward: fallbackTemplate.xpReward,
+        type: 'weekly',
+        icon: fallbackTemplate.icon,
+        color: fallbackTemplate.color
+      }
+    }
+    
+    // Select from achievable missions
+    const template = achievableTemplates[weekNumber % achievableTemplates.length]
     const progress = template.calculateProgress(weekLogs)
     
     return {
@@ -338,9 +382,19 @@ export default function ActiveMissions() {
     const sortedLogs = logs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     const getScore = (log: DailyLog) => log.habitsCompleted * 2 + log.focusSessions * 1 - log.snusCount * 1
     
+    const today = new Date().toISOString().split('T')[0]
+    
     let streak = 0
     for (const log of sortedLogs) {
-      if (getScore(log) >= 3) {
+      const score = getScore(log)
+      const isToday = log.date === today
+      
+      // Skip today if it has a low score (day might not be complete)
+      if (isToday && score < 3) {
+        continue
+      }
+      
+      if (score >= 3) {
         streak++
       } else {
         break

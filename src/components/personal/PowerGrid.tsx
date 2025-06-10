@@ -123,7 +123,15 @@ export default function PowerGrid() {
     const getScore = (log: DailyLog) => log.habitsCompleted * 2 + log.focusSessions * 1 - log.snusCount * 1
     
     for (const log of sortedLogs) {
-      if (getScore(log) >= 3) {
+      const score = getScore(log)
+      const isToday = log.date === today
+      
+      // Skip today if it has a low score (day might not be complete)
+      if (isToday && score < 3) {
+        continue
+      }
+      
+      if (score >= 3) {
         streak++
       } else {
         break

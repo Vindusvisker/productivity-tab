@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, AlertTriangle, CheckCircle, X } from 'lucide-react'
@@ -18,6 +18,7 @@ interface SnusData {
 export default function SnusTracker() {
   const [dailyCount, setDailyCount] = useState(0)
   const [showShame, setShowShame] = useState(true)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [snusData, setSnusData] = useState<SnusData>({
     dailyCount: 0,
     totalDays: 0,
@@ -28,10 +29,23 @@ export default function SnusTracker() {
   })
   
   const DAILY_LIMIT = 5
+  const lastClickTimeRef = useRef<number>(0)
 
   // Load data on mount
   useEffect(() => {
     loadSnusData()
+    cleanupDuplicateTimestamps() // Clean up any existing corrupted data
+    
+    // Expose debug helper in development
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      // @ts-ignore
+      window.clearSnusTimestamps = async () => {
+        const today = new Date().toDateString()
+        await storage.save(`snus-timestamps-${today}`, [])
+        console.log('Cleared all snus timestamps for today')
+        window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
+      }
+    }
   }, [])
 
   // Check if we need to reset daily (new day)
@@ -49,6 +63,26 @@ export default function SnusTracker() {
     const interval = setInterval(checkAndReset, 60000)
     return () => clearInterval(interval)
   }, [snusData.lastDate])
+
+  const cleanupDuplicateTimestamps = async () => {
+    try {
+      const today = new Date().toDateString()
+      const existingTimestamps = await storage.load(`snus-timestamps-${today}`) || []
+      
+      if (existingTimestamps.length > 0) {
+        // Remove duplicates while preserving order
+        const uniqueTimestamps = [...new Set(existingTimestamps)]
+        
+        // Only save if we actually removed duplicates
+        if (uniqueTimestamps.length !== existingTimestamps.length) {
+          console.log(`Cleaned up ${existingTimestamps.length - uniqueTimestamps.length} duplicate timestamps`)
+          await storage.save(`snus-timestamps-${today}`, uniqueTimestamps)
+        }
+      }
+    } catch (error) {
+      console.error('Error cleaning up timestamps:', error)
+    }
+  }
 
   const loadSnusData = async () => {
     try {
@@ -156,108 +190,161 @@ export default function SnusTracker() {
   }
 
   const incrementSnus = async () => {
-    const newCount = dailyCount + 1
-    const today = new Date().toDateString()
-    const todayISO = new Date().toISOString().split('T')[0] // ISO format for daily-logs
-    
-    setDailyCount(newCount)
-    
-    // Always show message area (remove the condition)
-    setShowShame(true)
-    
-    const updatedData: SnusData = {
-      ...snusData,
-      dailyCount: newCount,
-      lastDate: today
+    // Prevent rapid consecutive clicks (debounce)
+    const now = Date.now()
+    if (now - lastClickTimeRef.current < 1000) { // 1 second debounce
+      console.log('Click too rapid, ignoring')
+      return
     }
-    
-    await saveSnusData(updatedData)
-    
-    // Save timestamp for detailed tracking
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    const existingTimestamps = await storage.load(`snus-timestamps-${today}`) || []
-    const updatedTimestamps = [...existingTimestamps, currentTime]
-    await storage.save(`snus-timestamps-${today}`, updatedTimestamps)
-    
-    // Save to unified daily-logs format (same as JourneyHeatmap)
-    const dailyLogsData = await storage.load('daily-logs') || {}
-    const existingLog = dailyLogsData[todayISO] || { 
-      date: todayISO, 
-      habitsCompleted: 0, 
-      focusSessions: 0, 
-      snusCount: 0 
+    lastClickTimeRef.current = now
+
+    // Prevent multiple concurrent executions
+    if (isProcessing) {
+      console.log('Already processing, ignoring')
+      return
     }
-    dailyLogsData[todayISO] = {
-      ...existingLog,
-      snusCount: newCount
+
+    setIsProcessing(true)
+
+    try {
+      const newCount = dailyCount + 1
+      const today = new Date().toDateString()
+      const todayISO = new Date().toISOString().split('T')[0] // ISO format for daily-logs
+      
+      setDailyCount(newCount)
+      
+      // Always show message area (remove the condition)
+      setShowShame(true)
+      
+      const updatedData: SnusData = {
+        ...snusData,
+        dailyCount: newCount,
+        lastDate: today
+      }
+      
+      await saveSnusData(updatedData)
+      
+      // Save timestamp for detailed tracking - only save ONE timestamp per click
+      const currentTime = new Date().toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit' 
+      })
+      const existingTimestamps = await storage.load(`snus-timestamps-${today}`) || []
+      
+      // Make sure we don't add duplicate timestamps (very unlikely now with seconds)
+      if (!existingTimestamps.includes(currentTime)) {
+        const updatedTimestamps = [...existingTimestamps, currentTime]
+        await storage.save(`snus-timestamps-${today}`, updatedTimestamps)
+      }
+      
+      // Save to unified daily-logs format (same as JourneyHeatmap)
+      const dailyLogsData = await storage.load('daily-logs') || {}
+      const existingLog = dailyLogsData[todayISO] || { 
+        date: todayISO, 
+        habitsCompleted: 0, 
+        focusSessions: 0, 
+        snusCount: 0 
+      }
+      dailyLogsData[todayISO] = {
+        ...existingLog,
+        snusCount: newCount
+      }
+      await storage.save('daily-logs', dailyLogsData)
+      
+      // Also update legacy day data for WeeklyOverview
+      const existingDayData = await storage.load(`day-data-${today}`) || {}
+      const updatedDayData = {
+        ...existingDayData,
+        date: today,
+        snusCount: newCount,
+        snusStatus: newCount === 0 ? 'success' : newCount <= DAILY_LIMIT ? 'pending' : 'failed',
+        habits: existingDayData.habits || [],
+        focusSessions: existingDayData.focusSessions || 0,
+        allHabitsCompleted: existingDayData.allHabitsCompleted || false
+      }
+      await storage.save(`day-data-${today}`, updatedDayData)
+      
+      // Trigger updates to other components
+      window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
+    } catch (error) {
+      console.error('Error incrementing snus:', error)
+    } finally {
+      setIsProcessing(false)
     }
-    await storage.save('daily-logs', dailyLogsData)
-    
-    // Also update legacy day data for WeeklyOverview
-    const existingDayData = await storage.load(`day-data-${today}`) || {}
-    const updatedDayData = {
-      ...existingDayData,
-      date: today,
-      snusCount: newCount,
-      snusStatus: newCount === 0 ? 'success' : newCount <= DAILY_LIMIT ? 'pending' : 'failed',
-      habits: existingDayData.habits || [],
-      focusSessions: existingDayData.focusSessions || 0,
-      allHabitsCompleted: existingDayData.allHabitsCompleted || false
-    }
-    await storage.save(`day-data-${today}`, updatedDayData)
-    
-    // Trigger updates to other components
-    window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
   }
 
   const decrementSnus = async () => {
     if (dailyCount <= 0) return // Don't go below 0
     
-    const newCount = dailyCount - 1
-    const today = new Date().toDateString()
-    const todayISO = new Date().toISOString().split('T')[0]
-    
-    setDailyCount(newCount)
-    
-    // Always show message area (remove the condition)
-    setShowShame(true)
-    
-    const updatedData: SnusData = {
-      ...snusData,
-      dailyCount: newCount
+    // Prevent rapid consecutive clicks
+    const now = Date.now()
+    if (now - lastClickTimeRef.current < 500) { // 500ms debounce for decrement
+      return
     }
-    
-    await saveSnusData(updatedData)
-    
-    // Update unified daily-logs format
-    const dailyLogsData = await storage.load('daily-logs') || {}
-    const existingLog = dailyLogsData[todayISO] || { 
-      date: todayISO, 
-      habitsCompleted: 0, 
-      focusSessions: 0, 
-      snusCount: 0 
+    lastClickTimeRef.current = now
+
+    if (isProcessing) return
+    setIsProcessing(true)
+
+    try {
+      const newCount = dailyCount - 1
+      const today = new Date().toDateString()
+      const todayISO = new Date().toISOString().split('T')[0]
+      
+      setDailyCount(newCount)
+      
+      // Always show message area (remove the condition)
+      setShowShame(true)
+      
+      const updatedData: SnusData = {
+        ...snusData,
+        dailyCount: newCount
+      }
+      
+      await saveSnusData(updatedData)
+      
+      // Remove the last timestamp when decrementing
+      const existingTimestamps = await storage.load(`snus-timestamps-${today}`) || []
+      if (existingTimestamps.length > 0) {
+        const updatedTimestamps = existingTimestamps.slice(0, -1) // Remove last timestamp
+        await storage.save(`snus-timestamps-${today}`, updatedTimestamps)
+      }
+      
+      // Update unified daily-logs format
+      const dailyLogsData = await storage.load('daily-logs') || {}
+      const existingLog = dailyLogsData[todayISO] || { 
+        date: todayISO, 
+        habitsCompleted: 0, 
+        focusSessions: 0, 
+        snusCount: 0 
+      }
+      dailyLogsData[todayISO] = {
+        ...existingLog,
+        snusCount: newCount
+      }
+      await storage.save('daily-logs', dailyLogsData)
+      
+      // Also update legacy day data
+      const existingDayData = await storage.load(`day-data-${today}`) || {}
+      const updatedDayData = {
+        ...existingDayData,
+        date: today,
+        snusCount: newCount,
+        snusStatus: newCount === 0 ? 'success' : newCount <= DAILY_LIMIT ? 'pending' : 'failed',
+        habits: existingDayData.habits || [],
+        focusSessions: existingDayData.focusSessions || 0,
+        allHabitsCompleted: existingDayData.allHabitsCompleted || false
+      }
+      await storage.save(`day-data-${today}`, updatedDayData)
+      
+      // Trigger updates to other components
+      window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
+    } catch (error) {
+      console.error('Error decrementing snus:', error)
+    } finally {
+      setIsProcessing(false)
     }
-    dailyLogsData[todayISO] = {
-      ...existingLog,
-      snusCount: newCount
-    }
-    await storage.save('daily-logs', dailyLogsData)
-    
-    // Also update legacy day data
-    const existingDayData = await storage.load(`day-data-${today}`) || {}
-    const updatedDayData = {
-      ...existingDayData,
-      date: today,
-      snusCount: newCount,
-      snusStatus: newCount === 0 ? 'success' : newCount <= DAILY_LIMIT ? 'pending' : 'failed',
-      habits: existingDayData.habits || [],
-      focusSessions: existingDayData.focusSessions || 0,
-      allHabitsCompleted: existingDayData.allHabitsCompleted || false
-    }
-    await storage.save(`day-data-${today}`, updatedDayData)
-    
-    // Trigger updates to other components
-    window.dispatchEvent(new CustomEvent('dailyLogsUpdated'))
   }
 
   const getStatusColor = () => {
@@ -336,17 +423,18 @@ export default function SnusTracker() {
         <div className="flex space-x-3 mb-4">
           <Button
             onClick={incrementSnus}
-            className="flex-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 hover:text-red-300 rounded-2xl py-3"
+            disabled={isProcessing}
+            className="flex-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 hover:text-red-300 rounded-2xl py-3 disabled:opacity-50"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Take Snus
+            {isProcessing ? 'Adding...' : 'Take Snus'}
           </Button>
           
           <Button
             onClick={decrementSnus}
+            disabled={isProcessing || dailyCount <= 0}
             variant="outline"
             className="bg-gray-800/60 hover:bg-gray-700/60 border-gray-600 text-gray-300 hover:text-white rounded-2xl py-3 disabled:opacity-50"
-            disabled={dailyCount <= 0}
           >
             <span className="text-lg font-bold">−</span>
           </Button>
