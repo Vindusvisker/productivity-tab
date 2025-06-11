@@ -22,7 +22,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange, curr
   const getThemeGradient = (themeId: string) => {
     switch (themeId) {
       case 'ambient':
-        return 'linear-gradient(135deg, rgb(251, 146, 60), rgb(245, 101, 101), rgb(168, 85, 247))';
+        return 'linear-gradient(135deg, rgb(147, 51, 234), rgb(99, 102, 241), rgb(59, 130, 246))';
       case 'minimal':
         return 'linear-gradient(135deg, rgb(156, 163, 175), rgb(107, 114, 128), rgb(75, 85, 99))';
       case 'neon':

@@ -391,11 +391,22 @@ export default function ProfileDialog({ isOpen, onClose, profileData }: ProfileD
 
                 <div className="w-full bg-gray-800/60 rounded-full h-3 relative overflow-hidden border border-white/20 mb-2">
                   <div 
-                    className={`bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 h-full rounded-full transition-all duration-1000 relative`}
+                    className={`bg-gradient-to-r from-white/60 via-white/80 to-white/60 h-full rounded-full transition-all duration-1000 relative`}
                     style={{ width: `${progressPercentage}%` }}
                   >
-                    <div className="absolute inset-0 bg-white/20 animate-pulse opacity-60"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse opacity-60"></div>
                   </div>
+                  
+                  {/* Progress Glow Effect */}
+                  {progressPercentage > 0 && (
+                    <div
+                      className="absolute top-0 left-0 h-3 rounded-full blur-sm opacity-50"
+                      style={{
+                        width: `${progressPercentage}%`,
+                        background: 'linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.8), rgba(255,255,255,0.6))'
+                      }}
+                    />
+                  )}
                 </div>
                 
                 <div className="flex justify-between text-xs">

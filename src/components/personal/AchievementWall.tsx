@@ -45,14 +45,14 @@ const BadgeCard = ({ achievement, onClick }: BadgeCardProps) => {
       onClick={onClick}
       className={`relative p-4 rounded-2xl border transition-all duration-300 cursor-pointer hover:scale-105 ${
         achievement.unlocked
-          ? 'bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/30 hover:border-yellow-500/50'
+          ? 'bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border-purple-500/30 hover:border-purple-500/50'
           : 'bg-black/20 border-white/10 hover:border-white/20'
       }`}
     >
       {/* Badge Icon */}
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-3 ${
         achievement.unlocked
-          ? 'bg-gradient-to-br from-yellow-400 to-orange-500 shadow-lg'
+          ? 'bg-gradient-to-br from-purple-400 to-indigo-500 shadow-lg'
           : 'bg-gray-700 opacity-50'
       }`}>
         {achievement.unlocked ? achievement.icon : <Lock className="h-6 w-6 text-gray-400" />}
@@ -95,7 +95,7 @@ const BadgeCard = ({ achievement, onClick }: BadgeCardProps) => {
 
       {/* Unlock glow effect */}
       {achievement.unlocked && (
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-2xl opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-2xl opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       )}
     </div>
   )
@@ -512,7 +512,7 @@ export default function AchievementWall() {
       <Card className={`bg-gradient-to-br from-black/70 to-black/60 backdrop-blur-xl border border-white/10 h-full flex flex-col rounded-3xl`}>
         <CardHeader className="pb-2 flex-shrink-0">
           <CardTitle className="text-lg font-bold text-white flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-lg flex items-center justify-center">
               <Trophy className="h-4 w-4 text-white" />
             </div>
             <span>Achievement Wall</span>
@@ -557,14 +557,14 @@ export default function AchievementWall() {
                   onClick={() => handleAchievementClick(achievement)}
                   className={`relative p-3 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-105 ${
                     achievement.unlocked
-                      ? 'bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/30 hover:border-yellow-500/50'
+                      ? 'bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border-purple-500/30 hover:border-purple-500/50'
                       : 'bg-black/20 border-white/10 hover:border-white/20'
                   }`}
                 >
                   {/* Badge Icon */}
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg mb-2 ${
                     achievement.unlocked
-                      ? 'bg-gradient-to-br from-yellow-400 to-orange-500 shadow-lg'
+                      ? 'bg-gradient-to-br from-purple-400 to-indigo-500 shadow-lg'
                       : 'bg-gray-700 opacity-50'
                   }`}>
                     {achievement.unlocked ? achievement.icon : <Lock className="h-4 w-4 text-gray-400" />}
@@ -597,7 +597,7 @@ export default function AchievementWall() {
 
                   {/* Unlock glow effect */}
                   {achievement.unlocked && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-xl opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 rounded-xl opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   )}
                 </div>
               ))}
@@ -608,7 +608,7 @@ export default function AchievementWall() {
           <div className="pt-4 border-t border-white/10 flex-shrink-0">
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
-                <div className="text-lg font-bold text-yellow-400">
+                <div className="text-lg font-bold text-purple-400">
                   {achievements.filter(a => a.unlocked).length}
                 </div>
                 <div className="text-xs text-gray-400">Total Unlocked</div>

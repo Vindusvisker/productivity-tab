@@ -273,12 +273,23 @@ export default function ProfileHeader() {
               {/* Enhanced XP Progress Bar */}
               <div className="w-full bg-gray-800/60 rounded-full h-3 relative overflow-hidden border border-white/10 shadow-inner">
                 <div 
-                  className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 h-full rounded-full transition-all duration-1000 relative shadow-lg"
+                  className="bg-gradient-to-r from-white/60 via-white/80 to-white/60 h-full rounded-full transition-all duration-1000 relative shadow-lg"
                   style={{ width: `${getXPProgress()}%` }}
                 >
                   {/* Animated shine effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
                 </div>
+                
+                {/* Progress Glow Effect */}
+                {getXPProgress() > 0 && (
+                  <div
+                    className="absolute top-0 left-0 h-3 rounded-full blur-sm opacity-50"
+                    style={{
+                      width: `${getXPProgress()}%`,
+                      background: 'linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.8), rgba(255,255,255,0.6))'
+                    }}
+                  />
+                )}
               </div>
               
               <p className="text-xs text-gray-400 mt-1 font-medium">

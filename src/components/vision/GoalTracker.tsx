@@ -190,8 +190,8 @@ export default function GoalTracker() {
                 <Target className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Goals</h2>
-                <p className="text-xs text-purple-300">Track progress</p>
+                <h2 className="text-xl font-bold text-white">Savings Goals</h2>
+                <p className="text-xs text-purple-300">Vision board for the future</p>
               </div>
             </div>
             <Badge className="bg-purple-500/20 text-purple-400 px-2 py-1 text-xs border border-purple-500/30">
