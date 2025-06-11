@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronDown, Palette } from 'lucide-react';
 import Navigation from './components/Navigation';
 import StarButton from './components/StarButton';
+import ThemeGallery from './components/ThemeGallery';
 import HomeView from './views/HomeView';
 import ProductivityView from './views/ProductivityView';
 import PersonalView from './views/PersonalView';
@@ -10,12 +11,16 @@ import FinancialView from './views/FinancialView';
 
 type ViewType = 'home' | 'productivity' | 'personal' | 'vision' | 'financial';
 
-// All theme definitions in one place (Chrome extension friendly)
+// Enhanced theme definitions with gamification
 const themes = {
   ambient: {
     id: 'ambient',
     name: 'Ambient Glow',
     description: 'Colorful gradient spots with rich grain',
+    rarity: 'starter',
+    rarityLabel: 'Starter',
+    levelRequired: 1,
+    unlockMessage: 'Welcome to your journey! This signature theme grows with you.',
     backgroundColor: '#2a2a2a',
     gradientSpots: [
       'absolute top-20 right-32 w-80 h-80 bg-gradient-to-r from-orange-400/45 via-amber-500/35 to-yellow-400/25 rounded-tl-3xl rounded-br-xl rounded-tr-2xl rounded-bl-2xl blur-3xl',
@@ -26,12 +31,16 @@ const themes = {
       'absolute top-2/3 right-1/2 w-44 h-44 bg-gradient-to-r from-rose-400/25 via-violet-400/35 to-purple-400/30 rounded-tl-xl rounded-br-3xl rounded-tr-2xl rounded-bl-xl blur-3xl'
     ],
     grainOpacity: 80,
-    grainColors: 'light' // for dark backgrounds
+    grainColors: 'light'
   },
   minimal: {
     id: 'minimal',
     name: 'Minimal Dark',
     description: 'Clean dark background with subtle grain',
+    rarity: 'common',
+    rarityLabel: 'Common',
+    levelRequired: 2,
+    unlockMessage: 'Clean and focused - perfect for deep work sessions.',
     backgroundColor: '#1a1a1a',
     gradientSpots: [],
     grainOpacity: 30,
@@ -41,6 +50,10 @@ const themes = {
     id: 'neon',
     name: 'Neon Nights',
     description: 'Cyberpunk vibes with electric colors',
+    rarity: 'rare',
+    rarityLabel: 'Rare',
+    levelRequired: 7,
+    unlockMessage: 'Enter the digital realm. Your cyber-productivity awaits.',
     backgroundColor: '#0a0a0a',
     gradientSpots: [
       'absolute top-10 left-20 w-72 h-72 bg-gradient-to-r from-cyan-400/35 via-blue-500/30 to-indigo-600/25 rounded-full blur-3xl',
@@ -54,6 +67,10 @@ const themes = {
     id: 'warm',
     name: 'Warm Sunset',
     description: 'Cozy orange and red tones',
+    rarity: 'common',
+    rarityLabel: 'Common',
+    levelRequired: 3,
+    unlockMessage: 'Embrace the warmth of productivity. Cozy vibes for long sessions.',
     backgroundColor: '#2d1b1b',
     gradientSpots: [
       'absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-orange-500/35 via-red-400/30 to-rose-500/25 rounded-full blur-3xl',
@@ -67,6 +84,10 @@ const themes = {
     id: 'cool',
     name: 'Cool Breeze',
     description: 'Professional blues and teals',
+    rarity: 'rare',
+    rarityLabel: 'Rare',
+    levelRequired: 5,
+    unlockMessage: 'Professional excellence unlocked. Channel your inner business warrior.',
     backgroundColor: '#1a1f2e',
     gradientSpots: [
       'absolute top-20 left-40 w-88 h-88 bg-gradient-to-r from-blue-400/30 via-indigo-500/25 to-purple-600/20 rounded-full blur-3xl',
@@ -80,6 +101,10 @@ const themes = {
     id: 'mintlify',
     name: 'Mintlify Docs',
     description: 'Documentation platform inspired green gradients',
+    rarity: 'epic',
+    rarityLabel: 'Epic',
+    levelRequired: 10,
+    unlockMessage: 'Developer tier achieved! Channel the power of clean documentation.',
     backgroundColor: '#0a0f0a',
     gradientSpots: [
       'absolute top-32 right-20 w-96 h-96 bg-gradient-to-r from-emerald-400/40 via-teal-500/35 to-cyan-600/30 rounded-full blur-3xl',
@@ -95,6 +120,10 @@ const themes = {
     id: 'space',
     name: 'Deep Space',
     description: 'Cosmic elegance with deep purples and indigos',
+    rarity: 'legendary',
+    rarityLabel: 'Legendary',
+    levelRequired: 15,
+    unlockMessage: 'Cosmic mastery unlocked! Transcend earthly limits in the void.',
     backgroundColor: '#0b0c1a',
     gradientSpots: [
       'absolute top-20 right-24 w-88 h-88 bg-gradient-to-r from-indigo-500/35 via-purple-600/30 to-violet-700/25 rounded-full blur-3xl',
@@ -106,13 +135,102 @@ const themes = {
     ],
     grainOpacity: 55,
     grainColors: 'light'
+  },
+  aurora: {
+    id: 'aurora',
+    name: 'Aurora Dreams',
+    description: 'Ethereal northern lights dancing across the sky',
+    rarity: 'mythic',
+    rarityLabel: 'Mythic',
+    levelRequired: 20,
+    unlockMessage: 'Witness the divine aurora! You have achieved transcendent focus.',
+    backgroundColor: '#0a0e1a',
+    gradientSpots: [
+      'absolute top-10 left-10 w-96 h-96 bg-gradient-to-r from-emerald-400/40 via-cyan-500/35 to-blue-600/30 rounded-full blur-3xl',
+      'absolute bottom-10 right-10 w-88 h-88 bg-gradient-to-r from-violet-500/35 via-pink-400/30 to-rose-500/25 rounded-full blur-3xl',
+      'absolute top-1/3 right-1/4 w-72 h-72 bg-gradient-to-r from-green-400/30 via-teal-500/25 to-cyan-600/20 rounded-full blur-3xl',
+      'absolute bottom-1/3 left-1/4 w-80 h-80 bg-gradient-to-r from-purple-400/25 via-indigo-500/20 to-violet-600/15 rounded-full blur-3xl'
+    ],
+    grainOpacity: 70,
+    grainColors: 'light'
+  },
+  phoenix: {
+    id: 'phoenix',
+    name: 'Phoenix Rising',
+    description: 'Rebirth through fire and determination',
+    rarity: 'mythic',
+    rarityLabel: 'Mythic',
+    levelRequired: 25,
+    unlockMessage: 'From ashes to glory! Your dedication burns eternal.',
+    backgroundColor: '#1a0a0a',
+    gradientSpots: [
+      'absolute top-20 right-20 w-96 h-96 bg-gradient-to-r from-red-500/45 via-orange-600/40 to-yellow-500/35 rounded-full blur-3xl',
+      'absolute bottom-20 left-20 w-88 h-88 bg-gradient-to-r from-amber-500/35 via-red-600/30 to-rose-700/25 rounded-full blur-3xl',
+      'absolute top-1/2 left-1/2 w-72 h-72 bg-gradient-to-r from-orange-400/30 via-yellow-500/25 to-amber-600/20 rounded-full blur-3xl'
+    ],
+    grainOpacity: 60,
+    grainColors: 'light'
+  },
+  quantum: {
+    id: 'quantum',
+    name: 'Quantum Flux',
+    description: 'Reality bends to your productive will',
+    rarity: 'mythic',
+    rarityLabel: 'Mythic',
+    levelRequired: 30,
+    unlockMessage: 'You have mastered the quantum realm of productivity.',
+    backgroundColor: '#0f0f23',
+    gradientSpots: [
+      'absolute top-16 right-16 w-80 h-80 bg-gradient-to-r from-cyan-400/40 via-blue-500/35 to-purple-600/30 rounded-full blur-3xl',
+      'absolute bottom-16 left-16 w-96 h-96 bg-gradient-to-r from-pink-500/35 via-violet-600/30 to-indigo-700/25 rounded-full blur-3xl',
+      'absolute top-1/3 left-1/3 w-64 h-64 bg-gradient-to-r from-emerald-400/25 via-cyan-500/20 to-blue-600/15 rounded-full blur-3xl',
+      'absolute bottom-1/3 right-1/3 w-72 h-72 bg-gradient-to-r from-purple-400/30 via-pink-500/25 to-rose-600/20 rounded-full blur-3xl'
+    ],
+    grainOpacity: 75,
+    grainColors: 'light'
+  },
+  godmode: {
+    id: 'godmode',
+    name: 'God Mode',
+    description: 'Transcendent power flows through every pixel',
+    rarity: 'transcendent',
+    rarityLabel: 'Transcendent',
+    levelRequired: 50,
+    unlockMessage: 'You have achieved the impossible. Welcome to divinity.',
+    backgroundColor: '#1a1a1a',
+    gradientSpots: [
+      'absolute top-12 right-12 w-96 h-96 bg-gradient-to-r from-yellow-400/50 via-orange-500/45 to-red-600/40 rounded-full blur-3xl',
+      'absolute bottom-12 left-12 w-88 h-88 bg-gradient-to-r from-purple-500/40 via-pink-600/35 to-rose-700/30 rounded-full blur-3xl',
+      'absolute top-1/4 left-1/2 w-80 h-80 bg-gradient-to-r from-cyan-400/35 via-blue-500/30 to-indigo-600/25 rounded-full blur-3xl',
+      'absolute bottom-1/4 right-1/2 w-72 h-72 bg-gradient-to-r from-emerald-400/30 via-teal-500/25 to-green-600/20 rounded-full blur-3xl',
+      'absolute top-1/2 right-1/4 w-64 h-64 bg-gradient-to-r from-violet-400/25 via-purple-500/20 to-indigo-600/15 rounded-full blur-3xl'
+    ],
+    grainOpacity: 85,
+    grainColors: 'light'
+  },
+  omnipotent: {
+    id: 'omnipotent',
+    name: 'Omnipotent',
+    description: 'Reality itself reshapes around your presence',
+    rarity: 'transcendent',
+    rarityLabel: 'Transcendent',
+    levelRequired: 100,
+    unlockMessage: 'You have become legend. The universe acknowledges your supremacy.',
+    backgroundColor: '#000000',
+    gradientSpots: [
+      'absolute top-8 right-8 w-full h-full bg-gradient-radial from-yellow-400/60 via-orange-500/45 via-red-600/35 via-purple-700/25 via-blue-800/15 to-transparent rounded-full blur-3xl',
+      'absolute bottom-8 left-8 w-96 h-96 bg-gradient-to-r from-cyan-400/40 via-emerald-500/35 to-teal-600/30 rounded-full blur-3xl',
+      'absolute top-1/3 left-1/3 w-88 h-88 bg-gradient-to-r from-pink-500/35 via-rose-600/30 to-red-700/25 rounded-full blur-3xl'
+    ],
+    grainOpacity: 90,
+    grainColors: 'light'
   }
 };
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [currentTheme, setCurrentTheme] = useState<typeof themes.ambient | null>(null);
-  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  const [isThemeGalleryOpen, setIsThemeGalleryOpen] = useState(false);
   const [isThemeLoaded, setIsThemeLoaded] = useState(false);
 
   // Load theme from Chrome storage on mount
@@ -147,7 +265,7 @@ export default function App() {
   const changeTheme = async (themeId: keyof typeof themes) => {
     console.log('Changing theme to:', themeId);
     setCurrentTheme(themes[themeId]);
-    setIsThemeDropdownOpen(false);
+    setIsThemeGalleryOpen(false);
 
     try {
       if (typeof chrome !== 'undefined' && chrome.storage) {
@@ -284,67 +402,26 @@ export default function App() {
             {renderView()}
           </div>
           
-          {/* Theme Selector Dropdown - Fixed at top right */}
+          {/* Theme Gallery Button - Fixed at top right */}
           <div className="fixed top-6 right-6 z-20">
-            <div className="relative">
-              <button
-                onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-2 bg-black/20 hover:bg-black/30 rounded-lg transition-all duration-200 backdrop-blur-sm border border-white/10"
-              >
-                <Palette className="w-4 h-4 text-white/70" />
-                <span className="text-sm text-white/80 font-medium">{currentTheme.name}</span>
-                <ChevronDown className={`w-4 h-4 text-white/60 transition-transform duration-200 ${isThemeDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Dropdown Menu */}
-              {isThemeDropdownOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setIsThemeDropdownOpen(false)}
-                  />
-                  <div className="absolute top-full mt-2 right-0 z-50 w-72 bg-black/80 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl overflow-hidden">
-                    <div className="p-2">
-                      {Object.values(themes).map((theme) => (
-                        <button
-                          key={theme.id}
-                          onClick={() => changeTheme(theme.id as keyof typeof themes)}
-                          className={`w-full text-left p-3 rounded-lg transition-all duration-25 hover:bg-white/10 ${
-                            currentTheme.id === theme.id ? 'bg-white/15 border border-white/20' : ''
-                          }`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div 
-                              className="w-12 h-8 rounded-md border border-white/20 relative overflow-hidden flex-shrink-0"
-                              style={{ backgroundColor: theme.backgroundColor }}
-                            >
-                              {theme.gradientSpots.length > 0 && (
-                                <>
-                                  <div className="absolute top-0 right-0 w-3 h-3 bg-gradient-to-r from-orange-400 to-amber-500 rounded-full blur-sm opacity-60" />
-                                  <div className="absolute bottom-0 left-0 w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-400 rounded-full blur-sm opacity-50" />
-                                </>
-                              )}
-                              <div className="absolute inset-0 opacity-30" style={{
-                                backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 1px, transparent 1px)',
-                                backgroundSize: '8px 8px'
-                              }} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-white/90 text-sm">{theme.name}</div>
-                              <div className="text-xs text-white/60 mt-0.5">{theme.description}</div>
-                            </div>
-                            {currentTheme.id === theme.id && (
-                              <div className="w-2 h-2 bg-emerald-400 rounded-full flex-shrink-0 mt-2" />
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+            <button
+              onClick={() => setIsThemeGalleryOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-black/20 hover:bg-black/30 rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 hover:scale-105 group"
+            >
+              <Palette className="w-5 h-5 text-white/70 group-hover:text-white/90 transition-colors" />
+              <span className="text-sm text-white/80 group-hover:text-white/90 font-medium transition-colors">{currentTheme.name}</span>
+              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 animate-pulse" />
+            </button>
           </div>
+
+          {/* Theme Gallery Modal */}
+          <ThemeGallery
+            isOpen={isThemeGalleryOpen}
+            onClose={() => setIsThemeGalleryOpen(false)}
+            themes={themes}
+            currentTheme={currentTheme}
+            onThemeChange={(themeId) => changeTheme(themeId as keyof typeof themes)}
+          />
           
           {/* Star Button - Fixed at bottom left */}
           <div className="fixed bottom-6 left-6 z-20">
