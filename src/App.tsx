@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, Palette } from 'lucide-react';
+import { ChevronDown, Palette, Settings } from 'lucide-react';
 import Navigation from './components/Navigation';
 import StarButton from './components/StarButton';
 import ThemeGallery from './components/ThemeGallery';
+import SettingsDialog from './components/SettingsDialog';
 import HomeView from './views/HomeView';
 import ProductivityView from './views/ProductivityView';
 import PersonalView from './views/PersonalView';
@@ -231,6 +232,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [currentTheme, setCurrentTheme] = useState<typeof themes.ambient | null>(null);
   const [isThemeGalleryOpen, setIsThemeGalleryOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isThemeLoaded, setIsThemeLoaded] = useState(false);
 
   // Load theme from Chrome storage on mount
@@ -402,7 +404,18 @@ export default function App() {
             {renderView()}
           </div>
           
-          {/* Theme Gallery Button - Fixed at top right */}
+          {/* Settings Button - Top Left */}
+          <div className="fixed top-6 left-6 z-20">
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-black/20 hover:bg-black/30 rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 hover:scale-105 group"
+            >
+              <Settings className="w-5 h-5 text-white/70 group-hover:text-white/90 transition-colors" />
+              <span className="text-sm text-white/80 group-hover:text-white/90 font-medium transition-colors">Settings</span>
+            </button>
+          </div>
+
+          {/* Theme Gallery Button - Top Right */}
           <div className="fixed top-6 right-6 z-20">
             <button
               onClick={() => setIsThemeGalleryOpen(true)}
@@ -421,6 +434,12 @@ export default function App() {
             themes={themes}
             currentTheme={currentTheme}
             onThemeChange={(themeId) => changeTheme(themeId as keyof typeof themes)}
+          />
+
+          {/* Settings Dialog */}
+          <SettingsDialog
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
           />
           
           {/* Star Button - Fixed at bottom left */}
