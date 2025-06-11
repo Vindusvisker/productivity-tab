@@ -211,7 +211,7 @@ export default function SubscriptionTracker() {
   }
 
   const formatCurrency = (amount: number) => {
-    return `kr ${amount.toFixed(0).replace('.', ',')}`
+    return `kr ${Math.round(amount).toLocaleString()}`
   }
 
   const formatDate = (dateString: string) => {
@@ -270,13 +270,13 @@ export default function SubscriptionTracker() {
           <div className="mb-4">
             <div className="grid grid-cols-2 gap-2 mb-3">
               {/* Monthly Average */}
-              <div className="bg-white/5 border border-white/10 rounded-lg p-2">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-2">
                 <div className="text-xs text-gray-400 mb-1">Monthly avg</div>
                 <div className="text-lg font-bold text-white">{formatCurrency(monthlyTotal)}</div>
               </div>
 
               {/* Active Count */}
-              <div className="bg-white/5 border border-white/10 rounded-lg p-2">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-2">
                 <div className="text-xs text-gray-400 mb-1">Active</div>
                 <div className="text-lg font-bold text-white">{subscriptions.length}</div>
               </div>
@@ -284,11 +284,11 @@ export default function SubscriptionTracker() {
 
             {/* Due This Month & Year - 2x1 Grid */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-white/5 border border-white/10 rounded-lg p-2">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-2">
                 <div className="text-xs text-gray-400 mb-1">Due this month</div>
                 <div className="text-lg font-bold text-white">{formatCurrency(dueThisMonth)}</div>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-lg p-2">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-2">
                 <div className="text-xs text-gray-400 mb-1">Due this year</div>
                 <div className="text-lg font-bold text-white">{formatCurrency(dueThisYear)}</div>
               </div>
@@ -299,7 +299,7 @@ export default function SubscriptionTracker() {
           <div className="mb-3">
             <Button 
               onClick={() => setShowAddDialog(true)}
-              className="w-full bg-white/10 hover:bg-white/20 text-white text-xs py-2 rounded-lg"
+              className="w-full bg-white/10 hover:bg-white/20 text-white text-xs py-2 rounded-2xl"
             >
               <Plus className="h-3 w-3 mr-1" />
               Add new
@@ -310,7 +310,7 @@ export default function SubscriptionTracker() {
           {upcomingSubscriptions.length > 0 && (
             <div className="mb-3">
               <h4 className="text-sm font-bold text-white mb-2">Up next</h4>
-              <div className="bg-white/5 border border-white/10 rounded-lg p-2">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div className={`w-6 h-6 ${upcomingSubscriptions[0].color} rounded-full flex items-center justify-center text-xs`}>
@@ -341,7 +341,7 @@ export default function SubscriptionTracker() {
                 </button>
                 
                 {showFilterPicker && (
-                  <div className="absolute right-0 top-6 bg-gray-800 border border-white/20 rounded-lg p-2 z-10 min-w-[80px]">
+                  <div className="absolute right-0 top-6 bg-gray-800 border border-white/20 rounded-2xl p-2 z-10 min-w-[80px]">
                     {filterOptions.map((option) => (
                       <button
                         key={option.value}
@@ -370,7 +370,7 @@ export default function SubscriptionTracker() {
                   <div
                     key={sub.id}
                     onClick={() => handleSubscriptionClick(sub)}
-                    className="bg-white/5 border border-white/10 rounded-lg p-2 hover:bg-white/10 transition-all cursor-pointer"
+                    className="bg-white/5 border border-white/10 rounded-2xl p-2 hover:bg-white/10 transition-all cursor-pointer"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
