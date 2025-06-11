@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,39 +13,31 @@ export default function AffirmationWall() {
     affirmations[Math.floor(Math.random() * affirmations.length)]
   )
   const [isTransitioning, setIsTransitioning] = useState(false)
-  const [filteredAffirmations, setFilteredAffirmations] = useState<Affirmation[]>(affirmations)
 
-  useEffect(() => {
-    // Use all affirmations since we removed category filtering
-    setFilteredAffirmations(affirmations)
-  }, [])
-
-  useEffect(() => {
-    // Auto-rotate affirmations every 7 seconds for dynamic experience
-    const interval = setInterval(() => {
-      if (filteredAffirmations.length > 1) {
-        nextAffirmation()
-      }
-    }, 7000)
-
-    return () => clearInterval(interval)
-  }, [filteredAffirmations])
-
-  const nextAffirmation = () => {
-    if (isTransitioning) return
+  const nextAffirmation = useCallback(() => {
+    if (isTransitioning || affirmations.length <= 1) return
     
     setIsTransitioning(true)
     
     setTimeout(() => {
-      const currentIndex = filteredAffirmations.findIndex(aff => aff.id === currentAffirmation.id)
-      const nextIndex = (currentIndex + 1) % filteredAffirmations.length
-      setCurrentAffirmation(filteredAffirmations[nextIndex])
+      const currentIndex = affirmations.findIndex(aff => aff.id === currentAffirmation.id)
+      const nextIndex = (currentIndex + 1) % affirmations.length
+      setCurrentAffirmation(affirmations[nextIndex])
       
       setTimeout(() => {
         setIsTransitioning(false)
       }, 300)
     }, 300)
-  }
+  }, [isTransitioning, currentAffirmation.id])
+
+  useEffect(() => {
+    // Auto-rotate affirmations every 7 seconds for dynamic experience
+    const interval = setInterval(() => {
+      nextAffirmation()
+    }, 7000)
+
+    return () => clearInterval(interval)
+  }, [nextAffirmation])
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
