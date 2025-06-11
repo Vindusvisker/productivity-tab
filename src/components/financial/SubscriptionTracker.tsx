@@ -235,7 +235,7 @@ export default function SubscriptionTracker() {
 
   if (loading) {
     return (
-      <Card className="bg-black/60 border border-white/10 backdrop-blur-xl h-full overflow-hidden rounded-xl">
+      <Card className="bg-black/60 border border-white/10 backdrop-blur-xl h-full overflow-hidden rounded-2xl">
         <CardContent className="p-3 h-full flex items-center justify-center">
           <div className="text-gray-400">Loading subscriptions...</div>
         </CardContent>
@@ -245,7 +245,7 @@ export default function SubscriptionTracker() {
 
   return (
     <>
-      <Card className="bg-black/60 border border-white/10 backdrop-blur-xl h-full overflow-hidden rounded-xl">
+      <Card className="bg-black/60 border border-white/10 backdrop-blur-xl h-full overflow-hidden rounded-2xl">
         <CardContent className="p-3 h-full flex flex-col">
           
           {/* Header */}

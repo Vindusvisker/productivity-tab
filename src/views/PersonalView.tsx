@@ -4,11 +4,17 @@ import ActiveMissions from '@/components/personal/ActiveMissions';
 import JourneyHeatmap from '@/components/personal/JourneyHeatmap';
 import AchievementWall from '@/components/personal/AchievementWall';
 import WeeklyReflection from '@/components/personal/WeeklyReflection';
+import PersonalHelp from '@/components/PersonalHelp';
 
 const PersonalView: React.FC = () => {
   return (
-    <div className="h-screen pt-28 pb-16 overflow-hidden">
+    <div className="h-screen pt-28 pb-16 overflow-hidden relative">
       <div className="container mx-auto px-6 max-w-7xl h-full flex flex-col">
+        
+        {/* Help Button - Bottom right corner */}
+        <div className="fixed bottom-6 right-6 z-20">
+          <PersonalHelp />
+        </div>
         
         {/* Top Row - Profile Header + Active Missions */}
         <div className="mb-6 flex-shrink-0">
@@ -30,11 +36,6 @@ const PersonalView: React.FC = () => {
           
           {/* Left Column - Journey Heatmap */}
           <div className="lg:col-span-1">
-            {/* Title bounces in */}
-            <h2 className="text-base font-bold text-white mb-2 flex items-center opacity-0 animate-bounce-in" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
-              <span className="mr-2">📅</span>
-              Journey Heatmap
-            </h2>
             {/* Component fades and scales in */}
             <div className="opacity-0 animate-fade-in-scale" style={{ animationDelay: '700ms', animationFillMode: 'forwards' }}>
               <JourneyHeatmap className="h-full" />
@@ -43,11 +44,6 @@ const PersonalView: React.FC = () => {
 
           {/* Middle Column - Achievement Wall */}
           <div className="lg:col-span-1">
-            {/* Title bounces in */}
-            <h2 className="text-base font-bold text-white mb-2 flex items-center opacity-0 animate-bounce-in" style={{ animationDelay: '600ms', animationFillMode: 'forwards' }}>
-              <span className="mr-2">🏆</span>
-              Achievement Wall
-            </h2>
             {/* Component fades and scales in */}
             <div className="opacity-0 animate-fade-in-scale" style={{ animationDelay: '800ms', animationFillMode: 'forwards' }}>
               <AchievementWall />
@@ -56,11 +52,6 @@ const PersonalView: React.FC = () => {
 
           {/* Right Column - Weekly Reflection */}
           <div className="lg:col-span-1">
-            {/* Title bounces in */}
-            <h2 className="text-base font-bold text-white mb-2 flex items-center opacity-0 animate-bounce-in" style={{ animationDelay: '700ms', animationFillMode: 'forwards' }}>
-              <span className="mr-2">💭</span>
-              Weekly Reflection
-            </h2>
             {/* Component fades and scales in */}
             <div className="opacity-0 animate-fade-in-scale" style={{ animationDelay: '900ms', animationFillMode: 'forwards' }}>
               <WeeklyReflection className="h-full" />

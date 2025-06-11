@@ -245,7 +245,7 @@ export default function SnusImpactTracker() {
 
   if (loading) {
     return (
-      <Card className="bg-black/60 border border-white/10 backdrop-blur-xl h-full overflow-hidden rounded-xl">
+      <Card className="bg-black/60 border border-white/10 backdrop-blur-xl h-full overflow-hidden rounded-2xl">
         <CardContent className="p-3">
           <div className="animate-pulse text-center text-white/60 text-sm">
             Loading real data...
@@ -256,7 +256,7 @@ export default function SnusImpactTracker() {
   }
 
   return (
-    <Card className="bg-black/60 border border-white/10 backdrop-blur-xl h-full overflow-hidden rounded-xl">
+    <Card className="bg-black/60 border border-white/10 backdrop-blur-xl h-full overflow-hidden rounded-2xl">
       <CardContent className="p-3 h-full flex flex-col">
         
         {/* Header */}

@@ -3,6 +3,7 @@ import { Clock, Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import SnusTracker from '@/components/home/SnusTracker';
 import QuickAccess from '@/components/home/QuickAccess';
+import HomeHelp from '@/components/HomeHelp';
 
 const HomeView: React.FC = () => {
   const [time, setTime] = useState<string>('');
@@ -27,7 +28,13 @@ const HomeView: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen pt-6 flex items-center justify-center">
+    <div className="min-h-screen pt-6 flex items-center justify-center relative">
+      
+      {/* Help Button - Bottom right corner */}
+      <div className="fixed bottom-6 right-6 z-20">
+        <HomeHelp />
+      </div>
+      
       <div className="container mx-auto px-8 max-w-7xl">
         
         {/* Top Row: Time Display & Snus Tracker */}

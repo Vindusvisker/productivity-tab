@@ -100,13 +100,18 @@ export default function AffirmationWall() {
   const quickCategories = ['all', 'money', 'health', 'freedom', 'motivation']
 
   return (
-    <Card className="bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 border-2 border-indigo-500/30 backdrop-blur-xl h-full overflow-hidden">
-      <CardContent className="p-4 h-full flex flex-col">
+    <Card className="bg-black/60 border border-white/10 backdrop-blur-xl overflow-hidden rounded-2xl">
+      <CardContent className="p-3 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <Sparkles className="h-5 w-5 text-indigo-400" />
-            <span className="text-lg font-bold text-white">Affirmations</span>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center">
+              <Sparkles className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">Affirmations</h2>
+              <p className="text-xs text-indigo-300">Daily motivation</p>
+            </div>
           </div>
           <Badge className="bg-indigo-500/20 text-indigo-400 px-2 py-1 text-xs border border-indigo-500/30">
             {filteredAffirmations.length}
@@ -114,7 +119,7 @@ export default function AffirmationWall() {
         </div>
 
         {/* Quick Category Filter */}
-        <div className="mb-4">
+        <div className="mb-3">
           <div className="flex flex-wrap gap-1">
             {quickCategories.map(category => (
               <Button
@@ -137,17 +142,17 @@ export default function AffirmationWall() {
           </div>
         </div>
 
-        {/* Main Affirmation Display */}
-        <div className="flex-1 flex flex-col justify-center relative">
+        {/* Main Affirmation Display - Compact */}
+        <div className="flex flex-col justify-center relative">
           <div className={`transition-all duration-500 ${isTransitioning ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
             {/* Quote Icon */}
-            <div className="text-center mb-4">
-              <Quote className="h-8 w-8 text-indigo-400/50 mx-auto" />
+            <div className="text-center mb-2">
+              <Quote className="h-6 w-6 text-indigo-400/50 mx-auto" />
             </div>
 
             {/* Affirmation Text */}
-            <div className="text-center mb-6">
-              <blockquote className="text-lg lg:text-xl font-bold text-white leading-relaxed mb-3 px-2">
+            <div className="text-center mb-3">
+              <blockquote className="text-sm lg:text-base font-bold text-white leading-relaxed mb-2 px-2">
                 "{currentAffirmation.text}"
               </blockquote>
               
@@ -162,14 +167,14 @@ export default function AffirmationWall() {
 
             {/* Author */}
             {currentAffirmation.author && (
-              <div className="text-center text-gray-400 text-sm mb-4">
+              <div className="text-center text-gray-400 text-xs mb-2">
                 — {currentAffirmation.author}
               </div>
             )}
           </div>
 
           {/* Navigation Dots */}
-          <div className="flex justify-center space-x-1 mb-4">
+          <div className="flex justify-center space-x-1 mb-3">
             {filteredAffirmations.slice(0, 5).map((_, index) => {
               const currentIndex = filteredAffirmations.findIndex(aff => aff.id === currentAffirmation.id)
               const isActive = index === currentIndex % 5
@@ -186,7 +191,7 @@ export default function AffirmationWall() {
         </div>
 
         {/* Control Buttons */}
-        <div className="flex justify-center space-x-2 pt-3 border-t border-white/10">
+        <div className="flex justify-center space-x-2 pt-2 border-t border-white/10">
           <Button
             size="sm"
             variant="outline"
@@ -208,11 +213,6 @@ export default function AffirmationWall() {
             <Shuffle className="h-3 w-3" />
             <span>Random</span>
           </Button>
-        </div>
-
-        {/* Heart Animation */}
-        <div className="absolute top-3 right-3 opacity-20">
-          <Heart className="h-4 w-4 text-pink-400 animate-pulse" />
         </div>
       </CardContent>
     </Card>

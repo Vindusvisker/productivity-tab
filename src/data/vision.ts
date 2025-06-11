@@ -18,56 +18,6 @@ export interface Affirmation {
   author?: string;
 }
 
-export const defaultGoals: FinancialGoal[] = [
-  {
-    id: 'cabin-trip',
-    name: 'Cabin trip with Martine',
-    targetAmount: 6000,
-    savedAmount: 0,
-    category: 'experience',
-    priority: 'high',
-    description: 'Romantic weekend getaway to a cozy cabin',
-    externalUrl: 'https://airbnb.com',
-    imageUrl: 'https://images.unsplash.com/photo-1520637836862-4d197d17c57a?w=400&h=300&fit=crop'
-  },
-  {
-    id: 'emergency-fund',
-    name: 'Emergency Fund',
-    targetAmount: 50000,
-    savedAmount: 0,
-    category: 'investment',
-    priority: 'high',
-    description: '6 months of expenses for financial security'
-  },
-  {
-    id: 'course-investment',
-    name: 'Professional Development Course',
-    targetAmount: 8000,
-    savedAmount: 0,
-    category: 'education',
-    priority: 'medium',
-    description: 'Invest in skills that will pay dividends'
-  },
-  {
-    id: 'gym-membership',
-    name: 'Premium Gym Membership',
-    targetAmount: 12000,
-    savedAmount: 0,
-    category: 'health',
-    priority: 'medium',
-    description: 'Annual premium gym with personal trainer'
-  },
-  {
-    id: 'laptop-upgrade',
-    name: 'MacBook Pro M3',
-    targetAmount: 25000,
-    savedAmount: 0,
-    category: 'investment',
-    priority: 'low',
-    description: 'Professional laptop for development work'
-  }
-];
-
 export const affirmations: Affirmation[] = [
   // Money & Financial Freedom
   {

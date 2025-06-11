@@ -1,11 +1,17 @@
 import HabitTracker from '@/components/productivity/HabitTracker';
 import FocusTimer from '@/components/productivity/FocusTimer';
 import WeeklyOverview from '@/components/productivity/WeeklyOverview';
+import ProductivityHelp from '@/components/ProductivityHelp';
 
 const ProductivityView: React.FC = () => {
   return (
-    <div className="min-h-screen pt-24 pb-8 mt-6 overflow-hidden">
+    <div className="min-h-screen pt-24 pb-8 mt-6 overflow-hidden relative">
       <div className="container mx-auto px-6 max-w-7xl">
+
+        {/* Help Button - Bottom right corner */}
+        <div className="fixed bottom-6 right-6 z-20">
+          <ProductivityHelp />
+        </div>
 
         {/* Main Productivity Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

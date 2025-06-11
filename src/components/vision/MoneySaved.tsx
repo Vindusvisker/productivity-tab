@@ -92,31 +92,31 @@ export default function MoneySaved() {
       // Get existing contributions or initialize
       const contributions = await storage.load('monthly-contributions') || {}
       
-      // Calculate how many contributions should have been made
-      const startDate = new Date('2024-01-15') // Adjust to your actual start date
       const today = new Date()
+      const currentYear = today.getFullYear()
+      const currentMonth = today.getMonth()
+      const currentDay = today.getDate()
       
       let totalContributions = 0
-      let currentDate = new Date(startDate)
       
-      while (currentDate <= today) {
-        const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
-        
-        // Check if contribution was made this month
-        if (contributions[monthKey]) {
-          totalContributions += contributions[monthKey]
-        } else if (currentDate.getDate() === 15 && currentDate <= today) {
-          // Auto-add contribution if we're past the 15th and it hasn't been recorded
-          contributions[monthKey] = 2500
-          totalContributions += 2500
+      // Only count manually recorded contributions
+      Object.values(contributions).forEach((amount: any) => {
+        if (typeof amount === 'number') {
+          totalContributions += amount
         }
-        
-        // Move to next month's 15th
-        currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 15)
-      }
+      })
       
-      // Save updated contributions
-      await storage.save('monthly-contributions', contributions)
+      // Auto-add contribution ONLY for current month if today is the 15th or later
+      const currentMonthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`
+      
+      if (currentDay >= 15 && !contributions[currentMonthKey]) {
+        // Add this month's contribution
+        contributions[currentMonthKey] = 2500
+        totalContributions += 2500
+        
+        // Save the updated contributions
+        await storage.save('monthly-contributions', contributions)
+      }
       
       return totalContributions
     } catch (error) {
@@ -167,7 +167,7 @@ export default function MoneySaved() {
 
   if (loading) {
     return (
-      <Card className="bg-gradient-to-br from-green-500/10 via-emerald-500/10 to-teal-500/10 border-2 border-green-500/30 backdrop-blur-xl h-full">
+      <Card className="bg-gradient-to-br from-green-500/10 via-emerald-500/10 to-teal-500/10 border-2 border-green-500/30 backdrop-blur-xl">
         <CardContent className="p-4">
           <div className="animate-pulse text-center text-white/60 text-sm">
             Loading savings...
@@ -178,8 +178,8 @@ export default function MoneySaved() {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-green-500/10 via-emerald-500/10 to-teal-500/10 border-2 border-green-500/30 backdrop-blur-xl h-full">
-      <CardContent className="p-4 h-full flex flex-col">
+    <Card className="bg-black/60 border border-white/10 backdrop-blur-xl rounded-2xl">
+      <CardContent className="p-4 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
