@@ -43,7 +43,8 @@ export default function AddGoalDialog({ isOpen, onClose, onGoalAdded, editingGoa
     priority: 'medium' as PriorityType,
     description: '',
     deadline: '',
-    externalUrl: ''
+    externalUrl: '',
+    imageUrl: ''
   })
 
   const [showCategoryPicker, setShowCategoryPicker] = useState(false)
@@ -57,7 +58,8 @@ export default function AddGoalDialog({ isOpen, onClose, onGoalAdded, editingGoa
       priority: 'medium' as PriorityType,
       description: '',
       deadline: '',
-      externalUrl: ''
+      externalUrl: '',
+      imageUrl: ''
     })
     setShowCategoryPicker(false)
     setShowPriorityPicker(false)
@@ -75,7 +77,8 @@ export default function AddGoalDialog({ isOpen, onClose, onGoalAdded, editingGoa
         priority: editingGoal.priority,
         description: editingGoal.description || '',
         deadline: editingGoal.deadline || '',
-        externalUrl: editingGoal.externalUrl || ''
+        externalUrl: editingGoal.externalUrl || '',
+        imageUrl: editingGoal.imageUrl || ''
       })
     }
   }, [isOpen, editingGoal])
@@ -95,7 +98,8 @@ export default function AddGoalDialog({ isOpen, onClose, onGoalAdded, editingGoa
         priority: formData.priority,
         description: formData.description.trim(),
         deadline: formData.deadline || undefined,
-        externalUrl: formData.externalUrl.trim() || undefined
+        externalUrl: formData.externalUrl.trim() || undefined,
+        imageUrl: formData.imageUrl.trim() || undefined
       }
 
       try {
@@ -123,7 +127,8 @@ export default function AddGoalDialog({ isOpen, onClose, onGoalAdded, editingGoa
         priority: formData.priority,
         description: formData.description.trim(),
         deadline: formData.deadline || undefined,
-        externalUrl: formData.externalUrl.trim() || undefined
+        externalUrl: formData.externalUrl.trim() || undefined,
+        imageUrl: formData.imageUrl.trim() || undefined
       }
 
       try {
@@ -321,6 +326,22 @@ export default function AddGoalDialog({ isOpen, onClose, onGoalAdded, editingGoa
               onChange={(e) => setFormData(prev => ({ ...prev, externalUrl: e.target.value }))}
               className="bg-transparent border-none text-white placeholder:text-gray-400 text-sm focus:ring-0"
             />
+          </div>
+
+          {/* Image URL */}
+          <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+            <div className="flex items-center space-x-2 mb-1">
+              <div className="h-4 w-4 text-gray-400">🖼️</div>
+              <Label className="text-white text-sm">Goal Image (Optional)</Label>
+            </div>
+            <Input
+              type="url"
+              placeholder="https://images.example.com/dream-goal.jpg"
+              value={formData.imageUrl}
+              onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
+              className="bg-transparent border-none text-white placeholder:text-gray-400 text-sm focus:ring-0"
+            />
+            <p className="text-xs text-gray-500 mt-1">Paste any image URL from Google Images, Pinterest, etc.</p>
           </div>
 
           {/* Submit Button */}
