@@ -51,7 +51,7 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
     onboardingCompleted: false
   })
 
-  const totalSteps = config.hasAddiction ? 10 : 6
+  const totalSteps = config.hasAddiction ? 11 : 6
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -90,12 +90,13 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
       case 2: return '🎯 Habit Tracking'
       case 3: return config.hasAddiction ? '🎯 Habit Type' : '💰 Financial Setup'
       case 4: return config.hasAddiction ? '📊 Monthly Usage' : '📅 Savings Day'
-      case 5: return config.hasAddiction ? '💰 Package Cost' : '🌟 Personal Touch'
-      case 6: return config.hasAddiction ? '📦 Package Size' : '🎉 All Set!'
-      case 7: return config.hasAddiction ? '⏰ Hourly Rate' : ''
-      case 8: return config.hasAddiction ? '💰 Monthly Savings' : ''
-      case 9: return config.hasAddiction ? '📅 Payday' : ''
-      case 10: return config.hasAddiction ? '🌟 Motivation' : ''
+      case 5: return config.hasAddiction ? '🎯 Daily Goal' : '🌟 Personal Touch'
+      case 6: return config.hasAddiction ? '💰 Package Cost' : '🎉 All Set!'
+      case 7: return config.hasAddiction ? '📦 Package Size' : ''
+      case 8: return config.hasAddiction ? '⏰ Hourly Rate' : ''
+      case 9: return config.hasAddiction ? '💰 Monthly Savings' : ''
+      case 10: return config.hasAddiction ? '📅 Payday' : ''
+      case 11: return config.hasAddiction ? '🌟 Motivation' : ''
       default: return 'Setup'
     }
   }
@@ -111,21 +112,24 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
         if (config.hasAddiction) return config.previousMonthlyConsumption > 0
         return config.contributionDay > 0 && config.contributionDay <= 31
       case 5:
-        if (config.hasAddiction) return config.costPerUnit > 0
+        if (config.hasAddiction) return config.dailyLimit > 0
         return config.monthlyContribution > 0
       case 6:
-        if (config.hasAddiction) return config.unitsPerPackage > 0
+        if (config.hasAddiction) return config.costPerUnit > 0
         return true
       case 7:
-        if (config.hasAddiction) return config.hourlyRate > 0
+        if (config.hasAddiction) return config.unitsPerPackage > 0
         return true
       case 8:
-        if (config.hasAddiction) return config.monthlyContribution > 0
+        if (config.hasAddiction) return config.hourlyRate > 0
         return true
       case 9:
+        if (config.hasAddiction) return config.monthlyContribution > 0
+        return true
+      case 10:
         if (config.hasAddiction) return config.contributionDay > 0 && config.contributionDay <= 31
         return true
-      case 10: return true
+      case 11: return true
       default: return true
     }
   }
@@ -383,8 +387,64 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
             </div>
           )}
 
-          {/* Step 5: Package Cost + Currency (if addiction) OR Personal Touch (if no addiction) */}
+          {/* Step 5: Daily Goal (if addiction) OR Personal Touch (if no addiction) */}
           {currentStep === 5 && config.hasAddiction && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="text-3xl mb-2">🎯</div>
+                <h2 className="text-lg font-bold text-white mb-2">Daily Goal</h2>
+                <p className="text-gray-400 text-sm">What's your daily limit to stay on track?</p>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                <Label className="text-white text-sm mb-2 block">Daily limit</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="50"
+                  placeholder="5"
+                  value={config.dailyLimit}
+                  onChange={(e) => setConfig(prev => ({ ...prev, dailyLimit: Number(e.target.value) }))}
+                  className="bg-transparent border-none text-white placeholder:text-gray-400 text-base focus:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ MozAppearance: 'textfield' }}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Maximum number of units you aim to use per day to stay healthy
+                </p>
+              </div>
+
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                <div className="text-sm text-white/80">
+                  <div>🎯 Your daily goal: {config.dailyLimit} units max</div>
+                  <div>📊 Previous usage: ~{Math.round((config.previousMonthlyConsumption * config.unitsPerPackage) / 30)} units/day</div>
+                  <div>📈 Reduction: {Math.max(0, Math.round((config.previousMonthlyConsumption * config.unitsPerPackage) / 30) - config.dailyLimit)} fewer units/day</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 5 && !config.hasAddiction && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="text-3xl mb-2">🌟</div>
+                <h2 className="text-lg font-bold text-white mb-2">Personal Touch</h2>
+                <p className="text-gray-400 text-sm">What's your savings goal or motivation?</p>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                <Label className="text-white text-sm mb-2 block">Your motivation (optional)</Label>
+                <Input
+                  placeholder="e.g., Emergency fund, vacation, new car, financial freedom..."
+                  value={config.motivation}
+                  onChange={(e) => setConfig(prev => ({ ...prev, motivation: e.target.value }))}
+                  className="bg-transparent border-none text-white placeholder:text-gray-400 text-base focus:ring-0"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Step 6: Package Cost + Currency (if addiction) OR Complete (if no addiction) */}
+          {currentStep === 6 && config.hasAddiction && (
             <div className="space-y-4">
               <div className="text-center">
                 <div className="text-3xl mb-2">💰</div>
@@ -437,28 +497,23 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
             </div>
           )}
 
-          {currentStep === 5 && !config.hasAddiction && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className="text-3xl mb-2">🌟</div>
-                <h2 className="text-lg font-bold text-white mb-2">Personal Touch</h2>
-                <p className="text-gray-400 text-sm">What's your savings goal or motivation?</p>
-              </div>
-
-              <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-                <Label className="text-white text-sm mb-2 block">Your motivation (optional)</Label>
-                <Input
-                  placeholder="e.g., Emergency fund, vacation, new car, financial freedom..."
-                  value={config.motivation}
-                  onChange={(e) => setConfig(prev => ({ ...prev, motivation: e.target.value }))}
-                  className="bg-transparent border-none text-white placeholder:text-gray-400 text-base focus:ring-0"
-                />
+          {currentStep === 6 && !config.hasAddiction && (
+            <div className="space-y-4 text-center">
+              <div className="text-4xl mb-4">🎉</div>
+              <h2 className="text-xl font-bold text-white">Perfect!</h2>
+              <p className="text-gray-400">Your personal savings system is ready to go.</p>
+              <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-lg p-4 text-left">
+                <div className="text-sm text-white/80">
+                  <div>💰 Monthly savings: {config.monthlyContribution} {getCurrencySymbol()}</div>
+                  <div>📅 Auto-added on the {config.contributionDay}th</div>
+                  {config.motivation && <div>🌟 Goal: {config.motivation}</div>}
+                </div>
               </div>
             </div>
           )}
 
-          {/* Step 6: Package Size (if addiction) OR Complete (if no addiction) */}
-          {currentStep === 6 && config.hasAddiction && (
+          {/* Step 7: Package Size (if addiction) */}
+          {currentStep === 7 && config.hasAddiction && (
             <div className="space-y-4">
               <div className="text-center">
                 <div className="text-3xl mb-2">📦</div>
@@ -497,23 +552,8 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
             </div>
           )}
 
-          {currentStep === 6 && !config.hasAddiction && (
-            <div className="space-y-4 text-center">
-              <div className="text-4xl mb-4">🎉</div>
-              <h2 className="text-xl font-bold text-white">Perfect!</h2>
-              <p className="text-gray-400">Your personal savings system is ready to go.</p>
-              <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-lg p-4 text-left">
-                <div className="text-sm text-white/80">
-                  <div>💰 Monthly savings: {config.monthlyContribution} {getCurrencySymbol()}</div>
-                  <div>📅 Auto-added on the {config.contributionDay}th</div>
-                  {config.motivation && <div>🌟 Goal: {config.motivation}</div>}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 7: Hourly Rate (if addiction) */}
-          {currentStep === 7 && config.hasAddiction && (
+          {/* Step 8: Hourly Rate (if addiction) */}
+          {currentStep === 8 && config.hasAddiction && (
             <div className="space-y-4">
               <div className="text-center">
                 <div className="text-3xl mb-2">⏰</div>
@@ -549,8 +589,8 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
             </div>
           )}
 
-          {/* Step 8: Monthly Savings (if addiction) */}
-          {currentStep === 8 && config.hasAddiction && (
+          {/* Step 9: Monthly Savings (if addiction) */}
+          {currentStep === 9 && config.hasAddiction && (
             <div className="space-y-4">
               <div className="text-center">
                 <div className="text-3xl mb-2">💰</div>
@@ -586,8 +626,8 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
             </div>
           )}
 
-          {/* Step 9: Payday (if addiction) */}
-          {currentStep === 9 && config.hasAddiction && (
+          {/* Step 10: Payday (if addiction) */}
+          {currentStep === 10 && config.hasAddiction && (
             <div className="space-y-4">
               <div className="text-center">
                 <div className="text-3xl mb-2">📅</div>
@@ -616,8 +656,8 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
             </div>
           )}
 
-          {/* Step 10: Motivation + Complete (if addiction) */}
-          {currentStep === 10 && config.hasAddiction && (
+          {/* Step 11: Motivation + Complete (if addiction) */}
+          {currentStep === 11 && config.hasAddiction && (
             <div className="space-y-4">
               <div className="text-center">
                 <div className="text-3xl mb-2">🌟</div>
