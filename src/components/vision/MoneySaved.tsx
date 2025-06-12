@@ -5,22 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { TrendingUp, Coins, Calendar, Sparkles, Target, PiggyBank } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
-
-interface UserConfig {
-  hasAddiction: boolean
-  addictionType: string
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  hourlyRate: number
-  currency: string
-  monthlyContribution: number
-  contributionDay: number
-  firstName: string
-  motivation: string
-  onboardingCompleted: boolean
-}
+import { UserConfig } from '../../types/UserConfig'
 
 interface MoneySavedProps {
   userConfig?: UserConfig | null

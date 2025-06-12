@@ -3,6 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, Lock, Zap, Calendar, Target, Trophy } from 'lucide-react'
+import { UserConfig } from '../../types/UserConfig'
 
 interface Achievement {
   id: string
@@ -22,10 +23,39 @@ interface MissionDialogProps {
   achievement: Achievement | null
   isOpen: boolean
   onClose: () => void
+  userConfig?: UserConfig | null
 }
 
-export default function MissionDialog({ achievement, isOpen, onClose }: MissionDialogProps) {
+export default function MissionDialog({ achievement, isOpen, onClose, userConfig }: MissionDialogProps) {
   if (!achievement) return null
+
+  // Helper to get dynamic habit name
+  const getHabitName = () => {
+    if (!userConfig) return 'Habit'
+    if (userConfig.addictionName && userConfig.addictionName.trim()) {
+      return userConfig.addictionName
+    }
+    switch (userConfig.addictionType) {
+      case 'snus': return 'Snus'
+      case 'tobacco': return 'Cigarette'
+      case 'alcohol': return 'Drink'
+      case 'gambling': return 'Gambling'
+      case 'other': return 'Habit'
+      default: return 'Habit'
+    }
+  }
+  // Helper to get dynamic icon
+  const getHabitIcon = () => {
+    if (!userConfig) return '🚭'
+    switch (userConfig.addictionType) {
+      case 'snus': return '🚭'
+      case 'tobacco': return '🚬'
+      case 'alcohol': return '🍺'
+      case 'gambling': return '🎰'
+      case 'other': return '🎯'
+      default: return '🚭'
+    }
+  }
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -42,7 +72,7 @@ export default function MissionDialog({ achievement, isOpen, onClose }: MissionD
     switch (category) {
       case 'habit': return 'Habit Mastery'
       case 'focus': return 'Focus & Flow'
-      case 'snus': return 'Snus Resistance'
+      case 'snus': return `${getHabitName()} Resistance`
       case 'streak': return 'Streaks & Discipline'
       case 'wildcard': return 'Special Achievements'
       default: return 'Achievement'
@@ -68,10 +98,10 @@ export default function MissionDialog({ achievement, isOpen, onClose }: MissionD
         ]
       },
       'clean-day': {
-        detailed: 'Achieve your first completely snus-free day. This milestone represents your first victory over unwanted habits and the beginning of healthier choices.',
+        detailed: `Achieve your first completely ${getHabitName().toLowerCase()}-free day. This milestone represents your first victory over unwanted habits and the beginning of healthier choices.`,
         tips: [
-          'Replace snus times with healthy alternatives',
-          'Track triggers that lead to snus use',
+          `Replace ${getHabitName().toLowerCase()} times with healthy alternatives`,
+          `Track triggers that lead to ${getHabitName().toLowerCase()} use`,
           'Celebrate small wins along the way'
         ]
       },

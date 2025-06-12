@@ -11,6 +11,7 @@ import PersonalView from './views/PersonalView';
 import VisionView from './views/VisionView';
 import FinancialView from './views/FinancialView';
 import { storage } from './lib/chrome-storage';
+import { UserConfig } from './types/UserConfig'
 
 type ViewType = 'home' | 'productivity' | 'personal' | 'vision' | 'financial';
 
@@ -230,20 +231,19 @@ const themes = {
   }
 };
 
-interface UserConfig {
-  hasAddiction: boolean
-  addictionType: string
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  hourlyRate: number
-  currency: string
-  monthlyContribution: number
-  contributionDay: number
-  firstName: string
-  motivation: string
-  onboardingCompleted: boolean
+const ALLOWED_ADDICTION_TYPES = ['snus', 'tobacco', 'alcohol', 'gambling', 'other'] as const;
+const ALLOWED_CURRENCIES = ['NOK', 'USD', 'EUR', 'SEK'] as const;
+
+function normalizeUserConfig(config: any): UserConfig {
+  return {
+    ...config,
+    addictionType: ALLOWED_ADDICTION_TYPES.includes(config.addictionType)
+      ? config.addictionType
+      : 'snus',
+    currency: ALLOWED_CURRENCIES.includes(config.currency)
+      ? config.currency
+      : 'NOK',
+  };
 }
 
 export default function App() {
@@ -276,7 +276,7 @@ export default function App() {
         // Load user config and check if onboarding is needed
         const config = await storage.load('user-config');
         if (config && config.onboardingCompleted) {
-          setUserConfig(config);
+          setUserConfig(config ? normalizeUserConfig(config) : null);
           console.log('User config loaded:', config);
         } else {
           // No config or incomplete onboarding - show onboarding
@@ -311,13 +311,13 @@ export default function App() {
   };
 
   const handleOnboardingComplete = (config: UserConfig) => {
-    setUserConfig(config);
+    setUserConfig(normalizeUserConfig(config));
     setIsOnboardingOpen(false);
     console.log('Onboarding completed with config:', config);
   };
 
   const handleConfigUpdate = (config: UserConfig) => {
-    setUserConfig(config);
+    setUserConfig(normalizeUserConfig(config));
   };
 
   const renderView = () => {
@@ -481,7 +481,7 @@ export default function App() {
           <SettingsDialog
             isOpen={isSettingsOpen}
             onClose={() => setIsSettingsOpen(false)}
-            userConfig={userConfig}
+            userConfig={userConfig ?? undefined}
             onConfigUpdate={handleConfigUpdate}
           />
 

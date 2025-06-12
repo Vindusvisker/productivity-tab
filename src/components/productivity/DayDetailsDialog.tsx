@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Clock, CheckCircle, Flame, Target, Trophy } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
+import { UserConfig } from '../../types/UserConfig'
 
 interface DayActivity {
   date: string
@@ -27,9 +28,10 @@ interface DayDetailsDialogProps {
   isOpen: boolean
   onClose: () => void
   dayData: DayActivity | null
+  userConfig?: UserConfig | null
 }
 
-export default function DayDetailsDialog({ isOpen, onClose, dayData }: DayDetailsDialogProps) {
+export default function DayDetailsDialog({ isOpen, onClose, dayData, userConfig }: DayDetailsDialogProps) {
   const [detailedHabits, setDetailedHabits] = useState<HabitDetail[]>([])
   const [snusHistory, setSnusHistory] = useState<string[]>([])
   const [focusHistory, setFocusHistory] = useState<{ time: string, duration: number }[]>([])
@@ -99,6 +101,35 @@ export default function DayDetailsDialog({ isOpen, onClose, dayData }: DayDetail
     return `${mins}m`
   }
 
+  // Helper to get dynamic habit name
+  const getHabitName = () => {
+    if (!userConfig) return 'Habit'
+    if (userConfig.addictionName && userConfig.addictionName.trim()) {
+      return userConfig.addictionName
+    }
+    switch (userConfig.addictionType) {
+      case 'snus': return 'Snus'
+      case 'tobacco': return 'Cigarette'
+      case 'alcohol': return 'Drink'
+      case 'gambling': return 'Gambling'
+      case 'other': return 'Habit'
+      default: return 'Habit'
+    }
+  }
+
+  // Helper to get dynamic icon
+  const getHabitIcon = () => {
+    if (!userConfig) return '🚭'
+    switch (userConfig.addictionType) {
+      case 'snus': return '🚭'
+      case 'tobacco': return '🚬'
+      case 'alcohol': return '🍺'
+      case 'gambling': return '🎰'
+      case 'other': return '🎯'
+      default: return '🚭'
+    }
+  }
+
   if (!dayData) return null
 
   const snusInfo = getSnusStatusInfo()
@@ -133,15 +164,15 @@ export default function DayDetailsDialog({ isOpen, onClose, dayData }: DayDetail
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
               <Flame className="h-6 w-6 text-orange-400 mx-auto mb-2" />
               <div className="text-lg font-bold text-white">{dayData.snusCount}</div>
-              <div className="text-xs text-gray-400">Snus Count</div>
+              <div className="text-xs text-gray-400">{getHabitName()} Count</div>
             </div>
           </div>
 
           {/* Snus Status */}
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
             <h3 className="font-semibold text-white mb-3 flex items-center">
-              <span className="mr-2">🚭</span>
-              Snus Status
+              <span className="mr-2">{getHabitIcon()}</span>
+              {getHabitName()} Status
             </h3>
             <div className={`inline-flex items-center px-3 py-2 rounded-full border text-sm font-medium ${snusInfo.color}`}>
               <span className="mr-2">{snusInfo.emoji}</span>

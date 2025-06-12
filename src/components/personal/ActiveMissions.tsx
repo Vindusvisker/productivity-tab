@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Target, Flame, Trophy, ArrowRight, Zap, Brain, Star, Calendar } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
+import { UserConfig } from '../../types/UserConfig'
 
 type DailyLog = {
   date: string
@@ -35,7 +36,7 @@ interface WeeklyMissionTemplate {
   calculateProgress: (logs: DailyLog[]) => number
 }
 
-export default function ActiveMissions() {
+export default function ActiveMissions({ userConfig }: { userConfig?: UserConfig | null }) {
   const [missions, setMissions] = useState<Mission[]>([])
   const [completedMissions, setCompletedMissions] = useState<Set<string>>(new Set())
 
@@ -181,11 +182,11 @@ export default function ActiveMissions() {
       },
       {
         id: 'clean-week',
-        title: 'Clean Week Challenge',
-        description: 'Have 0 snus for 5 days this week',
+        title: `Clean Week Challenge`,
+        description: `Have 0 ${getHabitName().toLowerCase()} for 5 days this week`,
         target: 5,
         xpReward: 600,
-        icon: '🌟',
+        icon: getHabitIcon(),
         color: 'from-green-500 to-emerald-500',
         calculateProgress: (logs) => logs.filter(log => log.snusCount === 0).length
       },
@@ -368,6 +369,20 @@ export default function ActiveMissions() {
           icon: '🧠',
           color: 'from-blue-500 to-cyan-500'
         }
+      },
+      {
+        condition: cleanDays < 10,
+        mission: {
+          id: 'clean-days',
+          title: `Clean ${getHabitName()} Days`,
+          description: `${10 - cleanDays} clean ${getHabitName().toLowerCase()} days until badge`,
+          progress: cleanDays,
+          target: 10,
+          xpReward: 350,
+          type: 'milestone' as const,
+          icon: getHabitIcon(),
+          color: 'from-green-500 to-emerald-500'
+        }
       }
     ]
     
@@ -433,6 +448,34 @@ export default function ActiveMissions() {
       return 'left'
     } else {
       return 'left'
+    }
+  }
+
+  // Helper to get dynamic habit name
+  const getHabitName = () => {
+    if (!userConfig) return 'Habit'
+    if (userConfig.addictionName && userConfig.addictionName.trim()) {
+      return userConfig.addictionName
+    }
+    switch (userConfig.addictionType) {
+      case 'snus': return 'Snus'
+      case 'tobacco': return 'Cigarette'
+      case 'alcohol': return 'Drink'
+      case 'gambling': return 'Gambling'
+      case 'other': return 'Habit'
+      default: return 'Habit'
+    }
+  }
+  // Helper to get dynamic icon
+  const getHabitIcon = () => {
+    if (!userConfig) return '🚭'
+    switch (userConfig.addictionType) {
+      case 'snus': return '🚭'
+      case 'tobacco': return '🚬'
+      case 'alcohol': return '🍺'
+      case 'gambling': return '🎰'
+      case 'other': return '🎯'
+      default: return '🚭'
     }
   }
 

@@ -2,22 +2,7 @@ import HabitTracker from '@/components/productivity/HabitTracker';
 import FocusTimer from '@/components/productivity/FocusTimer';
 import WeeklyOverview from '@/components/productivity/WeeklyOverview';
 import ProductivityHelp from '@/components/ProductivityHelp';
-
-interface UserConfig {
-  hasAddiction: boolean
-  addictionType: string
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  hourlyRate: number
-  currency: string
-  monthlyContribution: number
-  contributionDay: number
-  firstName: string
-  motivation: string
-  onboardingCompleted: boolean
-}
+import { UserConfig } from '../types/UserConfig'
 
 interface ProductivityViewProps {
   userConfig?: UserConfig | null

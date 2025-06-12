@@ -5,22 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, AlertTriangle, CheckCircle, X } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
-
-interface UserConfig {
-  hasAddiction: boolean
-  addictionType: string
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  hourlyRate: number
-  currency: string
-  monthlyContribution: number
-  contributionDay: number
-  firstName: string
-  motivation: string
-  onboardingCompleted: boolean
-}
+import { UserConfig } from '../../types/UserConfig'
 
 interface SnusTrackerProps {
   userConfig?: UserConfig | null

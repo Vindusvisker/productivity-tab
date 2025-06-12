@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft, Target, DollarSign, Calendar, ExternalLink, ChevronRight, Star, Clock, Zap } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 import { FinancialGoal } from '@/data/vision'
+import { UserConfig } from '../../types/UserConfig'
 
 interface AddGoalDialogProps {
   isOpen: boolean
@@ -16,22 +17,6 @@ interface AddGoalDialogProps {
   onGoalAdded: (goal: FinancialGoal) => void
   editingGoal?: FinancialGoal | null
   onGoalUpdated?: (goal: FinancialGoal) => void
-}
-
-interface UserConfig {
-  hasAddiction: boolean
-  addictionType: string
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  hourlyRate: number
-  currency: string
-  monthlyContribution: number
-  contributionDay: number
-  firstName: string
-  motivation: string
-  onboardingCompleted: boolean
 }
 
 const categories = [

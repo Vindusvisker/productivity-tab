@@ -9,22 +9,7 @@ import { storage } from '@/lib/chrome-storage'
 import AddSubscriptionDialog from './AddSubscriptionDialog'
 import SubscriptionDetailsDialog from './SubscriptionDetailsDialog'
 import SubscriptionHistoryDialog from './SubscriptionHistoryDialog'
-
-interface UserConfig {
-  hasAddiction: boolean
-  addictionType: string
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  hourlyRate: number
-  currency: string
-  monthlyContribution: number
-  contributionDay: number
-  firstName: string
-  motivation: string
-  onboardingCompleted: boolean
-}
+import { UserConfig } from '../../types/UserConfig'
 
 interface Subscription {
   id: string

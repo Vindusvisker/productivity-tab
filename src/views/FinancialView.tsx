@@ -1,22 +1,7 @@
 import SnusImpactTracker from '@/components/financial/SnusImpactTracker';
 import SubscriptionTracker from '@/components/financial/SubscriptionTracker';
 import FinancialHelp from '@/components/FinancialHelp';
-
-interface UserConfig {
-  hasAddiction: boolean
-  addictionType: string
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  hourlyRate: number
-  currency: string
-  monthlyContribution: number
-  contributionDay: number
-  firstName: string
-  motivation: string
-  onboardingCompleted: boolean
-}
+import { UserConfig } from '../types/UserConfig'
 
 interface FinancialViewProps {
   userConfig?: UserConfig | null

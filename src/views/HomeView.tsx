@@ -4,22 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import SnusTracker from '@/components/home/SnusTracker';
 import QuickAccess from '@/components/home/QuickAccess';
 import HomeHelp from '@/components/HomeHelp';
-
-interface UserConfig {
-  hasAddiction: boolean
-  addictionType: string
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  hourlyRate: number
-  currency: string
-  monthlyContribution: number
-  contributionDay: number
-  firstName: string
-  motivation: string
-  onboardingCompleted: boolean
-}
+import { UserConfig } from '../types/UserConfig'
 
 interface HomeViewProps {
   userConfig?: UserConfig | null

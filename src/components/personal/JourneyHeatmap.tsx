@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Calendar, Target, Clock, Ban, Save, ChevronLeft, ChevronRight } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
+import { UserConfig } from '../../types/UserConfig'
 
 type DailyLog = {
   date: string
@@ -27,9 +28,10 @@ interface Habit {
 
 interface JourneyHeatmapProps {
   className?: string
+  userConfig?: UserConfig | null
 }
 
-export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
+export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmapProps) {
   const [dailyLogs, setDailyLogs] = useState<Record<string, DailyLog>>({})
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -185,7 +187,7 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
     if (!log) return `${formatted}\nNo activity recorded`
     
     const score = getDailyScore(log)
-    return `${formatted}\n✅ ${log.habitsCompleted} habits\n⏱️ ${log.focusSessions} focus sessions\n🚫 ${log.snusCount} snus\nScore: ${score}`
+    return `${formatted}\n✅ ${log.habitsCompleted} habits\n⏱️ ${log.focusSessions} focus sessions\n🚫 ${log.snusCount} ${userConfig?.addictionName?.toLowerCase() || 'snus'}\nScore: ${score}`
   }
 
   const handleDayClick = (date: string) => {
@@ -277,6 +279,35 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
       return selectedDateOnly.getTime() > todayDateOnly.getTime()
     })() : false
 
+    // Helper to get dynamic habit name
+    const getHabitName = () => {
+      if (!userConfig) return 'Habit'
+      if (userConfig.addictionName && userConfig.addictionName.trim()) {
+        return userConfig.addictionName
+      }
+      switch (userConfig.addictionType) {
+        case 'snus': return 'Snus'
+        case 'tobacco': return 'Cigarette'
+        case 'alcohol': return 'Drink'
+        case 'gambling': return 'Gambling'
+        case 'other': return 'Habit'
+        default: return 'Habit'
+      }
+    }
+
+    // Helper to get dynamic icon
+    const getHabitIcon = () => {
+      if (!userConfig) return '🚭'
+      switch (userConfig.addictionType) {
+        case 'snus': return '🚭'
+        case 'tobacco': return '🚬'
+        case 'alcohol': return '🍺'
+        case 'gambling': return '🎰'
+        case 'other': return '🎯'
+        default: return '🚭'
+      }
+    }
+
     return (
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
         <DialogContent className="bg-black/90 border border-white/20 text-white max-w-md">
@@ -308,7 +339,7 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
                     {currentScore}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Habits×2 + Focus×1 - Snus×1</p>
+                <p className="text-xs text-gray-500 mt-1">Habits×2 + Focus×1 - {getHabitName().toLowerCase()}×1</p>
               </div>
 
               {/* Input Fields */}
@@ -350,8 +381,8 @@ export default function JourneyHeatmap({ className }: JourneyHeatmapProps) {
 
                 <div className="space-y-2">
                   <Label className="text-sm text-gray-300 flex items-center space-x-2">
-                    <Ban className="h-4 w-4 text-red-400" />
-                    <span>Snus Count</span>
+                    <span>{getHabitIcon()}</span>
+                    <span>{getHabitName()} Count</span>
                   </Label>
                   <Input
                     type="number"

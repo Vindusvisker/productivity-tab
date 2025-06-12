@@ -7,22 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ArrowLeft, Calendar, CreditCard, Grid3X3, RotateCcw, Bell, ChevronDown, ChevronRight } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
-
-interface UserConfig {
-  hasAddiction: boolean
-  addictionType: string
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  hourlyRate: number
-  currency: string
-  monthlyContribution: number
-  contributionDay: number
-  firstName: string
-  motivation: string
-  onboardingCompleted: boolean
-}
+import { UserConfig } from '../../types/UserConfig'
 
 interface Subscription {
   id: string

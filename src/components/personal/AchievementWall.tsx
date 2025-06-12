@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Trophy, Clock, Target, Flame, Zap, Lock, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 import MissionDialog from './MissionDialog'
+import { UserConfig } from '../../types/UserConfig'
 
 type DailyLog = {
   date: string
@@ -134,7 +135,7 @@ const BadgeCategory = ({ title, icon: Icon, achievements, onBadgeClick }: BadgeC
   )
 }
 
-export default function AchievementWall() {
+export default function AchievementWall({ userConfig }: { userConfig?: UserConfig | null }) {
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(0)
@@ -176,12 +177,40 @@ export default function AchievementWall() {
       const currentStreak = calculateCurrentStreak(logs)
       const focusHours = Math.floor(totalFocus * 0.42) // 25min sessions
       
+      // Helper to get dynamic habit name
+      const getHabitName = () => {
+        if (!userConfig) return 'Habit'
+        if (userConfig.addictionName && userConfig.addictionName.trim()) {
+          return userConfig.addictionName
+        }
+        switch (userConfig.addictionType) {
+          case 'snus': return 'Snus'
+          case 'tobacco': return 'Cigarette'
+          case 'alcohol': return 'Drink'
+          case 'gambling': return 'Gambling'
+          case 'other': return 'Habit'
+          default: return 'Habit'
+        }
+      }
+      // Helper to get dynamic icon
+      const getHabitIcon = () => {
+        if (!userConfig) return '🚭'
+        switch (userConfig.addictionType) {
+          case 'snus': return '🚭'
+          case 'tobacco': return '🚬'
+          case 'alcohol': return '🍺'
+          case 'gambling': return '🎰'
+          case 'other': return '🎯'
+          default: return '🚭'
+        }
+      }
+      
       // Define ALL achievements across 5 pages
       const allAchievements: Omit<Achievement, 'unlocked' | 'dateUnlocked' | 'progress'>[] = [
         // Page 1: Starter Achievements
         { id: 'starter-spark', title: 'Starter Spark', icon: '⚡', description: 'Complete 5 habits total', category: 'habit', xpReward: 100 },
         { id: 'flow-initiate', title: 'Flow Initiate', icon: '🧘‍♂️', description: 'Log 5 deep work sessions', category: 'focus', xpReward: 100 },
-        { id: 'clean-day', title: 'Clean Day', icon: '🌟', description: 'Take 0 snus in a day', category: 'snus', xpReward: 200 },
+        { id: 'clean-day', title: `Clean ${getHabitName()} Day`, icon: getHabitIcon(), description: `Take 0 ${getHabitName().toLowerCase()} in a day`, category: 'habit', xpReward: 200 },
         { id: 'first-score', title: 'First Score', icon: '🎯', description: 'Achieve a daily score of 3+', category: 'wildcard', xpReward: 150 },
         { id: 'habit-duo', title: 'Habit Duo', icon: '👥', description: 'Complete 2 habits in one day', category: 'habit', xpReward: 75 },
         { id: 'focus-rookie', title: 'Focus Rookie', icon: '🎓', description: 'Complete your first focus session', category: 'focus', xpReward: 50 },

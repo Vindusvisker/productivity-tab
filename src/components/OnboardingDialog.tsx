@@ -7,29 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ArrowLeft, ArrowRight, Target, DollarSign, Clock, Package, Star, CheckCircle, User } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
-
-interface UserConfig {
-  // Addiction tracking
-  hasAddiction: boolean
-  addictionType: 'snus' | 'tobacco' | 'alcohol' | 'gambling' | 'other'
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  
-  // Financial
-  hourlyRate: number
-  currency: 'NOK' | 'USD' | 'EUR' | 'SEK'
-  monthlyContribution: number
-  contributionDay: number
-  
-  // Personal
-  firstName: string
-  motivation: string
-  
-  // System
-  onboardingCompleted: boolean
-}
+import { UserConfig } from '../types/UserConfig'
 
 interface OnboardingDialogProps {
   isOpen: boolean
@@ -61,7 +39,7 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
     addictionName: '',
     costPerUnit: 4.22,
     unitsPerPackage: 23,
-    packageCost: 97,
+    packageCost: 100,
     hourlyRate: 200,
     currency: 'NOK',
     monthlyContribution: 2500,
@@ -71,7 +49,7 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
     onboardingCompleted: false
   })
 
-  const totalSteps = config.hasAddiction ? 9 : 6
+  const totalSteps = config.hasAddiction ? 8 : 6
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -114,7 +92,6 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
       case 6: return config.hasAddiction ? '💰 Financial Setup' : '🎉 All Set!'
       case 7: return config.hasAddiction ? '📅 Savings Day' : ''
       case 8: return config.hasAddiction ? '🌟 Personal Touch' : ''
-      case 9: return config.hasAddiction ? '🎉 All Set!' : ''
       default: return 'Setup'
     }
   }
@@ -139,7 +116,6 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
         if (config.hasAddiction) return config.contributionDay > 0 && config.contributionDay <= 31
         return true
       case 8: return true
-      case 9: return true
       default: return true
     }
   }
@@ -472,8 +448,7 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
                   value={config.unitsPerPackage}
                   onChange={(e) => setConfig(prev => ({ 
                     ...prev, 
-                    unitsPerPackage: Number(e.target.value),
-                    packageCost: Number(e.target.value) * prev.costPerUnit
+                    unitsPerPackage: Number(e.target.value)
                   }))}
                   className="bg-transparent border-none text-white placeholder:text-gray-400 text-base focus:ring-0"
                 />
@@ -484,7 +459,7 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
 
               <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
                 <div className="text-sm text-white/80">
-                  <div>Package cost: {config.packageCost.toFixed(2)} {getCurrencySymbol()}</div>
+                  <div>Package cost: {(config.unitsPerPackage * config.costPerUnit).toFixed(2)} {getCurrencySymbol()}</div>
                   <div>Cost per unit: {config.costPerUnit} {getCurrencySymbol()}</div>
                 </div>
               </div>
@@ -547,41 +522,6 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
                 <div className="text-4xl mb-2">🎉</div>
                 <h3 className="text-lg font-bold text-white">You're all set!</h3>
                 <p className="text-sm text-gray-400">Your personalized system is ready to help you succeed.</p>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 9 && config.hasAddiction && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className="text-3xl mb-2">📦</div>
-                <h2 className="text-lg font-bold text-white mb-2">Package information</h2>
-                <p className="text-gray-400 text-sm">How many units come in a package?</p>
-              </div>
-
-              <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-                <Label className="text-white text-sm mb-2 block">Units per package</Label>
-                <Input
-                  type="number"
-                  placeholder="23"
-                  value={config.unitsPerPackage}
-                  onChange={(e) => setConfig(prev => ({ 
-                    ...prev, 
-                    unitsPerPackage: Number(e.target.value),
-                    packageCost: Number(e.target.value) * prev.costPerUnit
-                  }))}
-                  className="bg-transparent border-none text-white placeholder:text-gray-400 text-base focus:ring-0"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  e.g., 23 snus per box, 20 cigarettes per pack
-                </p>
-              </div>
-
-              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
-                <div className="text-sm text-white/80">
-                  <div>Package cost: {config.packageCost.toFixed(2)} {getCurrencySymbol()}</div>
-                  <div>Cost per unit: {config.costPerUnit} {getCurrencySymbol()}</div>
-                </div>
               </div>
             </div>
           )}

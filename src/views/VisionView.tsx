@@ -2,22 +2,7 @@ import MoneySaved from '@/components/vision/MoneySaved';
 import GoalTracker from '@/components/vision/GoalTracker';
 import AffirmationWall from '@/components/vision/AffirmationWall';
 import VisionHelp from '@/components/VisionHelp';
-
-interface UserConfig {
-  hasAddiction: boolean
-  addictionType: string
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  hourlyRate: number
-  currency: string
-  monthlyContribution: number
-  contributionDay: number
-  firstName: string
-  motivation: string
-  onboardingCompleted: boolean
-}
+import { UserConfig } from '../types/UserConfig'
 
 interface VisionViewProps {
   userConfig?: UserConfig | null

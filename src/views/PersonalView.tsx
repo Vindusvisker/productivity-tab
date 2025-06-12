@@ -5,22 +5,7 @@ import JourneyHeatmap from '@/components/personal/JourneyHeatmap';
 import AchievementWall from '@/components/personal/AchievementWall';
 import WeeklyReflection from '@/components/personal/WeeklyReflection';
 import PersonalHelp from '@/components/PersonalHelp';
-
-interface UserConfig {
-  hasAddiction: boolean
-  addictionType: string
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  hourlyRate: number
-  currency: string
-  monthlyContribution: number
-  contributionDay: number
-  firstName: string
-  motivation: string
-  onboardingCompleted: boolean
-}
+import { UserConfig } from '../types/UserConfig'
 
 interface PersonalViewProps {
   userConfig?: UserConfig | null

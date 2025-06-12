@@ -6,22 +6,7 @@ import { Calendar, CheckCircle, Flame, TrendingUp } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 import DayDetailsDialog from './DayDetailsDialog'
 import PowerGrid from '@/components/personal/PowerGrid'
-
-interface UserConfig {
-  hasAddiction: boolean
-  addictionType: string
-  addictionName: string
-  costPerUnit: number
-  unitsPerPackage: number
-  packageCost: number
-  hourlyRate: number
-  currency: string
-  monthlyContribution: number
-  contributionDay: number
-  firstName: string
-  motivation: string
-  onboardingCompleted: boolean
-}
+import { UserConfig } from '../../types/UserConfig'
 
 interface WeeklyOverviewProps {
   userConfig?: UserConfig | null
@@ -525,6 +510,7 @@ export default function WeeklyOverview({ userConfig }: WeeklyOverviewProps) {
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         dayData={selectedDay}
+        userConfig={userConfig}
       />
     </Card>
   )
