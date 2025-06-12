@@ -6,6 +6,22 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, Calendar, Grid3X3, CreditCard, Bell } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
 interface Subscription {
   id: string
   name: string
@@ -29,6 +45,7 @@ interface SubscriptionDetailsDialogProps {
   onSubscriptionUpdated: (updatedSubscription: Subscription) => void
   onSubscriptionDeleted: (subscriptionId: string) => void
   onEdit: (subscription: Subscription) => void
+  userConfig?: UserConfig | null
 }
 
 export default function SubscriptionDetailsDialog({ 
@@ -37,14 +54,32 @@ export default function SubscriptionDetailsDialog({
   subscription,
   onSubscriptionUpdated,
   onSubscriptionDeleted,
-  onEdit
+  onEdit,
+  userConfig
 }: SubscriptionDetailsDialogProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   if (!subscription) return null
 
+  // Get currency symbol from user config
+  const getCurrencySymbol = () => {
+    if (!userConfig) return 'kr'
+    switch (userConfig.currency) {
+      case 'USD': return '$'
+      case 'EUR': return '€'
+      case 'SEK': return 'kr'
+      case 'NOK': 
+      default: return 'kr'
+    }
+  }
+
+  // Format currency using user's configured currency
   const formatCurrency = (amount: number) => {
-    return `kr${amount.toFixed(2).replace('.', ',')}`
+    const symbol = getCurrencySymbol()
+    if (symbol === '$' || symbol === '€') {
+      return `${symbol}${amount.toFixed(2)}`
+    }
+    return `${amount.toFixed(2).replace('.', ',')} ${symbol}`
   }
 
   const formatDate = (dateString: string) => {

@@ -10,6 +10,22 @@ import AddSubscriptionDialog from './AddSubscriptionDialog'
 import SubscriptionDetailsDialog from './SubscriptionDetailsDialog'
 import SubscriptionHistoryDialog from './SubscriptionHistoryDialog'
 
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
 interface Subscription {
   id: string
   name: string
@@ -26,10 +42,14 @@ interface Subscription {
   reminderEnabled: boolean
 }
 
+interface SubscriptionTrackerProps {
+  userConfig?: UserConfig | null
+}
+
 // No default data - users start with empty list
 const defaultSubscriptions: Subscription[] = []
 
-export default function SubscriptionTracker() {
+export default function SubscriptionTracker({ userConfig }: SubscriptionTrackerProps) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [monthlyTotal, setMonthlyTotal] = useState(0)
   const [dueThisMonth, setDueThisMonth] = useState(0)
@@ -48,6 +68,27 @@ export default function SubscriptionTracker() {
     { value: 'price', label: 'Price' },
     { value: 'renewal', label: 'Renewal' }
   ]
+
+  // Get currency symbol from user config
+  const getCurrencySymbol = () => {
+    if (!userConfig) return 'kr'
+    switch (userConfig.currency) {
+      case 'USD': return '$'
+      case 'EUR': return '€'
+      case 'SEK': return 'kr'
+      case 'NOK': 
+      default: return 'kr'
+    }
+  }
+
+  // Format currency using user's configured currency
+  const formatCurrency = (amount: number) => {
+    const symbol = getCurrencySymbol()
+    if (symbol === '$' || symbol === '€') {
+      return `${symbol}${Math.round(amount).toLocaleString()}`
+    }
+    return `${Math.round(amount).toLocaleString()} ${symbol}`
+  }
 
   useEffect(() => {
     loadSubscriptions()
@@ -208,10 +249,6 @@ export default function SubscriptionTracker() {
       default:
         return sorted
     }
-  }
-
-  const formatCurrency = (amount: number) => {
-    return `kr ${Math.round(amount).toLocaleString()}`
   }
 
   const formatDate = (dateString: string) => {
@@ -405,6 +442,7 @@ export default function SubscriptionTracker() {
         onSubscriptionAdded={handleSubscriptionAdded}
         editingSubscription={editingSubscription}
         onSubscriptionUpdated={handleSubscriptionEdited}
+        userConfig={userConfig}
       />
 
       {/* Subscription Details Dialog */}
@@ -415,6 +453,7 @@ export default function SubscriptionTracker() {
         onSubscriptionUpdated={handleSubscriptionUpdated}
         onSubscriptionDeleted={handleSubscriptionDeleted}
         onEdit={handleEditSubscription}
+        userConfig={userConfig}
       />
 
       {/* Subscription History Dialog */}
@@ -422,6 +461,7 @@ export default function SubscriptionTracker() {
         <SubscriptionHistoryDialog
           isOpen={showHistoryDialog}
           onClose={() => setShowHistoryDialog(false)}
+          userConfig={userConfig}
         />
       )}
     </>

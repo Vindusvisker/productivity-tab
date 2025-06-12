@@ -5,25 +5,81 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { TrendingUp, Coins, Calendar, Sparkles, Target, PiggyBank } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
-import { SNUS_COST_NOK, HOURLY_RATE_NOK, SNUS_TIME_MINUTES } from '@/data/vision'
+
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
+interface MoneySavedProps {
+  userConfig?: UserConfig | null
+}
 
 interface SavingsData {
-  snusSaved: number
+  habitSaved: number
   monthlyContributions: number
   totalSaved: number
-  snusAvoided: number
+  habitsAvoided: number
   nextContributionDays: number
 }
 
-export default function MoneySaved() {
+export default function MoneySaved({ userConfig }: MoneySavedProps) {
   const [savingsData, setSavingsData] = useState<SavingsData>({
-    snusSaved: 0,
+    habitSaved: 0,
     monthlyContributions: 0,
     totalSaved: 0,
-    snusAvoided: 0,
+    habitsAvoided: 0,
     nextContributionDays: 0
   })
   const [loading, setLoading] = useState(true)
+
+  // Get habit name from user config
+  const getHabitName = () => {
+    if (!userConfig?.hasAddiction) return 'habit'
+    if (userConfig.addictionName && userConfig.addictionName.trim()) {
+      return userConfig.addictionName.toLowerCase()
+    }
+    
+    switch (userConfig.addictionType) {
+      case 'snus': return 'snus'
+      case 'tobacco': return 'cigarette'
+      case 'alcohol': return 'drink'
+      case 'gambling': return 'bet'
+      case 'other': return 'habit'
+      default: return 'habit'
+    }
+  }
+
+  // Get currency symbol from user config
+  const getCurrencySymbol = () => {
+    if (!userConfig) return 'NOK'
+    return userConfig.currency
+  }
+
+  // Format currency using user's configured currency
+  const formatCurrency = (amount: number) => {
+    if (!userConfig) return `${Math.round(amount).toLocaleString()} NOK`
+    
+    const symbol = userConfig.currency
+    switch (symbol) {
+      case 'USD': return `$${Math.round(amount).toLocaleString()}`
+      case 'EUR': return `€${Math.round(amount).toLocaleString()}`
+      case 'SEK': 
+      case 'NOK': 
+      default: return `${Math.round(amount).toLocaleString()} ${symbol}`
+    }
+  }
 
   useEffect(() => {
     calculateSavings()
@@ -33,27 +89,27 @@ export default function MoneySaved() {
     window.addEventListener('dailyLogsUpdated', handleUpdate)
     
     return () => window.removeEventListener('dailyLogsUpdated', handleUpdate)
-  }, [])
+  }, [userConfig])
 
   const calculateSavings = async () => {
     try {
-      // Get snus savings
-      const snusSaved = await calculateSnusSavings()
+      // Get habit savings (only if user has addiction tracking)
+      const habitSaved = userConfig?.hasAddiction ? await calculateHabitSavings() : 0
       
       // Get monthly contributions
       const monthlyContributions = await calculateMonthlyContributions()
       
-      // Calculate days until next contribution (15th of each month)
-      const nextContributionDays = calculateDaysToNext15th()
+      // Calculate days until next contribution
+      const nextContributionDays = calculateDaysToNextContribution()
       
-      // Get snus avoided count
-      const snusAvoided = await calculateSnusAvoided()
+      // Get habits avoided count (only if user has addiction tracking)
+      const habitsAvoided = userConfig?.hasAddiction ? await calculateHabitsAvoided() : 0
       
       setSavingsData({
-        snusSaved,
+        habitSaved,
         monthlyContributions,
-        totalSaved: snusSaved + monthlyContributions,
-        snusAvoided,
+        totalSaved: habitSaved + monthlyContributions,
+        habitsAvoided,
         nextContributionDays
       })
     } catch (error) {
@@ -63,26 +119,28 @@ export default function MoneySaved() {
     }
   }
 
-  const calculateSnusSavings = async (): Promise<number> => {
+  const calculateHabitSavings = async (): Promise<number> => {
+    if (!userConfig?.hasAddiction) return 0
+    
     try {
       const dailyLogs = await storage.load('daily-logs') || {}
       const logs = Object.values(dailyLogs) as any[]
       
       if (logs.length === 0) return 0
 
-      // Calculate baseline (same logic as before)
+      // Calculate baseline using user's configured cost
       const sortedLogs = logs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       const firstWeekLogs = sortedLogs.slice(0, 7)
-      const totalSnus = firstWeekLogs.reduce((sum, log) => sum + (log.snusCount || 0), 0)
-      const baselineSnusPerDay = Math.max(5, Math.round(totalSnus / Math.max(1, firstWeekLogs.length)))
+      const totalHabits = firstWeekLogs.reduce((sum, log) => sum + (log.snusCount || 0), 0)
+      const baselineHabitsPerDay = Math.max(5, Math.round(totalHabits / Math.max(1, firstWeekLogs.length)))
 
-      // Calculate total snus savings
+      // Calculate total habit savings using user's cost per unit
       return logs.reduce((sum, log) => {
-        const saved = Math.max(0, baselineSnusPerDay - (log.snusCount || 0))
-        return sum + (saved * SNUS_COST_NOK)
+        const saved = Math.max(0, baselineHabitsPerDay - (log.snusCount || 0))
+        return sum + (saved * userConfig.costPerUnit)
       }, 0)
     } catch (error) {
-      console.error('Error calculating snus savings:', error)
+      console.error('Error calculating habit savings:', error)
       return 0
     }
   }
@@ -106,13 +164,15 @@ export default function MoneySaved() {
         }
       })
       
-      // Auto-add contribution ONLY for current month if today is the 15th or later
+      // Auto-add contribution ONLY for current month if today is the contribution day or later
+      const contributionDay = userConfig?.contributionDay || 15
       const currentMonthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`
       
-      if (currentDay >= 15 && !contributions[currentMonthKey]) {
-        // Add this month's contribution
-        contributions[currentMonthKey] = 2500
-        totalContributions += 2500
+      if (currentDay >= contributionDay && !contributions[currentMonthKey]) {
+        // Add this month's contribution using user's configured amount
+        const monthlyAmount = userConfig?.monthlyContribution || 2500
+        contributions[currentMonthKey] = monthlyAmount
+        totalContributions += monthlyAmount
         
         // Save the updated contributions
         await storage.save('monthly-contributions', contributions)
@@ -125,7 +185,9 @@ export default function MoneySaved() {
     }
   }
 
-  const calculateSnusAvoided = async (): Promise<number> => {
+  const calculateHabitsAvoided = async (): Promise<number> => {
+    if (!userConfig?.hasAddiction) return 0
+    
     try {
       const dailyLogs = await storage.load('daily-logs') || {}
       const logs = Object.values(dailyLogs) as any[]
@@ -134,35 +196,32 @@ export default function MoneySaved() {
 
       const sortedLogs = logs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       const firstWeekLogs = sortedLogs.slice(0, 7)
-      const totalSnus = firstWeekLogs.reduce((sum, log) => sum + (log.snusCount || 0), 0)
-      const baselineSnusPerDay = Math.max(5, Math.round(totalSnus / Math.max(1, firstWeekLogs.length)))
+      const totalHabits = firstWeekLogs.reduce((sum, log) => sum + (log.snusCount || 0), 0)
+      const baselineHabitsPerDay = Math.max(5, Math.round(totalHabits / Math.max(1, firstWeekLogs.length)))
 
       return logs.reduce((sum, log) => {
-        return sum + Math.max(0, baselineSnusPerDay - (log.snusCount || 0))
+        return sum + Math.max(0, baselineHabitsPerDay - (log.snusCount || 0))
       }, 0)
     } catch (error) {
       return 0
     }
   }
 
-  const calculateDaysToNext15th = (): number => {
+  const calculateDaysToNextContribution = (): number => {
     const today = new Date()
     const currentMonth = today.getMonth()
     const currentYear = today.getFullYear()
+    const contributionDay = userConfig?.contributionDay || 15
     
-    let next15th = new Date(currentYear, currentMonth, 15)
+    let nextContribution = new Date(currentYear, currentMonth, contributionDay)
     
-    // If we're past the 15th this month, move to next month
-    if (today.getDate() > 15) {
-      next15th = new Date(currentYear, currentMonth + 1, 15)
+    // If we're past the contribution day this month, move to next month
+    if (today.getDate() > contributionDay) {
+      nextContribution = new Date(currentYear, currentMonth + 1, contributionDay)
     }
     
-    const diffTime = next15th.getTime() - today.getTime()
+    const diffTime = nextContribution.getTime() - today.getTime()
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  }
-
-  const formatCurrency = (amount: number) => {
-    return `${Math.round(amount).toLocaleString()} NOK`
   }
 
   if (loading) {
@@ -176,6 +235,10 @@ export default function MoneySaved() {
       </Card>
     )
   }
+
+  const habitName = getHabitName()
+  const contributionAmount = userConfig?.monthlyContribution || 2500
+  const contributionDay = userConfig?.contributionDay || 15
 
   return (
     <Card className="bg-black/60 border border-white/10 backdrop-blur-xl rounded-2xl">
@@ -191,9 +254,11 @@ export default function MoneySaved() {
               <p className="text-xs text-green-300">Building your future</p>
             </div>
           </div>
-          <Badge className="bg-green-500/20 text-green-400 px-2 py-1 text-xs border border-green-500/30">
-            {savingsData.snusAvoided} snus avoided
-          </Badge>
+          {userConfig?.hasAddiction && (
+            <Badge className="bg-green-500/20 text-green-400 px-2 py-1 text-xs border border-green-500/30">
+              {savingsData.habitsAvoided} {habitName} avoided
+            </Badge>
+          )}
         </div>
 
         {/* Total Savings - Big Number */}
@@ -208,24 +273,26 @@ export default function MoneySaved() {
 
         {/* Sources Breakdown */}
         <div className="grid grid-cols-2 gap-3 mb-4 flex-1">
-          {/* Snus Savings */}
-          <div className="bg-gradient-to-br from-emerald-600/20 to-teal-600/20 border border-emerald-500/20 rounded-xl p-3 text-center">
-            <div className="flex items-center justify-center mb-2">
-              <Target className="h-4 w-4 text-emerald-400 mr-1" />
-              <span className="text-xs font-medium text-emerald-400">Snus Savings</span>
+          {/* Habit Savings */}
+          {userConfig?.hasAddiction && (
+            <div className="bg-gradient-to-br from-emerald-600/20 to-teal-600/20 border border-emerald-500/20 rounded-xl p-3 text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Target className="h-4 w-4 text-emerald-400 mr-1" />
+                <span className="text-xs font-medium text-emerald-400">{habitName} Savings</span>
+              </div>
+              <div className="text-lg font-bold text-white">{formatCurrency(savingsData.habitSaved)}</div>
+              <div className="text-xs text-emerald-300">Health wins</div>
             </div>
-            <div className="text-lg font-bold text-white">{formatCurrency(savingsData.snusSaved)}</div>
-            <div className="text-xs text-emerald-300">Health wins</div>
-          </div>
+          )}
 
           {/* Monthly Contributions */}
-          <div className="bg-gradient-to-br from-teal-600/20 to-cyan-600/20 border border-teal-500/20 rounded-xl p-3 text-center">
+          <div className={`bg-gradient-to-br from-teal-600/20 to-cyan-600/20 border border-teal-500/20 rounded-xl p-3 text-center ${!userConfig?.hasAddiction ? 'col-span-2' : ''}`}>
             <div className="flex items-center justify-center mb-2">
               <Calendar className="h-4 w-4 text-teal-400 mr-1" />
               <span className="text-xs font-medium text-teal-400">Monthly Fund</span>
             </div>
             <div className="text-lg font-bold text-white">{formatCurrency(savingsData.monthlyContributions)}</div>
-            <div className="text-xs text-teal-300">2,500 NOK/month</div>
+            <div className="text-xs text-teal-300">{formatCurrency(contributionAmount)}/month</div>
           </div>
         </div>
 
@@ -238,14 +305,14 @@ export default function MoneySaved() {
           <div className="text-lg font-bold text-white">
             {savingsData.nextContributionDays === 0 ? 'Today!' : `${savingsData.nextContributionDays} days`}
           </div>
-          <div className="text-xs text-purple-300">2,500 NOK on the 15th</div>
+          <div className="text-xs text-purple-300">{formatCurrency(contributionAmount)} on the {contributionDay}th</div>
         </div>
 
         {/* Motivational Message */}
         {savingsData.totalSaved > 0 && (
           <div className="mt-3 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-xl p-3 text-center">
             <div className="text-sm font-bold text-yellow-400">
-              🎉 Every NOK is a step toward freedom!
+              🎉 Every {getCurrencySymbol()} is a step toward freedom!
             </div>
           </div>
         )}

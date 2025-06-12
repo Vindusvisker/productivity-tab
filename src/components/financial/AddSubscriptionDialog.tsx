@@ -8,6 +8,22 @@ import { Label } from '@/components/ui/label'
 import { ArrowLeft, Calendar, CreditCard, Grid3X3, RotateCcw, Bell, ChevronDown, ChevronRight } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
 interface Subscription {
   id: string
   name: string
@@ -30,6 +46,7 @@ interface AddSubscriptionDialogProps {
   onSubscriptionAdded: (subscription: Subscription) => void
   editingSubscription?: Subscription | null
   onSubscriptionUpdated?: (subscription: Subscription) => void
+  userConfig?: UserConfig | null
 }
 
 const iconOptions = ['💻', '📱', '🎵', '🎬', '🏃', '☁️', '🛡️', '🏠', '📚', '🤖']
@@ -47,7 +64,7 @@ const colorOptions = [
 const categories = ['Entertainment', 'Productivity', 'Health & Fitness', 'Utilities', 'Food & Drink', 'Transportation', 'Other']
 const paymentMethods = ['Credit Card', 'Debit Card', 'PayPal', 'Bank Transfer', 'Other']
 
-export default function AddSubscriptionDialog({ isOpen, onClose, onSubscriptionAdded, editingSubscription, onSubscriptionUpdated }: AddSubscriptionDialogProps) {
+export default function AddSubscriptionDialog({ isOpen, onClose, onSubscriptionAdded, editingSubscription, onSubscriptionUpdated, userConfig }: AddSubscriptionDialogProps) {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -64,6 +81,29 @@ export default function AddSubscriptionDialog({ isOpen, onClose, onSubscriptionA
   const [showIconPicker, setShowIconPicker] = useState(false)
   const [showCategoryPicker, setShowCategoryPicker] = useState(false)
   const [showPaymentPicker, setShowPaymentPicker] = useState(false)
+
+  // Get currency symbol and label from user config
+  const getCurrencySymbol = () => {
+    if (!userConfig) return 'kr'
+    switch (userConfig.currency) {
+      case 'USD': return '$'
+      case 'EUR': return '€'
+      case 'SEK': return 'kr'
+      case 'NOK': 
+      default: return 'kr'
+    }
+  }
+
+  const getCurrencyLabel = () => {
+    if (!userConfig) return 'NOK (kr)'
+    switch (userConfig.currency) {
+      case 'USD': return 'USD ($)'
+      case 'EUR': return 'EUR (€)'
+      case 'SEK': return 'SEK (kr)'
+      case 'NOK': 
+      default: return 'NOK (kr)'
+    }
+  }
 
   const resetForm = () => {
     setFormData({
@@ -386,7 +426,7 @@ export default function AddSubscriptionDialog({ isOpen, onClose, onSubscriptionA
                   onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                   className="bg-transparent border-none text-white placeholder:text-gray-400 text-right flex-1 focus:ring-0 text-sm appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                 />
-                <span className="text-gray-400 text-sm">NOK (kr)</span>
+                <span className="text-gray-400 text-sm">{getCurrencyLabel()}</span>
               </div>
             </div>
           )}

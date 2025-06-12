@@ -47,7 +47,7 @@ const FinancialView: React.FC<FinancialViewProps> = ({ userConfig }) => {
           <div>
             {/* Component slides in from right */}
             <div className="opacity-0 animate-slide-in-right h-[calc(100vh-12rem)]" style={{ animationDelay: '400ms', animationFillMode: 'forwards' }}>
-              <SubscriptionTracker />
+              <SubscriptionTracker userConfig={userConfig} />
             </div>
           </div>
 

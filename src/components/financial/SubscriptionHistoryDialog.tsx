@@ -6,6 +6,22 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, Calendar, Trash2, History as HistoryIcon } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
 interface HistoricalSubscription {
   id: string
   name: string
@@ -23,9 +39,10 @@ interface HistoricalSubscription {
 interface SubscriptionHistoryDialogProps {
   isOpen: boolean
   onClose: () => void
+  userConfig?: UserConfig | null
 }
 
-export default function SubscriptionHistoryDialog({ isOpen, onClose }: SubscriptionHistoryDialogProps) {
+export default function SubscriptionHistoryDialog({ isOpen, onClose, userConfig }: SubscriptionHistoryDialogProps) {
   const [historyList, setHistoryList] = useState<HistoricalSubscription[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -47,8 +64,25 @@ export default function SubscriptionHistoryDialog({ isOpen, onClose }: Subscript
     }
   }
 
+  // Get currency symbol from user config
+  const getCurrencySymbol = () => {
+    if (!userConfig) return 'kr'
+    switch (userConfig.currency) {
+      case 'USD': return '$'
+      case 'EUR': return '€'
+      case 'SEK': return 'kr'
+      case 'NOK': 
+      default: return 'kr'
+    }
+  }
+
+  // Format currency using user's configured currency
   const formatCurrency = (amount: number) => {
-    return `kr${amount.toFixed(0).replace('.', ',')}`
+    const symbol = getCurrencySymbol()
+    if (symbol === '$' || symbol === '€') {
+      return `${symbol}${amount.toFixed(0)}`
+    }
+    return `${amount.toFixed(0).replace('.', ',')} ${symbol}`
   }
 
   const formatDate = (dateString: string) => {

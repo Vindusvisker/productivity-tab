@@ -49,7 +49,7 @@ const VisionView: React.FC<VisionViewProps> = ({ userConfig }) => {
             {/* Savings Fund */}
             <div className="flex-1 min-h-0">
               <div className="opacity-0 animate-slide-in-left" style={{ animationDelay: '400ms', animationFillMode: 'forwards' }}>
-                <MoneySaved />
+                <MoneySaved userConfig={userConfig} />
               </div>
             </div>
 
