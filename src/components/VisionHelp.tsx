@@ -2,9 +2,38 @@
 
 import { useState } from 'react'
 import { HelpCircle, Info, X, DollarSign, Calendar, Target, TrendingUp } from 'lucide-react'
+import { UserConfig } from '../types/UserConfig'
 
-export default function VisionHelp() {
+export default function VisionHelp({ userConfig }: { userConfig?: UserConfig | null }) {
   const [isOpen, setIsOpen] = useState(false)
+
+  // Helper to get dynamic habit name
+  const getHabitName = () => {
+    if (!userConfig) return 'Habit'
+    if (userConfig.addictionName && userConfig.addictionName.trim()) {
+      return userConfig.addictionName
+    }
+    switch (userConfig.addictionType) {
+      case 'snus': return 'Snus'
+      case 'tobacco': return 'Cigarette'
+      case 'alcohol': return 'Drink'
+      case 'gambling': return 'Gambling'
+      case 'other': return 'Habit'
+      default: return 'Habit'
+    }
+  }
+  // Helper to get dynamic icon
+  const getHabitIcon = () => {
+    if (!userConfig) return '🚭'
+    switch (userConfig.addictionType) {
+      case 'snus': return '🚭'
+      case 'tobacco': return '🚬'
+      case 'alcohol': return '🍺'
+      case 'gambling': return '🎰'
+      case 'other': return '🎯'
+      default: return '🚭'
+    }
+  }
 
   return (
     <div className="relative">
@@ -53,33 +82,32 @@ export default function VisionHelp() {
                   <div className="space-y-4 text-white/80">
                     <p className="text-sm">The Vision tab is your financial motivation center. It tracks your progress toward financial goals using two funding sources:</p>
                     <div className="bg-black/40 rounded-lg p-3 text-xs">
-                      <div><strong>💚 Snus Savings:</strong> Money saved by using fewer snus than your baseline</div>
-                      <div><strong>💰 Monthly Contributions:</strong> 2,500 NOK added automatically on the 15th of each month</div>
+                      <div><strong>💚 {getHabitName()} Savings:</strong> Money saved by using fewer {getHabitName().toLowerCase()} than your baseline</div>
+                      <div><strong>💰 Monthly Contributions:</strong> Your chosen amount is added automatically each month on your selected day</div>
                       <div><strong>🎯 Goal Tracking:</strong> Your total savings distributed across your financial goals by priority</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Snus Savings Explanation */}
+                {/* Habit Savings Explanation */}
                 <div className="bg-gradient-to-br from-emerald-500/10 to-green-500/10 border border-emerald-500/20 rounded-xl p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <Target className="w-6 h-6 text-emerald-400" />
-                    <h3 className="text-lg font-bold text-white">💰 Snus Savings Calculator</h3>
+                    <h3 className="text-lg font-bold text-white">💰 {getHabitName()} Savings Calculator</h3>
                   </div>
                   
                   <div className="space-y-4 text-white/80">
                     <div>
                       <h4 className="font-semibold text-emerald-300 mb-2">Step 1: Your Baseline is Established</h4>
-                      <p className="text-sm">Your <strong>first week</strong> of tracking sets your "normal" snus usage. If you used 35 snus total in week 1, your baseline = 35÷7 = <strong>5 snus per day</strong>.</p>
+                      <p className="text-sm">Your <strong>first week</strong> of tracking sets your "normal" {getHabitName().toLowerCase()} usage. For example, if you used a certain number of {getHabitName().toLowerCase()} in week 1, your baseline is calculated as your average per day.</p>
                     </div>
                     
                     <div>
                       <h4 className="font-semibold text-emerald-300 mb-2">Step 2: Daily Savings Calculation</h4>
                       <p className="text-sm">Every day after, the app compares your actual usage to your baseline:</p>
                       <div className="mt-2 bg-black/40 rounded-lg p-3 text-xs font-mono">
-                        <div>• Day 8: Baseline 5, you used 3 → Saved 2 snus = 2 × 4.27 NOK = <span className="text-emerald-400">8.54 NOK</span></div>
-                        <div>• Day 9: Baseline 5, you used 1 → Saved 4 snus = 4 × 4.27 NOK = <span className="text-emerald-400">17.08 NOK</span></div>
-                        <div>• Day 10: Baseline 5, you used 7 → Saved 0 snus = <span className="text-red-400">0 NOK</span> (used more than baseline)</div>
+                        <div>• If your baseline is 5 and you use 3, you save 2 {getHabitName().toLowerCase()} × your unit cost = your daily savings</div>
+                        <div>• If you use less than your baseline, you save more; if you use more, you save nothing that day</div>
                       </div>
                     </div>
                     
@@ -89,7 +117,7 @@ export default function VisionHelp() {
                     </div>
                     
                     <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3">
-                      <p className="text-sm"><strong>Current snus cost:</strong> 4.27 NOK per snus (97 NOK ÷ 23 snus per packet)</p>
+                      <p className="text-sm"><strong>Your current unit cost:</strong> Set in your profile as the cost per {getHabitName().toLowerCase()} and per package</p>
                     </div>
                   </div>
                 </div>
@@ -98,26 +126,26 @@ export default function VisionHelp() {
                 <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-xl p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <Calendar className="w-6 h-6 text-blue-400" />
-                    <h3 className="text-lg font-bold text-white">💰 Monthly Contributions (2,500 NOK)</h3>
+                    <h3 className="text-lg font-bold text-white">💰 Monthly Contributions</h3>
                   </div>
                   
                   <div className="space-y-4 text-white/80">
                     <div>
                       <h4 className="font-semibold text-blue-300 mb-2">How It Works</h4>
-                      <p className="text-sm">Every month on the <strong>15th</strong>, the app automatically adds 2,500 NOK to your savings fund. This simulates a monthly contribution to your financial goals.</p>
+                      <p className="text-sm">Every month on your chosen day, the app automatically adds your selected monthly contribution to your savings fund. This simulates a regular contribution to your financial goals.</p>
                     </div>
                     
                     <div>
                       <h4 className="font-semibold text-blue-300 mb-2">Timeline</h4>
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
-                        <div>• <strong>1st-14th of month:</strong> No contribution added</div>
-                        <div>• <strong>15th of month:</strong> 2,500 NOK automatically added</div>
-                        <div>• <strong>16th-31st:</strong> Contribution remains until next month</div>
+                        <div>• <strong>Before your contribution day:</strong> No contribution added</div>
+                        <div>• <strong>On your contribution day:</strong> Your chosen amount is automatically added</div>
+                        <div>• <strong>After your contribution day:</strong> Contribution remains until next month</div>
                       </div>
                     </div>
                     
                     <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-                      <p className="text-sm"><strong>Important:</strong> No retroactive contributions! If you start tracking mid-month, you only get contributions from the 15th onwards.</p>
+                      <p className="text-sm"><strong>Important:</strong> No retroactive contributions! If you start tracking mid-month, you only get contributions from your chosen day onwards.</p>
                     </div>
                   </div>
                 </div>
@@ -132,7 +160,7 @@ export default function VisionHelp() {
                   <div className="space-y-4 text-white/80">
                     <div>
                       <h4 className="font-semibold text-purple-300 mb-2">Priority System</h4>
-                      <p className="text-sm">Your total savings (snus + monthly contributions) get distributed to goals based on:</p>
+                      <p className="text-sm">Your total savings ({getHabitName().toLowerCase()} + monthly contributions) get distributed to goals based on:</p>
                       <div className="mt-2 bg-black/40 rounded-lg p-3 text-xs">
                         <div>1. <strong>Priority level:</strong> High → Medium → Low</div>
                         <div>2. <strong>Goal amount:</strong> Smaller goals get filled first within same priority</div>
@@ -141,7 +169,7 @@ export default function VisionHelp() {
                     </div>
                     
                     <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
-                      <p className="text-sm"><strong>Example:</strong> If you have 5,000 NOK saved and a high-priority 6,000 NOK cabin trip goal, it shows as 83% complete (5,000 ÷ 6,000).</p>
+                      <p className="text-sm"><strong>Example:</strong> If you have a certain amount saved and a high-priority goal, your progress is shown as a percentage of your goal amount.</p>
                     </div>
                   </div>
                 </div>

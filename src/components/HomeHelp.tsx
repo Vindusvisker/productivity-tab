@@ -54,53 +54,53 @@ export default function HomeHelp() {
                     <p className="text-sm">Home is your central command center - the first thing you see when opening a new tab. It's designed for quick actions and daily tracking.</p>
                     <div className="bg-black/40 rounded-lg p-3 text-xs">
                       <div><strong>🕐 Time Display:</strong> Current time and date prominently shown</div>
-                      <div><strong>📊 Snus Tracker:</strong> Log and monitor your daily snus usage with smart feedback</div>
+                      <div><strong>📊 Habit Tracker:</strong> Log and monitor your daily tracked habit usage with smart feedback</div>
                       <div><strong>🚀 Quick Access:</strong> Fast links to your most-used tools and websites</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Snus Tracker Explanation */}
+                {/* Habit Tracker Explanation */}
                 <div className="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-xl p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <Plus className="w-6 h-6 text-red-400" />
-                    <h3 className="text-lg font-bold text-white">📊 Snus Tracker (Right Side)</h3>
+                    <h3 className="text-lg font-bold text-white">📊 Habit Tracker (Right Side)</h3>
                   </div>
                   
                   <div className="space-y-4 text-white/80">
                     <div>
                       <h4 className="font-semibold text-red-300 mb-2">Daily Limit System</h4>
-                      <p className="text-sm">Track your snus usage with a <strong>5 snus daily limit</strong>. The tracker provides real-time feedback on your progress.</p>
+                      <p className="text-sm">Track your habit usage with a daily limit you set. The tracker provides real-time feedback on your progress.</p>
                     </div>
                     
                     <div>
                       <h4 className="font-semibold text-red-300 mb-2">Smart Messaging</h4>
-                      <p className="text-sm">Get personalized messages based on your count:</p>
+                      <p className="text-sm">Get personalized messages based on your usage count and your daily limit:</p>
                       <div className="mt-2 bg-black/40 rounded-lg p-3 text-xs font-mono">
-                        <div>• <span className="text-green-400">0 snus:</span> "Clean start — stay sharp and own the day 🧠"</div>
-                        <div>• <span className="text-yellow-400">1-4 snus:</span> Awareness messages to keep you mindful</div>
-                        <div>• <span className="text-orange-400">5 snus:</span> "Limit reached. Time to lock in 🔒"</div>
-                        <div>• <span className="text-red-400">6+ snus:</span> Tough love messages to help you regain control</div>
+                        <div>• <span className="text-green-400">0 used:</span> "Clean start — stay sharp and own the day 🧠"</div>
+                        <div>• <span className="text-yellow-400">Below limit:</span> Awareness messages to keep you mindful</div>
+                        <div>• <span className="text-orange-400">At limit:</span> "Limit reached. Time to lock in 🔒"</div>
+                        <div>• <span className="text-red-400">Above limit:</span> Tough love messages to help you regain control</div>
                       </div>
                     </div>
                     
                     <div>
                       <h4 className="font-semibold text-red-300 mb-2">How to Use</h4>
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
-                        <div>• <strong>Click "+" button:</strong> Log a snus (1-second cooldown prevents accidental clicks)</div>
-                        <div>• <strong>Long-press "+" (3 seconds):</strong> Subtract last snus if logged by mistake</div>
-                        <div>• <strong>Visual progress bar:</strong> See how close you are to the daily limit</div>
+                        <div>• <strong>Click "+" button:</strong> Log a habit usage (1-second cooldown prevents accidental clicks)</div>
+                        <div>• <strong>Long-press "+" (3 seconds):</strong> Subtract last usage if logged by mistake</div>
+                        <div>• <strong>Visual progress bar:</strong> See how close you are to your daily limit</div>
                         <div>• <strong>Auto-reset:</strong> Resets to 0 at midnight and logs yesterday's data</div>
                       </div>
                     </div>
                     
                     <div>
                       <h4 className="font-semibold text-red-300 mb-2">Data Tracking</h4>
-                      <p className="text-sm">Your daily snus count automatically feeds into:</p>
+                      <p className="text-sm">Your daily habit usage automatically feeds into:</p>
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
-                        <div>• <strong>Vision Tab:</strong> Calculates snus savings for financial goals</div>
+                        <div>• <strong>Vision Tab:</strong> Calculates savings for financial goals</div>
                         <div>• <strong>Personal Tab:</strong> Shows in weekly overview and journey heatmap</div>
-                        <div>• <strong>Success/Failure tracking:</strong> Days &lt;=5 snus = success, &gt;5 = failed day</div>
+                        <div>• <strong>Success/Failure tracking:</strong> Days at or below your limit = success, above = failed day</div>
                       </div>
                     </div>
                     
@@ -128,8 +128,8 @@ export default function HomeHelp() {
                       <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                         <div className="bg-black/40 rounded-lg p-2">
                           <div><strong>🔧 Development:</strong></div>
-                          <div>• Trale Extension (GitHub)</div>
-                          <div>• Trale Main (GitHub)</div>
+                          <div>• GitHub</div>
+                          <div>• Daily.dev</div>
                         </div>
                         <div className="bg-black/40 rounded-lg p-2">
                           <div><strong>🤖 AI Tools:</strong></div>
@@ -138,7 +138,7 @@ export default function HomeHelp() {
                         </div>
                         <div className="bg-black/40 rounded-lg p-2">
                           <div><strong>📚 Productivity:</strong></div>
-                          <div>• Daily.dev (Dev news)</div>
+                          <div>• Gmail</div>
                           <div>• Google Calendar</div>
                         </div>
                       </div>

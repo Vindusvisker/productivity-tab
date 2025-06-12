@@ -51,12 +51,12 @@ export default function PersonalHelp() {
                   </div>
                   
                   <div className="space-y-4 text-white/80">
-                    <p className="text-sm">Personal is your comprehensive growth and reflection center. Track your progress with XP leveling, complete dynamic missions, visualize your journey, unlock achievements, and reflect on your weekly experiences.</p>
+                    <p className="text-sm">Personal is your comprehensive growth and reflection center. Track your progress with XP leveling, complete dynamic missions, visualize your journey, unlock achievements, and reflect on your weekly experiences—no matter what habit you are tracking.</p>
                     <div className="bg-black/40 rounded-lg p-3 text-xs">
                       <div><strong>👤 Profile Header:</strong> XP leveling system with ranks, titles, and progress tracking</div>
                       <div><strong>🎯 Active Missions:</strong> Dynamic weekly challenges and milestone goals</div>
                       <div><strong>🗓️ Journey Heatmap:</strong> Visual activity calendar with manual editing</div>
-                      <div><strong>🏆 Achievement Wall:</strong> Badge collection system across 30+ achievements</div>
+                      <div><strong>🏆 Achievement Wall:</strong> Badge collection system across many achievements</div>
                       <div><strong>💭 Weekly Reflection:</strong> Mood tracking and journaling for personal growth</div>
                     </div>
                   </div>
@@ -85,13 +85,13 @@ export default function PersonalHelp() {
                       <h4 className="font-semibold text-yellow-300 mb-2">XP Sources & Calculation</h4>
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
                         <div><strong>📅 Daily Activity XP:</strong></div>
-                        <div className="ml-2">• Habits: 50 XP each completed</div>
-                        <div className="ml-2">• Focus Sessions: 25 XP each completed</div>
-                        <div className="ml-2">• Snus Penalty: -10 XP each (min 0 per day)</div>
+                        <div className="ml-2">• Habits: XP for each completed habit</div>
+                        <div className="ml-2">• Focus Sessions: XP for each completed focus session</div>
+                        <div className="ml-2">• Habit Penalty: XP penalty for tracked habit usage (if applicable)</div>
                         
                         <div className="mt-2"><strong>🔥 Streak Bonus XP:</strong></div>
                         <div className="ml-2">• Habit Streak: 100 XP per day of current streak</div>
-                        <div className="ml-2">• Snus Clean Streak: 150 XP per day of current streak</div>
+                        <div className="ml-2">• Clean Streak: XP per day of current clean streak (no tracked habit usage)</div>
                         
                         <div className="mt-2"><strong>🎯 Mission & Achievement XP:</strong></div>
                         <div className="ml-2">• Weekly missions: 450-600 XP each</div>
@@ -146,25 +146,25 @@ export default function PersonalHelp() {
                     <div>
                       <h4 className="font-semibold text-blue-300 mb-2">Weekly Missions (Rotating)</h4>
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
-                        <div><strong>🎯 Weekly Domination:</strong> Complete 35 habits this week (500 XP)</div>
-                        <div><strong>🧠 Focus Mastery:</strong> Complete 20 focus sessions this week (450 XP)</div>
-                        <div><strong>🌟 Clean Week Challenge:</strong> Have 0 snus for 5 days this week (600 XP)</div>
-                        <div><strong>👑 Consistency King:</strong> Have 6 days with score ≥3 this week (550 XP)</div>
-                        <div><strong>💪 Peak Performance:</strong> Have 4 days with score ≥6 this week (650 XP)</div>
-                        <div><strong>🏃‍♂️ Marathon Week:</strong> Complete 30 focus sessions this week (700 XP)</div>
-                        <div><strong>🔥 Habit Inferno:</strong> Complete 50 habits this week (750 XP)</div>
-                        <div><strong>✨ Perfect Week:</strong> Have 7 days with score ≥3 this week (800 XP)</div>
+                        <div><strong>🎯 Weekly Domination:</strong> Complete a set number of habits this week (XP reward)</div>
+                        <div><strong>🧠 Focus Mastery:</strong> Complete a set number of focus sessions this week (XP reward)</div>
+                        <div><strong>🌟 Clean Week Challenge:</strong> Have no tracked habit usage for several days this week (XP reward)</div>
+                        <div><strong>👑 Consistency King:</strong> Have several days with high scores this week (XP reward)</div>
+                        <div><strong>💪 Peak Performance:</strong> Have several days with very high scores this week (XP reward)</div>
+                        <div><strong>🏃‍♂️ Marathon Week:</strong> Complete a high number of focus sessions this week (XP reward)</div>
+                        <div><strong>🔥 Habit Inferno:</strong> Complete a high number of habits this week (XP reward)</div>
+                        <div><strong>✨ Perfect Week:</strong> Have a week with all days above a certain score (XP reward)</div>
                       </div>
                     </div>
                     
                     <div>
                       <h4 className="font-semibold text-blue-300 mb-2">Milestone Missions (Long-term)</h4>
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
-                        <div><strong>🎯 Total Habits:</strong> 50 → 100 → 250 → 500 → 1000 habits</div>
-                        <div><strong>🧠 Focus Hours:</strong> 10 → 25 → 50 → 100 → 200 hours of focus</div>
-                        <div><strong>🌟 Clean Days:</strong> 7 → 15 → 30 → 60 → 100 zero-snus days</div>
-                        <div><strong>🔥 Streak Master:</strong> 7 → 14 → 30 → 60 → 100 day productivity streaks</div>
-                        <div><strong>Rewards:</strong> 500-1000 XP based on difficulty</div>
+                        <div><strong>🎯 Total Habits:</strong> Reach progressive milestones for total habits completed</div>
+                        <div><strong>🧠 Focus Hours:</strong> Reach progressive milestones for total focus hours</div>
+                        <div><strong>🌟 Clean Days:</strong> Reach progressive milestones for days with no tracked habit usage</div>
+                        <div><strong>🔥 Streak Master:</strong> Reach progressive milestones for productivity streaks</div>
+                        <div><strong>Rewards:</strong> XP based on difficulty</div>
                       </div>
                     </div>
                     
@@ -209,11 +209,7 @@ export default function PersonalHelp() {
                       <h4 className="font-semibold text-green-300 mb-2">Scoring Formula</h4>
                       <div className="bg-black/40 rounded-lg p-3 text-xs font-mono">
                         <div>Daily Score = (Habits × 2) + (Focus × 1) - (Snus × 1)</div>
-                        <div className="mt-2 text-gray-300">
-                          <div>• Same formula as Productivity Weekly Overview</div>
-                          <div>• Minimum score of 0 (no negative daily scores)</div>
-                          <div>• Encourages habit consistency and focus work</div>
-                        </div>
+                        <div className="mt-2 text-gray-300">• For your tracked habit, the penalty is subtracted from your daily score</div>
                       </div>
                     </div>
                     
@@ -233,6 +229,7 @@ export default function PersonalHelp() {
                         <div>• <strong>Habit Selection:</strong> Choose from your current habit list</div>
                         <div>• <strong>Focus Sessions:</strong> Manual input for focus work</div>
                         <div>• <strong>Snus Count:</strong> Adjust daily snus usage</div>
+                        <div>• <strong>Habit Count:</strong> Adjust daily tracked habit usage</div>
                         <div>• <strong>Data Protection:</strong> Manual edits won't be overwritten by automatic updates</div>
                         <div>• <strong>Dual Storage:</strong> Saves to both new unified format and legacy format</div>
                       </div>
@@ -269,7 +266,7 @@ export default function PersonalHelp() {
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
                         <div><strong>✅ Habit Achievements:</strong> Completion milestones and daily goals</div>
                         <div><strong>🧠 Focus Achievements:</strong> Session counts and time-based goals</div>
-                        <div><strong>🌟 Snus Achievements:</strong> Clean days and streak challenges</div>
+                        <div><strong>🌟 Clean Achievements:</strong> Clean days and streak challenges (no tracked habit usage)</div>
                         <div><strong>🔥 Streak Achievements:</strong> Consistency and momentum rewards</div>
                         <div><strong>🎯 Wildcard Achievements:</strong> Special combinations and unique goals</div>
                       </div>
@@ -278,11 +275,11 @@ export default function PersonalHelp() {
                     <div>
                       <h4 className="font-semibold text-orange-300 mb-2">Example Achievement Tiers</h4>
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
-                        <div><strong>🎯 Starter Spark:</strong> Complete 5 habits total (100 XP)</div>
-                        <div><strong>🏆 Focus Champion:</strong> Complete 10 focus sessions total (300 XP)</div>
-                        <div><strong>🌟 Clean Streak Master:</strong> 30 clean days in a row (1200 XP)</div>
-                        <div><strong>👑 Century Club:</strong> Complete 100 habits total (1000 XP)</div>
-                        <div><strong>🚀 Productivity Legend:</strong> 100-day productivity streak (2000 XP)</div>
+                        <div><strong>🎯 Starter Spark:</strong> Complete a starter milestone for habits (XP reward)</div>
+                        <div><strong>🏆 Focus Champion:</strong> Complete a starter milestone for focus sessions (XP reward)</div>
+                        <div><strong>🌟 Clean Streak Master:</strong> Achieve a clean streak milestone (no tracked habit usage, XP reward)</div>
+                        <div><strong>👑 Century Club:</strong> Complete a major milestone for habits (XP reward)</div>
+                        <div><strong>🚀 Productivity Legend:</strong> Achieve a major productivity streak (XP reward)</div>
                       </div>
                     </div>
                     

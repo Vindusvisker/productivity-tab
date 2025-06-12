@@ -54,7 +54,7 @@ export default function ProductivityHelp() {
                     <p className="text-sm">Productivity is your personal excellence system. Track habits, manage focus sessions, and visualize your weekly progress to build a life of consistent growth.</p>
                     <div className="bg-black/40 rounded-lg p-3 text-xs">
                       <div><strong>✅ Habit Tracker:</strong> Custom daily habits with smart tracking and streaks</div>
-                      <div><strong>🍅 Focus Timer:</strong> Pomodoro-style sessions with break management</div>
+                      <div><strong>🍅 Focus Timer:</strong> Focus sessions with break management</div>
                       <div><strong>📊 Weekly Overview:</strong> Visual progress grid with detailed day breakdowns</div>
                     </div>
                   </div>
@@ -77,7 +77,7 @@ export default function ProductivityHelp() {
                           <div>• ☀️ Second Workout</div>
                         </div>
                         <div className="bg-black/40 rounded-lg p-2">
-                          <div>• 📚 Read 10 pages</div>
+                          <div>• 📚 Read</div>
                           <div>• 🍽️ Follow healthy diet</div>
                           <div>• 💧 Drink water</div>
                         </div>
@@ -117,7 +117,7 @@ export default function ProductivityHelp() {
                     </div>
 
                     <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-                      <p className="text-sm"><strong>Pro Tip:</strong> Start small with 3-4 habits. Consistency beats perfection - it's better to complete 3 habits daily than fail at 10.</p>
+                      <p className="text-sm"><strong>Pro Tip:</strong> Start small with a few habits. Consistency beats perfection - it's better to complete a few habits daily than fail at many.</p>
                     </div>
                   </div>
                 </div>
@@ -131,11 +131,11 @@ export default function ProductivityHelp() {
                   
                   <div className="space-y-4 text-white/80">
                     <div>
-                      <h4 className="font-semibold text-orange-300 mb-2">Pomodoro Technique</h4>
-                      <p className="text-sm">Advanced Pomodoro timer with background persistence and smart break management.</p>
+                      <h4 className="font-semibold text-orange-300 mb-2">Focus Sessions</h4>
+                      <p className="text-sm">Advanced focus sessions with background persistence and smart break management.</p>
                       <div className="bg-black/40 rounded-lg p-3 text-xs mt-2">
-                        <div>• <strong>Focus Sessions:</strong> 25 minutes of concentrated work</div>
-                        <div>• <strong>Break Modes:</strong> 5-minute short breaks, 15-minute long breaks</div>
+                        <div>• <strong>Focus Sessions:</strong> Focused work intervals</div>
+                        <div>• <strong>Break Modes:</strong> Short and long breaks</div>
                         <div>• <strong>Background Operation:</strong> Continues running when you switch tabs</div>
                         <div>• <strong>Auto-Transitions:</strong> Seamlessly moves between focus and break modes</div>
                       </div>
@@ -144,8 +144,8 @@ export default function ProductivityHelp() {
                     <div>
                       <h4 className="font-semibold text-orange-300 mb-2">How to Use</h4>
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
-                        <div>• <strong>Start Focus:</strong> Click "Start Focus" for 25-minute work session</div>
-                        <div>• <strong>Start Break:</strong> Click "Take Break" for 5-minute rest period</div>
+                        <div>• <strong>Start Focus:</strong> Click to start a focus session</div>
+                        <div>• <strong>Start Break:</strong> Click to take a break</div>
                         <div>• <strong>Stop Timer:</strong> Red stop button to end current session</div>
                         <div>• <strong>Visual Progress:</strong> Circular progress bar shows time remaining</div>
                         <div>• <strong>Session Counter:</strong> Tracks completed focus sessions for the day</div>
@@ -192,9 +192,9 @@ export default function ProductivityHelp() {
                       <h4 className="font-semibold text-purple-300 mb-2">Visual Progress Grid</h4>
                       <p className="text-sm">Color-coded grid showing your daily performance across all productivity metrics.</p>
                       <div className="bg-black/40 rounded-lg p-3 text-xs mt-2">
-                        <div>• <strong>Green Days:</strong> High productivity (good habits + focus sessions + low snus)</div>
+                        <div>• <strong>Green Days:</strong> High productivity (good habits + focus sessions + low penalty habit usage)</div>
                         <div>• <strong>Yellow Days:</strong> Moderate productivity (mixed performance)</div>
-                        <div>• <strong>Red Days:</strong> Low productivity (few habits, no focus, high snus)</div>
+                        <div>• <strong>Red Days:</strong> Low productivity (few habits, no focus, high penalty habit usage)</div>
                         <div>• <strong>Gray Days:</strong> No data or inactive day</div>
                       </div>
                     </div>
@@ -203,11 +203,11 @@ export default function ProductivityHelp() {
                       <h4 className="font-semibold text-purple-300 mb-2">Scoring Algorithm</h4>
                       <p className="text-sm">Your daily score is calculated using a smart formula:</p>
                       <div className="bg-black/40 rounded-lg p-3 text-xs font-mono">
-                        <div>Score = (Habits × 2) + (Focus Sessions × 1) - (Snus Count × 1)</div>
+                        <div>Score = (Habits × 2) + (Focus Sessions × 1) - (Penalty Habit × 1)</div>
                         <div className="mt-2 text-gray-300">
                           <div>• <span className="text-green-400">Habits:</span> Worth 2 points each (high value for consistency)</div>
                           <div>• <span className="text-blue-400">Focus:</span> Worth 1 point each (rewards deep work)</div>
-                          <div>• <span className="text-red-400">Snus:</span> Subtracts 1 point each (penalty for health)</div>
+                          <div>• <span className="text-red-400">Penalty Habit:</span> Subtracts 1 point each (penalty for tracked habit usage)</div>
                         </div>
                       </div>
                     </div>
@@ -216,7 +216,7 @@ export default function ProductivityHelp() {
                       <h4 className="font-semibold text-purple-300 mb-2">Interactive Features</h4>
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
                         <div>• <strong>Click Any Day:</strong> Opens detailed breakdown dialog</div>
-                        <div>• <strong>Day Details Modal:</strong> Shows habits, focus sessions, snus count</div>
+                        <div>• <strong>Day Details Modal:</strong> Shows habits, focus sessions, penalty habit usage</div>
                         <div>• <strong>Current Streak:</strong> Displays consecutive high-productivity days</div>
                         <div>• <strong>Success Rate:</strong> Percentage of successful days this week</div>
                         <div>• <strong>Real-time Updates:</strong> Grid updates as you complete activities</div>
@@ -229,7 +229,7 @@ export default function ProductivityHelp() {
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
                         <div>• <strong>Habit Tracker:</strong> Daily habit completion counts and specific habits</div>
                         <div>• <strong>Focus Timer:</strong> Number of completed Pomodoro sessions</div>
-                        <div>• <strong>Home Snus Tracker:</strong> Daily snus usage for health scoring</div>
+                        <div>• <strong>Penalty Habit Tracker:</strong> Daily tracked habit usage for health scoring</div>
                         <div>• <strong>Legacy Data:</strong> Automatically migrates old formats to new unified system</div>
                         <div>• <strong>Multiple Formats:</strong> Supports both legacy and new data structures</div>
                       </div>

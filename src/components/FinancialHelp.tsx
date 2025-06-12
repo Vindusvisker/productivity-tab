@@ -51,9 +51,9 @@ export default function FinancialHelp() {
                   </div>
                   
                   <div className="space-y-4 text-white/80">
-                    <p className="text-sm">Financial is your comprehensive money tracking and awareness center. Monitor the true cost of snus usage and manage all your subscriptions in one place to maintain financial discipline.</p>
+                    <p className="text-sm">Financial is your comprehensive money tracking and awareness center. Monitor the true cost of your tracked habit and manage all your subscriptions in one place to maintain financial discipline.</p>
                     <div className="bg-black/40 rounded-lg p-3 text-xs">
-                      <div><strong>📊 Snus Impact Tracker:</strong> Real-time cost analysis and time-value calculations</div>
+                      <div><strong>📊 Habit Impact Tracker:</strong> Real-time cost analysis and time-value calculations</div>
                       <div><strong>💳 Subscription Tracker:</strong> Complete subscription management with forecasting</div>
                     </div>
                   </div>
@@ -69,29 +69,27 @@ export default function FinancialHelp() {
                   <div className="space-y-4 text-white/80">
                     <div>
                       <h4 className="font-semibold text-red-300 mb-2">Financial Impact Analysis</h4>
-                      <p className="text-sm">Real-time calculation of snus costs and their equivalent in work time using your actual hourly rate.</p>
+                      <p className="text-sm">Real-time calculation of your habit costs and their equivalent in work time using your actual hourly rate.</p>
                       <div className="bg-black/40 rounded-lg p-3 text-xs mt-2">
-                        <div>• <strong>Live Data Integration:</strong> Syncs with Home snus tracker automatically</div>
+                        <div>• <strong>Live Data Integration:</strong> Syncs with your main habit tracker automatically</div>
                         <div>• <strong>Multiple Time Periods:</strong> Today, this week, this month, and total tracking</div>
-                        <div>• <strong>Work Time Conversion:</strong> Shows how many minutes you work to afford snus</div>
-                        <div>• <strong>Baseline Comparison:</strong> Tracks snus avoided vs. historical average</div>
+                        <div>• <strong>Work Time Conversion:</strong> Shows how many minutes you work to afford your habit</div>
+                        <div>• <strong>Baseline Comparison:</strong> Tracks usage avoided vs. your historical average</div>
                       </div>
                     </div>
                     
                     <div>
                       <h4 className="font-semibold text-red-300 mb-2">Precise Financial Calculations</h4>
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
-                        <div><strong>💰 Cost Constants:</strong></div>
-                        <div className="ml-2">• Snus cost: 4.22 NOK per snus (97 NOK ÷ 23 snus per packet)</div>
-                        <div className="ml-2">• Hourly rate: 179.64 NOK (30,000 NOK ÷ 167 hours)</div>
-                        <div className="ml-2">• Time per snus: 1.41 minutes of work</div>
-                        
-                        <div className="mt-2"><strong>📦 Packet Tracking:</strong></div>
-                        <div className="ml-2">• Calculates total packets bought (rounds up for full packets)</div>
-                        <div className="ml-2">• 23 snus per packet at 97 NOK each</div>
-                        
+                        <div><strong>💰 Cost Inputs:</strong></div>
+                        <div className="ml-2">• Your unit cost: Set in your profile as the cost per habit and per package</div>
+                        <div className="ml-2">• Your hourly rate: Set in your profile for work time calculations</div>
+                        <div className="ml-2">• Time per unit: How many minutes of work each unit of your habit costs you</div>
+                        <div className="mt-2"><strong>📦 Package Tracking:</strong></div>
+                        <div className="ml-2">• Calculates total packages bought (rounds up for full packages)</div>
+                        <div className="ml-2">• Uses your configured units per package and package cost</div>
                         <div className="mt-2"><strong>⏰ Time Value Analysis:</strong></div>
-                        <div className="ml-2">• Today: Exact minutes worked to afford today's snus</div>
+                        <div className="ml-2">• Today: Exact minutes worked to afford today's habit</div>
                         <div className="ml-2">• Weekly/Monthly: Cumulative work time impact</div>
                         <div className="ml-2">• Visual representation of time vs. money</div>
                       </div>
@@ -100,25 +98,25 @@ export default function FinancialHelp() {
                     <div>
                       <h4 className="font-semibold text-red-300 mb-2">Smart Baseline System</h4>
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
-                        <div>• <strong>Historical Analysis:</strong> Calculates your average daily snus usage</div>
-                        <div>• <strong>Avoided Snus Tracking:</strong> Shows snus not taken vs. your baseline</div>
+                        <div>• <strong>Historical Analysis:</strong> Calculates your average daily habit usage</div>
+                        <div>• <strong>Avoided Usage Tracking:</strong> Shows units not taken vs. your baseline</div>
                         <div>• <strong>Progress Awareness:</strong> Highlights reduction in usage over time</div>
-                        <div>• <strong>Data Sources:</strong> Uses all available snus data from daily logs</div>
+                        <div>• <strong>Data Sources:</strong> Uses all available habit data from daily logs</div>
                       </div>
                     </div>
                     
                     <div>
                       <h4 className="font-semibold text-red-300 mb-2">Data Integration</h4>
                       <div className="bg-black/40 rounded-lg p-3 text-xs">
-                        <div>• <strong>Home Snus Tracker:</strong> Real-time sync with daily snus counts</div>
+                        <div>• <strong>Main Habit Tracker:</strong> Real-time sync with daily habit counts</div>
                         <div>• <strong>Daily Logs:</strong> Comprehensive historical data analysis</div>
                         <div>• <strong>Legacy Support:</strong> Merges old and new data formats seamlessly</div>
-                        <div>• <strong>Live Updates:</strong> Refreshes automatically when snus count changes</div>
+                        <div>• <strong>Live Updates:</strong> Refreshes automatically when your habit count changes</div>
                       </div>
                     </div>
 
                     <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-                      <p className="text-sm"><strong>Financial Awareness:</strong> Seeing snus costs in work minutes makes the financial impact visceral and motivates reduction!</p>
+                      <p className="text-sm"><strong>Financial Awareness:</strong> Seeing your habit costs in work minutes makes the financial impact visceral and motivates reduction!</p>
                     </div>
                   </div>
                 </div>
@@ -274,7 +272,7 @@ export default function FinancialHelp() {
                   </div>
                   
                   <div className="space-y-3 text-white/80 text-sm">
-                    <div><strong>Real-time Snus Cost Tracking:</strong> Snus Impact Tracker updates automatically as you log snus in Home tab</div>
+                    <div><strong>Real-time Habit Cost Tracking:</strong> Habit Impact Tracker updates automatically as you log your habit in the main tab</div>
                     <div><strong>Independent Subscription Management:</strong> Subscriptions operate independently for privacy and flexibility</div>
                     <div><strong>Comprehensive Data Sources:</strong> Merges multiple data formats for complete historical analysis</div>
                     <div><strong>Financial Awareness Focus:</strong> Both components emphasize cost consciousness and spending awareness</div>
