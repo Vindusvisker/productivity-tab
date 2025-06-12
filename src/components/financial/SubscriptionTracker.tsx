@@ -31,8 +31,24 @@ interface SubscriptionTrackerProps {
   userConfig?: UserConfig | null
 }
 
-// No default data - users start with empty list
-const defaultSubscriptions: Subscription[] = []
+// Demo subscription to show users the value
+const defaultSubscriptions: Subscription[] = [
+  {
+    id: 'demo-netflix',
+    name: 'Netflix',
+    price: 179,
+    renewalDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 15 days from now
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
+    icon: '🎬',
+    color: 'bg-red-500',
+    status: 'active' as const,
+    daysUntilRenewal: 15,
+    category: 'Entertainment',
+    paymentMethod: 'Credit Card',
+    billingCycle: 'monthly' as const,
+    reminderEnabled: true
+  }
+]
 
 export default function SubscriptionTracker({ userConfig }: SubscriptionTrackerProps) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
@@ -98,8 +114,15 @@ export default function SubscriptionTracker({ userConfig }: SubscriptionTrackerP
         }))
         setSubscriptions(updatedSubscriptions)
       } else {
-        // Start with empty list for new users
-        setSubscriptions([])
+        // Start with demo subscription for new users to show value
+        const demoWithUpdatedDates = defaultSubscriptions.map(sub => ({
+          ...sub,
+          daysUntilRenewal: calculateDaysUntilRenewal(sub.renewalDate),
+          status: getSubscriptionStatus(sub.renewalDate)
+        }))
+        setSubscriptions(demoWithUpdatedDates)
+        // Save the demo subscription so it persists
+        await storage.save('subscriptions', demoWithUpdatedDates)
       }
     } catch (error) {
       console.error('Error loading subscriptions:', error)
