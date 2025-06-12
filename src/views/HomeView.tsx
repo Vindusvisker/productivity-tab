@@ -43,9 +43,9 @@ const HomeView: React.FC<HomeViewProps> = ({ userConfig }) => {
       <div className="container mx-auto px-8 max-w-7xl">
         
         {/* Top Row: Time Display & Habit Tracker */}
-        <div className="grid grid-cols-2 gap-8 mb-12">
+        <div className={`grid ${userConfig?.hasAddiction ? 'grid-cols-2' : 'grid-cols-1'} gap-8 mb-12`}>
           {/* Time Display - Hero element with gentle fade */}
-          <div className="flex items-center justify-center">
+          <div className={`flex items-center justify-center ${!userConfig?.hasAddiction ? 'col-span-2' : ''}`}>
             <div className="text-center opacity-0 animate-gentle-fade" style={{ animationDelay: '50ms', animationFillMode: 'forwards' }}>
               {/* Main time - smooth fade up */}
               <div className="text-8xl font-light text-white mb-2 opacity-0 animate-smooth-fade-up" style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}>
@@ -59,9 +59,11 @@ const HomeView: React.FC<HomeViewProps> = ({ userConfig }) => {
           </div>
           
           {/* Habit Tracker - iOS slide up from right side */}
-          <div className="opacity-0 animate-ios-slide-up" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>
-            <SnusTracker userConfig={userConfig} />
-          </div>
+          {userConfig?.hasAddiction && (
+            <div className="opacity-0 animate-ios-slide-up" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>
+              <SnusTracker userConfig={userConfig} />
+            </div>
+          )}
         </div>
 
         {/* Bottom Row: Quick Access - Final elegant entrance */}
