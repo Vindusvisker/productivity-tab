@@ -380,7 +380,7 @@ export default function SnusImpactTracker({ userConfig }: SnusImpactTrackerProps
                     <div className="text-xs text-gray-400 mb-2">Packages bought:</div>
                     <div className="flex gap-0.5">
                       {/* Show current packets (colored to match theme) */}
-                      {Array.from({ length: Math.min(impactData.packetsBought, 20) }).map((_, index) => {
+                      {Array.from({ length: Math.min(impactData.packetsBought, userConfig?.previousMonthlyConsumption || 20) }).map((_, index) => {
                         // Use lighter colors for better visibility
                         let packetColor = 'bg-red-400/60 border-red-400' // Default red
                         if (impactData.packetsBought < 5) {
@@ -394,11 +394,11 @@ export default function SnusImpactTracker({ userConfig }: SnusImpactTrackerProps
                         )
                       })}
                       
-                      {/* Show potential additional packets (gray) - based on 20 packets monthly baseline */}
+                      {/* Show potential additional packets (gray) - based on previous consumption */}
                       {(() => {
-                        const maxPotentialPackets = monthlyBaseline
+                        const maxPotentialPackets = userConfig?.previousMonthlyConsumption || 20
                         const remainingPackets = Math.max(0, maxPotentialPackets - impactData.packetsBought)
-                        const packetsToShow = Math.min(remainingPackets, 20 - impactData.packetsBought)
+                        const packetsToShow = Math.min(remainingPackets, (userConfig?.previousMonthlyConsumption || 20) - impactData.packetsBought)
                         
                         return Array.from({ length: Math.max(0, packetsToShow) }).map((_, index) => (
                           <div key={`potential-${index}`} className="flex-1 h-3 bg-gray-600/40 border border-gray-500/50 rounded-sm" />
@@ -407,7 +407,7 @@ export default function SnusImpactTracker({ userConfig }: SnusImpactTrackerProps
                     </div>
                     <div className="text-xs text-gray-500 mt-2">
                       <span className={textColor}>{impactData.packetsBought} bought</span>
-                      <span className="text-gray-400 ml-2">/ {monthlyBaseline} past-self monthly deadline</span>
+                      <span className="text-gray-400 ml-2">/ {userConfig?.previousMonthlyConsumption || 20} previous monthly consumption</span>
                     </div>
                   </div>
                 </div>

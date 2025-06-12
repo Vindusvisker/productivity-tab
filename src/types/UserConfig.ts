@@ -6,6 +6,8 @@ export interface UserConfig {
   costPerUnit: number
   unitsPerPackage: number
   packageCost: number
+  dailyLimit: number // Daily usage limit
+  previousMonthlyConsumption: number // How many packages they used to consume per month
 
   // Financial
   hourlyRate: number

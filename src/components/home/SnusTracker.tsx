@@ -33,8 +33,8 @@ export default function SnusTracker({ userConfig }: SnusTrackerProps) {
     lastDate: ''
   })
   
-  // Use configurable daily limit - default to 5 for backward compatibility
-  const DAILY_LIMIT = 5 // We can make this configurable later if needed
+  // Use user's configured daily limit
+  const DAILY_LIMIT = userConfig?.dailyLimit || 5 // Fallback to 5 for backward compatibility
   const lastClickTimeRef = useRef<number>(0)
 
   // Don't render if user doesn't have addiction tracking enabled
