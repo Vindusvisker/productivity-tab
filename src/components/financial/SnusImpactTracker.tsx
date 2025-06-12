@@ -6,12 +6,25 @@ import { Badge } from '@/components/ui/badge'
 import { Clock, DollarSign, TrendingDown, AlertCircle, Target, Package, Calendar } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 
-// Your actual financial data
-const SNUS_COST_NOK = 4.22  // 97 NOK ÷ 23 snus
-const HOURLY_RATE_NOK = 179.64  // 30,000 NOK ÷ 167 hours
-const MINUTES_PER_SNUS = (SNUS_COST_NOK / HOURLY_RATE_NOK) * 60 // 1.41 minutes
-const SNUS_PER_PACKET = 23
-const PACKET_COST_NOK = 97
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
+interface SnusImpactTrackerProps {
+  userConfig?: UserConfig | null
+}
 
 interface SnusImpactData {
   todayCount: number
@@ -31,7 +44,7 @@ interface SnusImpactData {
   daysTracked: number
 }
 
-export default function SnusImpactTracker() {
+export default function SnusImpactTracker({ userConfig }: SnusImpactTrackerProps) {
   const [impactData, setImpactData] = useState<SnusImpactData>({
     todayCount: 0,
     weekCount: 0,
@@ -50,6 +63,45 @@ export default function SnusImpactTracker() {
     daysTracked: 0
   })
   const [loading, setLoading] = useState(true)
+
+  // Don't render if user doesn't have addiction tracking enabled
+  if (!userConfig?.hasAddiction) {
+    return null
+  }
+
+  // Get user's configured values instead of hardcoded ones
+  const COST_PER_UNIT = userConfig.costPerUnit
+  const HOURLY_RATE = userConfig.hourlyRate
+  const MINUTES_PER_UNIT = (COST_PER_UNIT / HOURLY_RATE) * 60
+  const UNITS_PER_PACKAGE = userConfig.unitsPerPackage
+  const PACKAGE_COST = userConfig.packageCost
+
+  // Get display name for the habit
+  const getHabitName = () => {
+    if (userConfig.addictionName) {
+      return userConfig.addictionName
+    }
+    
+    switch (userConfig.addictionType) {
+      case 'snus': return 'Snus'
+      case 'tobacco': return 'Cigarette'
+      case 'alcohol': return 'Drink'
+      case 'gambling': return 'Gambling'
+      case 'other': return 'Habit'
+      default: return 'Snus'
+    }
+  }
+
+  // Get currency symbol
+  const getCurrencySymbol = () => {
+    switch (userConfig.currency) {
+      case 'USD': return '$'
+      case 'EUR': return '€'
+      case 'SEK': return 'kr'
+      case 'NOK': 
+      default: return 'kr'
+    }
+  }
 
   useEffect(() => {
     calculateSnusImpact()
@@ -168,18 +220,18 @@ export default function SnusImpactTracker() {
       const totalCount = allLogs.reduce((sum, log) => sum + log.snusCount, 0)
       
       // Calculate packets bought (round up since you have to buy full packets)
-      const packetsBought = Math.ceil(totalCount / SNUS_PER_PACKET)
+      const packetsBought = Math.ceil(totalCount / UNITS_PER_PACKAGE)
 
-      // Calculate costs
-      const costToday = todayCount * SNUS_COST_NOK
-      const costWeek = weekCount * SNUS_COST_NOK
-      const costMonth = monthCount * SNUS_COST_NOK
-      const costTotal = totalCount * SNUS_COST_NOK
+      // Calculate costs using user's configured values
+      const costToday = todayCount * COST_PER_UNIT
+      const costWeek = weekCount * COST_PER_UNIT
+      const costMonth = monthCount * COST_PER_UNIT
+      const costTotal = totalCount * COST_PER_UNIT
 
-      // Calculate time wasted (in minutes)
-      const minutesToday = costToday / HOURLY_RATE_NOK * 60
-      const minutesWeek = costWeek / HOURLY_RATE_NOK * 60
-      const minutesMonth = costMonth / HOURLY_RATE_NOK * 60
+      // Calculate time wasted (in minutes) using user's hourly rate
+      const minutesToday = costToday / HOURLY_RATE * 60
+      const minutesWeek = costWeek / HOURLY_RATE * 60
+      const minutesMonth = costMonth / HOURLY_RATE * 60
 
       // Calculate snus avoided (days where usage was below baseline)
       const totalSnusAvoided = allLogs.reduce((sum, log) => {
@@ -231,7 +283,7 @@ export default function SnusImpactTracker() {
   }
 
   const formatCurrency = (amount: number) => {
-    return `kr ${Math.round(amount).toLocaleString()}`
+    return `${getCurrencySymbol()} ${Math.round(amount).toLocaleString()}`
   }
 
   const formatTime = (minutes: number) => {
@@ -264,7 +316,7 @@ export default function SnusImpactTracker() {
           <div className="flex items-center space-x-2">
             <AlertCircle className="h-4 w-4 text-orange-400" />
             <div>
-              <h3 className="text-sm font-bold text-white">Snus Impact</h3>
+              <h3 className="text-sm font-bold text-white">{getHabitName()} Impact</h3>
               <p className="text-xs text-gray-400">Real usage analysis</p>
             </div>
           </div>
@@ -324,12 +376,12 @@ export default function SnusImpactTracker() {
                       <Package className={`h-3 w-3 ${textColor}`} />
                       <span className="text-xs text-gray-400">Total Damage</span>
                     </div>
-                    <span className={`text-xs ${textColor}`}>{impactData.packetsBought} packets</span>
+                    <span className={`text-xs ${textColor}`}>{impactData.packetsBought} packages</span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <div>
-                      <div className="text-xs text-gray-400">Total snus</div>
+                      <div className="text-xs text-gray-400">Total {getHabitName().toLowerCase()}</div>
                       <div className={`text-xl font-bold ${textColor}`}>{impactData.totalCount.toLocaleString()}</div>
                     </div>
                     <div>
@@ -338,9 +390,9 @@ export default function SnusImpactTracker() {
                     </div>
                   </div>
 
-                  {/* Packet Visualization */}
+                  {/* Package Visualization */}
                   <div className="mb-4">
-                    <div className="text-xs text-gray-400 mb-2">Packets bought:</div>
+                    <div className="text-xs text-gray-400 mb-2">Packages bought:</div>
                     <div className="flex gap-0.5">
                       {/* Show current packets (colored to match theme) */}
                       {Array.from({ length: Math.min(impactData.packetsBought, 20) }).map((_, index) => {
@@ -446,7 +498,7 @@ export default function SnusImpactTracker() {
                     </div>
                     <div className="bg-black/40 border border-white/20 rounded-2xl p-3">
                       <div className="text-sm font-bold text-teal-400">
-                        {formatTime((impactData.costTotal / HOURLY_RATE_NOK) * 60)}
+                        {formatTime((impactData.costTotal / HOURLY_RATE) * 60)}
                       </div>
                       <div className="text-xs text-gray-400">Total</div>
                     </div>

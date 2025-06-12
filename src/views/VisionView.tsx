@@ -3,7 +3,27 @@ import GoalTracker from '@/components/vision/GoalTracker';
 import AffirmationWall from '@/components/vision/AffirmationWall';
 import VisionHelp from '@/components/VisionHelp';
 
-const VisionView: React.FC = () => {
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
+interface VisionViewProps {
+  userConfig?: UserConfig | null
+}
+
+const VisionView: React.FC<VisionViewProps> = ({ userConfig }) => {
   return (
     <div className="h-screen pt-28 pb-16 overflow-hidden relative">
       <div className="container mx-auto px-6 max-w-7xl h-full flex flex-col">

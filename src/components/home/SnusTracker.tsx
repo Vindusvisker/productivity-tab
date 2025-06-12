@@ -6,6 +6,26 @@ import { Button } from '@/components/ui/button'
 import { Plus, AlertTriangle, CheckCircle, X } from 'lucide-react'
 import { storage } from '@/lib/chrome-storage'
 
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
+interface SnusTrackerProps {
+  userConfig?: UserConfig | null
+}
+
 interface SnusData {
   dailyCount: number
   totalDays: number
@@ -15,7 +35,7 @@ interface SnusData {
   lastDate: string
 }
 
-export default function SnusTracker() {
+export default function SnusTracker({ userConfig }: SnusTrackerProps) {
   const [dailyCount, setDailyCount] = useState(0)
   const [showShame, setShowShame] = useState(true)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -28,8 +48,61 @@ export default function SnusTracker() {
     lastDate: ''
   })
   
-  const DAILY_LIMIT = 5
+  // Use configurable daily limit - default to 5 for backward compatibility
+  const DAILY_LIMIT = 5 // We can make this configurable later if needed
   const lastClickTimeRef = useRef<number>(0)
+
+  // Don't render if user doesn't have addiction tracking enabled
+  if (!userConfig?.hasAddiction) {
+    return null
+  }
+
+  // Get display name for the habit
+  const getHabitName = () => {
+    // If user provided a custom name, use that
+    if (userConfig.addictionName && userConfig.addictionName.trim()) {
+      return userConfig.addictionName
+    }
+    
+    // Otherwise use the standard name based on addiction type
+    switch (userConfig.addictionType) {
+      case 'snus': return 'Snus'
+      case 'tobacco': return 'Smoking'
+      case 'alcohol': return 'Alcohol'
+      case 'gambling': return 'Gambling'
+      case 'other': return 'Habit'
+      default: return 'Habit'
+    }
+  }
+
+  // Get action text for the button
+  const getActionText = () => {
+    // If user provided a custom name, use it in action
+    if (userConfig.addictionName && userConfig.addictionName.trim()) {
+      return `Use ${userConfig.addictionName}`
+    }
+    
+    // Otherwise use specific action text based on addiction type
+    switch (userConfig.addictionType) {
+      case 'snus': return 'Take Snus'
+      case 'tobacco': return 'Smoke'
+      case 'alcohol': return 'Have Drink'
+      case 'gambling': return 'Place Bet'
+      case 'other': return 'Use Habit'
+      default: return 'Track Usage'
+    }
+  }
+
+  // Get currency symbol
+  const getCurrencySymbol = () => {
+    switch (userConfig.currency) {
+      case 'USD': return '$'
+      case 'EUR': return '€'
+      case 'SEK': return 'kr'
+      case 'NOK': 
+      default: return 'kr'
+    }
+  }
 
   // Load data on mount
   useEffect(() => {
@@ -161,12 +234,13 @@ export default function SnusTracker() {
   }
 
   const getShameMessage = (count: number): string => {
+    const habitName = getHabitName().toLowerCase()
     const messages = [
       "Clean start — stay sharp and own the day 🧠", // 0
       "Alright, first one down — stay mindful ⚠️", // 1
       "Second hit logged. Keep your head in the game 📒", // 2
       "Three deep. You're still in control — barely 🧩", // 3
-      "Four snus. Yellow zone now. Eyes on the mission 👁️", // 4
+      "Four entries. Yellow zone now. Eyes on the mission 👁️", // 4
       "Limit reached. Time to lock in 🔒", // 5
       "You've crossed the line today. Regain control 🧠⚔️", // 6
       "This is no longer 'just one more'. Recalibrate. ⛔", // 7
@@ -174,9 +248,9 @@ export default function SnusTracker() {
       "Momentum killer. You're stronger than this 💢", // 9
       "Double digits. You're at a crossroads 🔻", // 10
       "You're not in control — the habit is. Flip the script 🔄", // 11
-      "That's your future rent right there 💸", // 12
+      `That's your future savings right there 💸`, // 12
       "13 in. What story are you writing today? 📉", // 13
-      "Your lungs and gums are waving the white flag 🫁", // 14
+      userConfig.addictionType === 'tobacco' ? "Your lungs are waving the white flag 🫁" : "Your health is paying the price 🏥", // 14
       "15 hits. Your willpower didn't sign up for this 🧱", // 15
       "You're spiraling. Is this how you want to show up? 🎭", // 16
       "Seventeen. Let's not make this your new normal 🛑", // 17
@@ -375,7 +449,7 @@ export default function SnusTracker() {
         {/* Header with circular progress */}
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-1">Snus Tracker</h2>
+            <h2 className="text-2xl font-semibold text-white mb-1">{getHabitName()} Tracker</h2>
             <p className={`text-sm ${getStatusColor()}`}>
               {getStatusMessage()}
             </p>
@@ -427,7 +501,7 @@ export default function SnusTracker() {
             className="flex-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 hover:text-red-300 rounded-2xl py-3 disabled:opacity-50"
           >
             <Plus className="h-4 w-4 mr-2" />
-            {isProcessing ? 'Adding...' : 'Take Snus'}
+            {isProcessing ? 'Adding...' : getActionText()}
           </Button>
           
           <Button

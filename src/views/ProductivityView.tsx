@@ -3,7 +3,27 @@ import FocusTimer from '@/components/productivity/FocusTimer';
 import WeeklyOverview from '@/components/productivity/WeeklyOverview';
 import ProductivityHelp from '@/components/ProductivityHelp';
 
-const ProductivityView: React.FC = () => {
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
+interface ProductivityViewProps {
+  userConfig?: UserConfig | null
+}
+
+const ProductivityView: React.FC<ProductivityViewProps> = ({ userConfig }) => {
   return (
     <div className="min-h-screen pt-24 pb-8 mt-6 overflow-hidden relative">
       <div className="container mx-auto px-6 max-w-7xl">
@@ -33,7 +53,7 @@ const ProductivityView: React.FC = () => {
           <div className="space-y-6">
             {/* WeeklyOverview - Third to appear */}
             <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'forwards' }}>
-              <WeeklyOverview />
+              <WeeklyOverview userConfig={userConfig} />
             </div>
           </div>
         </div>

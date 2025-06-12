@@ -7,6 +7,26 @@ import { storage } from '@/lib/chrome-storage'
 import DayDetailsDialog from './DayDetailsDialog'
 import PowerGrid from '@/components/personal/PowerGrid'
 
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
+interface WeeklyOverviewProps {
+  userConfig?: UserConfig | null
+}
+
 type DailyLog = {
   date: string
   habitsCompleted: number
@@ -40,11 +60,43 @@ interface SnusData {
   lastDate: string
 }
 
-export default function WeeklyOverview() {
+export default function WeeklyOverview({ userConfig }: WeeklyOverviewProps) {
   const [weekData, setWeekData] = useState<DayActivity[]>([])
   const [currentStreak, setCurrentStreak] = useState(0)
   const [selectedDay, setSelectedDay] = useState<DayActivity | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  // Get display name for the habit
+  const getHabitName = () => {
+    if (!userConfig?.hasAddiction) return 'Habit'
+    
+    if (userConfig.addictionName) {
+      return userConfig.addictionName
+    }
+    
+    switch (userConfig.addictionType) {
+      case 'snus': return 'Snus'
+      case 'tobacco': return 'Cigarette'  
+      case 'alcohol': return 'Drink'
+      case 'gambling': return 'Gambling'
+      case 'other': return 'Habit'
+      default: return 'Snus'
+    }
+  }
+
+  // Get emoji for habit type
+  const getHabitEmoji = () => {
+    if (!userConfig?.hasAddiction) return '🚭'
+    
+    switch (userConfig.addictionType) {
+      case 'snus': return '🚭'
+      case 'tobacco': return '🚬'
+      case 'alcohol': return '🍺'
+      case 'gambling': return '🎰'
+      case 'other': return '🎯'
+      default: return '🚭'
+    }
+  }
 
   useEffect(() => {
     loadWeeklyData()
@@ -403,9 +455,13 @@ export default function WeeklyOverview() {
                       day.snusStatus === 'success' ? 'bg-green-500/20 text-green-400' :
                       day.snusStatus === 'failed' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'
                     }`}>
-                      {(typeof day.snusCount === 'number' && day.snusCount === 0) ? '🚭' : 
-                       (typeof day.snusCount === 'number' && day.snusCount > 0) ? `${day.snusCount} snus` : 
-                       '0 snus'}
+                      {userConfig?.hasAddiction ? (
+                        (typeof day.snusCount === 'number' && day.snusCount === 0) ? getHabitEmoji() : 
+                        (typeof day.snusCount === 'number' && day.snusCount > 0) ? `${day.snusCount} ${getHabitName().toLowerCase()}` : 
+                        `0 ${getHabitName().toLowerCase()}`
+                      ) : (
+                        '🌟 No tracking'
+                      )}
                     </div>
                   </div>
                   <div>

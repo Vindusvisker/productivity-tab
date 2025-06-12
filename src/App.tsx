@@ -4,11 +4,13 @@ import Navigation from './components/Navigation';
 import StarButton from './components/StarButton';
 import ThemeGallery from './components/ThemeGallery';
 import SettingsDialog from './components/SettingsDialog';
+import OnboardingDialog from './components/OnboardingDialog';
 import HomeView from './views/HomeView';
 import ProductivityView from './views/ProductivityView';
 import PersonalView from './views/PersonalView';
 import VisionView from './views/VisionView';
 import FinancialView from './views/FinancialView';
+import { storage } from './lib/chrome-storage';
 
 type ViewType = 'home' | 'productivity' | 'personal' | 'vision' | 'financial';
 
@@ -228,17 +230,36 @@ const themes = {
   }
 };
 
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [currentTheme, setCurrentTheme] = useState<typeof themes.ambient | null>(null);
   const [isThemeGalleryOpen, setIsThemeGalleryOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isThemeLoaded, setIsThemeLoaded] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
 
-  // Load theme from Chrome storage on mount
+  // Load theme and user config on mount
   useEffect(() => {
-    const loadTheme = async () => {
+    const loadAppData = async () => {
       try {
+        // Load theme
         if (typeof chrome !== 'undefined' && chrome.storage) {
           const result = await chrome.storage.local.get('background-theme');
           const savedThemeId = result['background-theme'];
@@ -246,21 +267,31 @@ export default function App() {
             setCurrentTheme(themes[savedThemeId as keyof typeof themes]);
             console.log('Loaded theme from storage:', savedThemeId);
           } else {
-            // No saved theme, use default
             setCurrentTheme(themes.ambient);
           }
         } else {
-          // Fallback if Chrome storage not available
           setCurrentTheme(themes.ambient);
         }
+
+        // Load user config and check if onboarding is needed
+        const config = await storage.load('user-config');
+        if (config && config.onboardingCompleted) {
+          setUserConfig(config);
+          console.log('User config loaded:', config);
+        } else {
+          // No config or incomplete onboarding - show onboarding
+          setIsOnboardingOpen(true);
+          console.log('No user config found, opening onboarding');
+        }
       } catch (error) {
-        console.warn('Failed to load theme from storage:', error);
+        console.warn('Failed to load app data:', error);
         setCurrentTheme(themes.ambient);
+        setIsOnboardingOpen(true); // Show onboarding on error too
       } finally {
         setIsThemeLoaded(true);
       }
     };
-    loadTheme();
+    loadAppData();
   }, []);
 
   // Save theme when it changes
@@ -279,20 +310,30 @@ export default function App() {
     }
   };
 
+  const handleOnboardingComplete = (config: UserConfig) => {
+    setUserConfig(config);
+    setIsOnboardingOpen(false);
+    console.log('Onboarding completed with config:', config);
+  };
+
+  const handleConfigUpdate = (config: UserConfig) => {
+    setUserConfig(config);
+  };
+
   const renderView = () => {
     switch (currentView) {
       case 'home':
-        return <HomeView />;
+        return <HomeView userConfig={userConfig} />;
       case 'productivity':
-        return <ProductivityView />;
+        return <ProductivityView userConfig={userConfig} />;
       case 'personal':
-        return <PersonalView />;
+        return <PersonalView userConfig={userConfig} />;
       case 'vision':
-        return <VisionView />;
+        return <VisionView userConfig={userConfig} />;
       case 'financial':
-        return <FinancialView />;
+        return <FinancialView userConfig={userConfig} />;
       default:
-        return <HomeView />;
+        return <HomeView userConfig={userConfig} />;
     }
   };
 
@@ -440,6 +481,15 @@ export default function App() {
           <SettingsDialog
             isOpen={isSettingsOpen}
             onClose={() => setIsSettingsOpen(false)}
+            userConfig={userConfig}
+            onConfigUpdate={handleConfigUpdate}
+          />
+
+          {/* Onboarding Dialog */}
+          <OnboardingDialog
+            isOpen={isOnboardingOpen}
+            onClose={() => setIsOnboardingOpen(false)}
+            onComplete={handleOnboardingComplete}
           />
           
           {/* Star Button - Fixed at bottom left */}

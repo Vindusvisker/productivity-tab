@@ -5,7 +5,27 @@ import SnusTracker from '@/components/home/SnusTracker';
 import QuickAccess from '@/components/home/QuickAccess';
 import HomeHelp from '@/components/HomeHelp';
 
-const HomeView: React.FC = () => {
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
+interface HomeViewProps {
+  userConfig?: UserConfig | null
+}
+
+const HomeView: React.FC<HomeViewProps> = ({ userConfig }) => {
   const [time, setTime] = useState<string>('');
   const [date, setDate] = useState<string>('');
 
@@ -37,7 +57,7 @@ const HomeView: React.FC = () => {
       
       <div className="container mx-auto px-8 max-w-7xl">
         
-        {/* Top Row: Time Display & Snus Tracker */}
+        {/* Top Row: Time Display & Habit Tracker */}
         <div className="grid grid-cols-2 gap-8 mb-12">
           {/* Time Display - Hero element with gentle fade */}
           <div className="flex items-center justify-center">
@@ -53,9 +73,9 @@ const HomeView: React.FC = () => {
             </div>
           </div>
           
-          {/* Snus Tracker - iOS slide up from right side */}
+          {/* Habit Tracker - iOS slide up from right side */}
           <div className="opacity-0 animate-ios-slide-up" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>
-            <SnusTracker />
+            <SnusTracker userConfig={userConfig} />
           </div>
         </div>
 

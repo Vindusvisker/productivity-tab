@@ -6,7 +6,27 @@ import AchievementWall from '@/components/personal/AchievementWall';
 import WeeklyReflection from '@/components/personal/WeeklyReflection';
 import PersonalHelp from '@/components/PersonalHelp';
 
-const PersonalView: React.FC = () => {
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
+interface PersonalViewProps {
+  userConfig?: UserConfig | null
+}
+
+const PersonalView: React.FC<PersonalViewProps> = ({ userConfig }) => {
   return (
     <div className="h-screen pt-28 pb-16 overflow-hidden relative">
       <div className="container mx-auto px-6 max-w-7xl h-full flex flex-col">
