@@ -71,7 +71,7 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
     onboardingCompleted: false
   })
 
-  const totalSteps = config.hasAddiction ? 8 : 5
+  const totalSteps = config.hasAddiction ? 9 : 6
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -104,15 +104,17 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
   }
 
   const getStepTitle = () => {
+    if (isCompleting) return "✨ Finalizing Setup"
     switch (currentStep) {
       case 1: return '👋 Welcome!'
       case 2: return '🎯 Habit Tracking'
       case 3: return config.hasAddiction ? '💰 Cost Setup' : '💰 Financial Setup'
-      case 4: return config.hasAddiction ? '⏰ Your Income' : '🌟 Personal Touch'
-      case 5: return config.hasAddiction ? '📦 Package Info' : '🎉 All Set!'
-      case 6: return config.hasAddiction ? '💰 Financial Setup' : ''
-      case 7: return config.hasAddiction ? '🌟 Personal Touch' : ''
-      case 8: return config.hasAddiction ? '🎉 All Set!' : ''
+      case 4: return config.hasAddiction ? '⏰ Your Income' : '📅 Savings Day'
+      case 5: return config.hasAddiction ? '📦 Package Info' : '🌟 Personal Touch'
+      case 6: return config.hasAddiction ? '💰 Financial Setup' : '🎉 All Set!'
+      case 7: return config.hasAddiction ? '📅 Savings Day' : ''
+      case 8: return config.hasAddiction ? '🌟 Personal Touch' : ''
+      case 9: return config.hasAddiction ? '🎉 All Set!' : ''
       default: return 'Setup'
     }
   }
@@ -122,26 +124,22 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
       case 1: return config.firstName.trim().length > 0
       case 2: return true
       case 3: 
-        if (config.hasAddiction) {
-          return config.costPerUnit > 0
-        } else {
-          return config.monthlyContribution > 0
-        }
+        if (config.hasAddiction) return config.costPerUnit > 0
+        return config.monthlyContribution > 0
       case 4:
-        if (config.hasAddiction) {
-          return config.hourlyRate > 0
-        } else {
-          return true
-        }
+        if (config.hasAddiction) return config.hourlyRate > 0
+        return config.contributionDay > 0 && config.contributionDay <= 31
       case 5:
-        if (config.hasAddiction) {
-          return config.unitsPerPackage > 0
-        } else {
-          return true
-        }
-      case 6: return config.hasAddiction ? config.monthlyContribution > 0 : true
-      case 7: return config.hasAddiction ? true : true
-      case 8: return config.hasAddiction ? true : true
+        if (config.hasAddiction) return config.unitsPerPackage > 0
+        return true
+      case 6:
+        if (config.hasAddiction) return config.monthlyContribution > 0
+        return true
+      case 7:
+        if (config.hasAddiction) return config.contributionDay > 0 && config.contributionDay <= 31
+        return true
+      case 8: return true
+      case 9: return true
       default: return true
     }
   }
@@ -391,19 +389,24 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
           {currentStep === 4 && !config.hasAddiction && (
             <div className="space-y-4">
               <div className="text-center">
-                <div className="text-3xl mb-2">🌟</div>
-                <h2 className="text-lg font-bold text-white mb-2">Personal motivation</h2>
-                <p className="text-gray-400 text-sm">What drives you to save money?</p>
+                <div className="text-3xl mb-2">📅</div>
+                <h2 className="text-lg font-bold text-white mb-2">When do you get paid?</h2>
+                <p className="text-gray-400 text-sm">We'll add your savings on this day each month.</p>
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-                <Label className="text-white text-sm mb-2 block">Your motivation (optional)</Label>
-                <Input
-                  placeholder="e.g., Financial freedom, travel, emergency fund..."
-                  value={config.motivation}
-                  onChange={(e) => setConfig(prev => ({ ...prev, motivation: e.target.value }))}
-                  className="bg-transparent border-none text-white placeholder:text-gray-400 text-base focus:ring-0"
-                />
+                <Label className="text-white text-sm mb-2 block">Day of the month</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="number"
+                    min="1"
+                    max="31"
+                    placeholder="25"
+                    value={config.contributionDay}
+                    onChange={(e) => setConfig(prev => ({ ...prev, contributionDay: Number(e.target.value) }))}
+                    className="bg-transparent border-none text-white placeholder:text-gray-400 text-base focus:ring-0 flex-1"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -491,26 +494,24 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
           {currentStep === 7 && config.hasAddiction && (
             <div className="space-y-4">
               <div className="text-center">
-                <div className="text-3xl mb-2">💰</div>
-                <h2 className="text-lg font-bold text-white mb-2">Monthly savings goal</h2>
-                <p className="text-gray-400 text-sm">Besides addiction savings, how much do you want to save monthly?</p>
+                <div className="text-3xl mb-2">📅</div>
+                <h2 className="text-lg font-bold text-white mb-2">When do you get paid?</h2>
+                <p className="text-gray-400 text-sm">We'll add your savings on this day each month.</p>
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-                <Label className="text-white text-sm mb-2 block">Monthly contribution</Label>
+                <Label className="text-white text-sm mb-2 block">Day of the month</Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     type="number"
-                    placeholder="2500"
-                    value={config.monthlyContribution}
-                    onChange={(e) => setConfig(prev => ({ ...prev, monthlyContribution: Number(e.target.value) }))}
+                    min="1"
+                    max="31"
+                    placeholder="25"
+                    value={config.contributionDay}
+                    onChange={(e) => setConfig(prev => ({ ...prev, contributionDay: Number(e.target.value) }))}
                     className="bg-transparent border-none text-white placeholder:text-gray-400 text-base focus:ring-0 flex-1"
                   />
-                  <span className="text-gray-400">{getCurrencySymbol()}</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-1">
-                  This will be auto-added on the {config.contributionDay}th of each month
-                </p>
               </div>
             </div>
           )}
@@ -546,6 +547,41 @@ export default function OnboardingDialog({ isOpen, onClose, onComplete }: Onboar
                 <div className="text-4xl mb-2">🎉</div>
                 <h3 className="text-lg font-bold text-white">You're all set!</h3>
                 <p className="text-sm text-gray-400">Your personalized system is ready to help you succeed.</p>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 9 && config.hasAddiction && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="text-3xl mb-2">📦</div>
+                <h2 className="text-lg font-bold text-white mb-2">Package information</h2>
+                <p className="text-gray-400 text-sm">How many units come in a package?</p>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                <Label className="text-white text-sm mb-2 block">Units per package</Label>
+                <Input
+                  type="number"
+                  placeholder="23"
+                  value={config.unitsPerPackage}
+                  onChange={(e) => setConfig(prev => ({ 
+                    ...prev, 
+                    unitsPerPackage: Number(e.target.value),
+                    packageCost: Number(e.target.value) * prev.costPerUnit
+                  }))}
+                  className="bg-transparent border-none text-white placeholder:text-gray-400 text-base focus:ring-0"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  e.g., 23 snus per box, 20 cigarettes per pack
+                </p>
+              </div>
+
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+                <div className="text-sm text-white/80">
+                  <div>Package cost: {config.packageCost.toFixed(2)} {getCurrencySymbol()}</div>
+                  <div>Cost per unit: {config.costPerUnit} {getCurrencySymbol()}</div>
+                </div>
               </div>
             </div>
           )}

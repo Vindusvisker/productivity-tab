@@ -9,34 +9,68 @@ import { storage } from '@/lib/chrome-storage'
 import { type FinancialGoal } from '@/data/vision'
 import AddGoalDialog from './AddGoalDialog'
 
+interface UserConfig {
+  hasAddiction: boolean
+  addictionType: string
+  addictionName: string
+  costPerUnit: number
+  unitsPerPackage: number
+  packageCost: number
+  hourlyRate: number
+  currency: string
+  monthlyContribution: number
+  contributionDay: number
+  firstName: string
+  motivation: string
+  onboardingCompleted: boolean
+}
+
 export default function GoalTracker() {
   const [goals, setGoals] = useState<FinancialGoal[]>([])
   const [totalSaved, setTotalSaved] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [editingGoal, setEditingGoal] = useState<FinancialGoal | null>(null)
+  const [userConfig, setUserConfig] = useState<UserConfig | null>(null)
+  const [userConfigLoading, setUserConfigLoading] = useState(true)
 
   useEffect(() => {
-    loadGoalsAndSavings()
-    
+    const loadUserConfig = async () => {
+      setUserConfigLoading(true)
+      const config = await storage.load('user-config')
+      setUserConfig(config)
+      setUserConfigLoading(false)
+    }
+    loadUserConfig()
+  }, [])
+
+  useEffect(() => {
+    if (!userConfigLoading) {
+      loadGoalsAndSavings()
+    }
     // Listen for updates from other components
     const handleUpdate = () => loadGoalsAndSavings()
     window.addEventListener('dailyLogsUpdated', handleUpdate)
-    
     return () => window.removeEventListener('dailyLogsUpdated', handleUpdate)
-  }, [])
+  }, [userConfigLoading, userConfig])
+
+  const formatCurrency = (amount: number) => {
+    if (!userConfig) return `${Math.round(amount).toLocaleString()} NOK`
+    const symbol = userConfig.currency
+    switch (symbol) {
+      case 'USD': return `$${Math.round(amount).toLocaleString()}`
+      case 'EUR': return `€${Math.round(amount).toLocaleString()}`
+      case 'SEK':
+      case 'NOK':
+      default: return `${Math.round(amount).toLocaleString()} ${symbol}`
+    }
+  }
 
   const loadGoalsAndSavings = async () => {
     try {
-      // Load goals from storage (empty array if none exist)
       const savedGoals = await storage.load('vision-goals') || []
-      
-      // Calculate total savings (snus + monthly contributions)
       const totalSavings = await calculateTotalSavings()
-      
-      // Update goals with current savings amount (distribute across top priority goals)
       const updatedGoals = distributeSavingsToGoals(savedGoals, totalSavings)
-      
       setGoals(updatedGoals)
       setTotalSaved(totalSavings)
     } catch (error) {
@@ -49,12 +83,8 @@ export default function GoalTracker() {
 
   const calculateTotalSavings = async (): Promise<number> => {
     try {
-      // Calculate snus savings
       const snusSavings = await calculateSnusSavings()
-      
-      // Calculate monthly contributions
       const monthlyContributions = await calculateMonthlyContributions()
-      
       return snusSavings + monthlyContributions
     } catch (error) {
       console.error('Error calculating total savings:', error)
@@ -63,20 +93,18 @@ export default function GoalTracker() {
   }
 
   const calculateSnusSavings = async (): Promise<number> => {
+    if (!userConfig || !userConfig.hasAddiction) return 0
     const dailyLogs = await storage.load('daily-logs') || {}
     const logs = Object.values(dailyLogs) as any[]
-    
     if (logs.length === 0) return 0
-
     const sortedLogs = logs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     const firstWeekLogs = sortedLogs.slice(0, 7)
     const totalSnus = firstWeekLogs.reduce((sum, log) => sum + (log.snusCount || 0), 0)
     const baselineSnusPerDay = Math.max(5, Math.round(totalSnus / Math.max(1, firstWeekLogs.length)))
-
-    const SNUS_COST_NOK = 4.27
+    const COST_PER_UNIT = userConfig.costPerUnit || 4.27
     return logs.reduce((sum, log) => {
       const saved = Math.max(0, baselineSnusPerDay - (log.snusCount || 0))
-      return sum + (saved * SNUS_COST_NOK)
+      return sum + (saved * COST_PER_UNIT)
     }, 0)
   }
 
@@ -167,7 +195,7 @@ export default function GoalTracker() {
     }
   }
 
-  if (loading) {
+  if (loading || userConfigLoading) {
     return (
       <Card className="bg-black/60 border border-white/10 backdrop-blur-xl rounded-2xl">
         <CardContent className="p-4">
@@ -195,7 +223,7 @@ export default function GoalTracker() {
               </div>
             </div>
             <Badge className="bg-purple-500/20 text-purple-400 px-2 py-1 text-xs border border-purple-500/30">
-              {Math.round(totalSaved).toLocaleString()} NOK
+              {formatCurrency(totalSaved)}
             </Badge>
           </div>
 
@@ -349,11 +377,10 @@ export default function GoalTracker() {
                     <div className="relative z-10 mb-6">
                       <div className="flex justify-between items-center mb-3">
                         <div className="text-white/90">
-                          <span className="text-2xl font-bold">{Math.round(goal.savedAmount).toLocaleString()}</span>
-                          <span className="text-lg text-white/60 ml-1">NOK</span>
+                          <span className="text-2xl font-bold">{formatCurrency(goal.savedAmount)}</span>
                         </div>
                         <div className="text-right text-white/60">
-                          <div className="text-sm">of {goal.targetAmount.toLocaleString()} NOK</div>
+                          <div className="text-sm">of {formatCurrency(goal.targetAmount)}</div>
                           <div className="text-lg font-semibold text-white/90">{progress.toFixed(1)}%</div>
                         </div>
                       </div>
@@ -392,7 +419,7 @@ export default function GoalTracker() {
                       <div className="flex justify-between items-center mt-3 text-sm">
                         <span className="text-white/60">
                           {goal.targetAmount - goal.savedAmount > 0
-                            ? `${Math.round(goal.targetAmount - goal.savedAmount).toLocaleString()} NOK remaining`
+                            ? `${formatCurrency(goal.targetAmount - goal.savedAmount)} remaining`
                             : 'Goal achieved! 🎯'
                           }
                         </span>
