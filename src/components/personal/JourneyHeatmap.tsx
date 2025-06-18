@@ -310,9 +310,9 @@ export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmap
 
     return (
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="bg-black/90 border border-white/20 text-white max-w-md">
+        <DialogContent className="bg-black/90 border border-white/20 text-white max-w-md max-h-[70vh] lg:max-h-[85vh] xl:max-h-none overflow-y-auto !top-[5vh] !translate-y-0 lg:!top-[50%] lg:!-translate-y-1/2">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center space-x-2">
+            <DialogTitle className="text-lg lg:text-xl font-bold flex items-center space-x-2">
               <Calendar className="h-5 w-5 text-blue-400" />
               <span>Daily Log</span>
             </DialogTitle>
@@ -325,9 +325,9 @@ export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmap
               <p className="text-gray-400">Can't log future dates</p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-2 lg:space-y-4 xl:space-y-6">
               {/* Current Score Display */}
-              <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-4">
+              <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-2 lg:p-3 xl:p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">Daily Score</span>
                   <span className={`text-2xl font-bold ${
@@ -343,15 +343,16 @@ export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmap
               </div>
 
               {/* Input Fields */}
-              <div className="space-y-4">
-                <div className="space-y-2">
+              <div className="space-y-2 lg:space-y-3 xl:space-y-4">
+                                                  <div className="space-y-1 lg:space-y-2">
                   <Label className="text-sm text-gray-300 flex items-center space-x-2">
                     <Target className="h-4 w-4 text-green-400" />
                     <span>Habits Completed ({editLog.completedHabits?.length || 0})</span>
                   </Label>
-                  <div className="space-y-2">
-                    {availableHabits.map((habit) => (
-                      <label key={habit} className="flex items-center space-x-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer">
+                  <div className="max-h-[200px] overflow-y-auto pr-1">
+                    <div className="space-y-1 lg:space-y-2">
+                      {availableHabits.map((habit) => (
+                        <label key={habit} className="flex items-center space-x-3 p-1.5 lg:p-2 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={editLog.completedHabits?.includes(habit) || false}
@@ -361,10 +362,11 @@ export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmap
                         <span className="text-sm text-gray-300">{habit}</span>
                       </label>
                     ))}
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1 lg:space-y-2">
                   <Label className="text-sm text-gray-300 flex items-center space-x-2">
                     <Clock className="h-4 w-4 text-blue-400" />
                     <span>Focus Sessions</span>
@@ -379,7 +381,7 @@ export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmap
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1 lg:space-y-2">
                   <Label className="text-sm text-gray-300 flex items-center space-x-2">
                     <span>{getHabitIcon()}</span>
                     <span>{getHabitName()} Count</span>
@@ -426,19 +428,19 @@ export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmap
   return (
     <TooltipProvider>
       <Card className={`bg-gradient-to-br from-black/70 to-black/60 backdrop-blur-xl border border-white/10 h-full flex flex-col rounded-3xl ${className}`}>
-        <CardHeader className="pb-2 flex-shrink-0">
-          <CardTitle className="text-lg font-bold text-white flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <Calendar className="h-4 w-4 text-white" />
+        <CardHeader className="pb-1 lg:pb-2 flex-shrink-0">
+          <CardTitle className="text-sm lg:text-lg font-bold text-white flex items-center space-x-2">
+            <div className="w-6 h-6 lg:w-8 lg:h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
+              <Calendar className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
             </div>
             <span>Journey Heatmap</span>
           </CardTitle>
-          <p className="text-sm text-gray-400">Your daily progress for {currentMonthName}</p>
+          <p className="text-xs lg:text-sm text-gray-400">Your daily progress for {currentMonthName}</p>
         </CardHeader>
 
-        <CardContent className="p-4 pt-0 flex-1 flex flex-col">
+        <CardContent className="p-2 lg:p-4 pt-0 flex-1 flex flex-col">
           {/* Month Navigation */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2 lg:mb-4">
             <Button
               variant="ghost"
               size="sm"
@@ -448,7 +450,7 @@ export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmap
               <ChevronLeft className="h-4 w-4" />
             </Button>
             
-            <h3 className="text-base font-semibold text-white">{currentMonthName}</h3>
+            <h3 className="text-sm lg:text-base font-semibold text-white">{currentMonthName}</h3>
             
             <Button
               variant="ghost"
@@ -462,7 +464,7 @@ export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmap
           </div>
 
           {/* Heatmap Grid - Compact calendar */}
-          <div className="flex-1 flex items-center justify-center mb-4">
+          <div className="flex-1 flex items-center justify-center mb-2 lg:mb-4">
             <div 
               className="grid gap-1 w-full max-w-full" 
               style={{ 
@@ -472,7 +474,7 @@ export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmap
             >
               {/* Weekday headers */}
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                <div key={day} className="text-xs text-gray-400 text-center pb-1 font-medium">
+                <div key={day} className="text-xs lg:text-xs text-gray-400 text-center pb-0.5 lg:pb-1 font-medium">
                   {day}
                 </div>
               ))}
@@ -508,7 +510,7 @@ export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmap
                       <button
                         onClick={() => handleDayClick(date)}
                         className={`
-                          aspect-square rounded border cursor-pointer transition-all duration-200 hover:scale-105 hover:z-10 relative flex items-center justify-center text-xs font-medium
+                          aspect-square rounded border cursor-pointer transition-all duration-200 hover:scale-105 hover:z-10 relative flex items-center justify-center text-xs lg:text-xs font-medium
                           ${colorClass} ${intensityClass}
                           ${isFutureDate ? 'opacity-30 cursor-not-allowed' : ''}
                         `}
@@ -539,10 +541,10 @@ export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmap
           </div>
 
           {/* Quick Stats - Current Month */}
-          <div className="pt-4 border-t border-white/10 flex-shrink-0">
-            <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="pt-2 lg:pt-4 border-t border-white/10 flex-shrink-0">
+            <div className="grid grid-cols-3 gap-2 lg:gap-3 text-center">
               <div>
-                <div className="text-lg font-bold text-green-400">
+                <div className="text-base lg:text-lg font-bold text-green-400">
                   {calendarDays.filter(date => {
                     const log = dailyLogs[date]
                     const score = getDailyScore(log)
@@ -552,13 +554,13 @@ export default function JourneyHeatmap({ className, userConfig }: JourneyHeatmap
                 <div className="text-xs text-gray-400">Great Days</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-blue-400">
+                <div className="text-base lg:text-lg font-bold text-blue-400">
                   {calendarDays.reduce((sum, date) => sum + (dailyLogs[date]?.focusSessions || 0), 0)}
                 </div>
                 <div className="text-xs text-gray-400">Focus Sessions</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-purple-400">
+                <div className="text-base lg:text-lg font-bold text-purple-400">
                   {calendarDays.reduce((sum, date) => sum + (dailyLogs[date]?.habitsCompleted || 0), 0)}
                 </div>
                 <div className="text-xs text-gray-400">Total Habits</div>

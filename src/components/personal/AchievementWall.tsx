@@ -539,15 +539,15 @@ export default function AchievementWall({ userConfig }: { userConfig?: UserConfi
   return (
     <>
       <Card className={`bg-gradient-to-br from-black/70 to-black/60 backdrop-blur-xl border border-white/10 h-full flex flex-col rounded-3xl`}>
-        <CardHeader className="pb-2 flex-shrink-0">
-          <CardTitle className="text-lg font-bold text-white flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-lg flex items-center justify-center">
-              <Trophy className="h-4 w-4 text-white" />
+        <CardHeader className="pb-1 lg:pb-2 flex-shrink-0">
+          <CardTitle className="text-sm lg:text-lg font-bold text-white flex items-center space-x-2">
+            <div className="w-6 h-6 lg:w-8 lg:h-8 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-lg flex items-center justify-center">
+              <Trophy className="h-3 w-3 lg:h-4 lg:w-4 text-white" />
             </div>
             <span>Achievement Wall</span>
           </CardTitle>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-400">{getPageTitle(currentPage)} - {unlockedCount}/{totalCount} unlocked</p>
+            <p className="text-xs lg:text-sm text-gray-400">{getPageTitle(currentPage)} - {unlockedCount}/{totalCount} unlocked</p>
             <div className="flex items-center space-x-2">
               <Button
                 variant="ghost"
@@ -576,31 +576,31 @@ export default function AchievementWall({ userConfig }: { userConfig?: UserConfi
           </div>
         </CardHeader>
 
-        <CardContent className="p-4 pt-0 flex-1 flex flex-col">
+        <CardContent className="p-2 lg:p-4 pt-0 flex-1 flex flex-col">
           {/* Achievement Grid - Compact 2x3 */}
-          <div className="flex-1 flex items-center justify-center mb-4">
-            <div className="grid grid-cols-2 gap-3 w-full">
+          <div className="flex-1 flex items-center justify-center mb-2 lg:mb-4">
+            <div className="grid grid-cols-2 gap-2 lg:gap-3 w-full">
               {currentPageAchievements.map((achievement) => (
                 <div
                   key={achievement.id}
                   onClick={() => handleAchievementClick(achievement)}
-                  className={`relative p-3 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-105 ${
+                  className={`relative p-2 lg:p-3 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-105 ${
                     achievement.unlocked
                       ? 'bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border-purple-500/30 hover:border-purple-500/50'
                       : 'bg-black/20 border-white/10 hover:border-white/20'
                   }`}
                 >
                   {/* Badge Icon */}
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg mb-2 ${
+                  <div className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg flex items-center justify-center text-sm lg:text-lg mb-1 lg:mb-2 ${
                     achievement.unlocked
                       ? 'bg-gradient-to-br from-purple-400 to-indigo-500 shadow-lg'
                       : 'bg-gray-700 opacity-50'
                   }`}>
-                    {achievement.unlocked ? achievement.icon : <Lock className="h-4 w-4 text-gray-400" />}
+                    {achievement.unlocked ? achievement.icon : <Lock className="h-3 w-3 lg:h-4 lg:w-4 text-gray-400" />}
                   </div>
 
                   {/* Badge Info */}
-                  <div className="space-y-1">
+                  <div className="space-y-0.5 lg:space-y-1">
                     <h3 className={`font-semibold text-xs ${
                       achievement.unlocked ? 'text-white' : 'text-gray-400'
                     }`}>
@@ -634,22 +634,22 @@ export default function AchievementWall({ userConfig }: { userConfig?: UserConfi
           </div>
 
           {/* Quick Stats - Bottom summary */}
-          <div className="pt-4 border-t border-white/10 flex-shrink-0">
-            <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="pt-2 lg:pt-4 border-t border-white/10 flex-shrink-0">
+            <div className="grid grid-cols-3 gap-2 lg:gap-3 text-center">
               <div>
-                <div className="text-lg font-bold text-purple-400">
+                <div className="text-base lg:text-lg font-bold text-purple-400">
                   {achievements.filter(a => a.unlocked).length}
                 </div>
                 <div className="text-xs text-gray-400">Total Unlocked</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-blue-400">
+                <div className="text-base lg:text-lg font-bold text-blue-400">
                   {achievements.filter(a => a.unlocked).reduce((sum, a) => sum + a.xpReward, 0)}
                 </div>
                 <div className="text-xs text-gray-400">Total XP</div>
               </div>
               <div>
-                <div className="text-lg font-bold text-purple-400">
+                <div className="text-base lg:text-lg font-bold text-purple-400">
                   {Math.round((achievements.filter(a => a.unlocked).length / achievements.length) * 100)}%
                 </div>
                 <div className="text-xs text-gray-400">Overall Progress</div>
