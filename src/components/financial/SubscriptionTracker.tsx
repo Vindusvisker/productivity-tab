@@ -106,12 +106,27 @@ export default function SubscriptionTracker({ userConfig }: SubscriptionTrackerP
       const saved = await storage.load('subscriptions')
       
       if (saved && saved.length > 0) {
-        // Update days until renewal for existing subscriptions
-        const updatedSubscriptions = saved.map((sub: Subscription) => ({
-          ...sub,
-          daysUntilRenewal: calculateDaysUntilRenewal(sub.renewalDate),
-          status: getSubscriptionStatus(sub.renewalDate)
-        }))
+        // Update days until renewal and auto-advance overdue subscriptions
+        const updatedSubscriptions = saved.map((sub: Subscription) => {
+          let currentRenewalDate = sub.renewalDate
+          let daysUntil = calculateDaysUntilRenewal(currentRenewalDate)
+          
+          // If subscription is overdue (negative days), advance to next renewal
+          if (daysUntil < 0) {
+            currentRenewalDate = getNextRenewalDate(currentRenewalDate, sub.billingCycle)
+            daysUntil = calculateDaysUntilRenewal(currentRenewalDate)
+          }
+          
+          return {
+            ...sub,
+            renewalDate: currentRenewalDate,
+            daysUntilRenewal: daysUntil,
+            status: getSubscriptionStatus(currentRenewalDate)
+          }
+        })
+        
+        // Save the updated subscriptions with new renewal dates
+        await storage.save('subscriptions', updatedSubscriptions)
         setSubscriptions(updatedSubscriptions)
       } else {
         // Start with demo subscription for new users to show value
@@ -143,6 +158,29 @@ export default function SubscriptionTracker({ userConfig }: SubscriptionTrackerP
     const daysDiff = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     
     return daysDiff // Allow negative values for overdue subscriptions
+  }
+
+  const getNextRenewalDate = (currentRenewalDate: string, billingCycle: 'monthly' | 'yearly' | 'weekly'): string => {
+    const current = new Date(currentRenewalDate)
+    const next = new Date(current)
+    
+    switch (billingCycle) {
+      case 'weekly':
+        next.setDate(current.getDate() + 7)
+        break
+      case 'monthly':
+        next.setMonth(current.getMonth() + 1)
+        // Handle edge case like Jan 31 -> Feb 28
+        if (next.getDate() !== current.getDate()) {
+          next.setDate(0) // Go to last day of previous month
+        }
+        break
+      case 'yearly':
+        next.setFullYear(current.getFullYear() + 1)
+        break
+    }
+    
+    return next.toISOString().split('T')[0]
   }
 
   const getSubscriptionStatus = (renewalDate: string): 'active' | 'upcoming' | 'overdue' => {
@@ -275,7 +313,7 @@ export default function SubscriptionTracker({ userConfig }: SubscriptionTrackerP
   }
 
   const upcomingSubscriptions = subscriptions
-    .filter(sub => sub.daysUntilRenewal <= 7)
+    .filter(sub => sub.daysUntilRenewal <= 7 && sub.daysUntilRenewal >= 0)
     .sort((a, b) => a.daysUntilRenewal - b.daysUntilRenewal)
 
   if (loading) {
