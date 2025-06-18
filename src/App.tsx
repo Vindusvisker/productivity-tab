@@ -446,24 +446,31 @@ export default function App() {
           </div>
           
           {/* Settings Button - Top Left */}
-          <div className="fixed top-6 left-6 z-20">
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-black/20 hover:bg-black/30 rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 hover:scale-105 group"
-            >
-              <Settings className="w-5 h-5 text-white/70 group-hover:text-white/90 transition-colors" />
-              <span className="text-sm text-white/80 group-hover:text-white/90 font-medium transition-colors">Settings</span>
-            </button>
+          <div className="fixed top-3 left-3 sm:top-4 sm:left-4 md:top-6 md:left-6 z-20">
+            <div className="flex flex-col space-y-2 sm:space-y-3">
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-black/20 hover:bg-black/30 rounded-lg sm:rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 hover:scale-105 group"
+              >
+                <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-white/70 group-hover:text-white/90 transition-colors" />
+                <span className="hidden sm:inline text-xs sm:text-sm text-white/80 group-hover:text-white/90 font-medium transition-colors">Settings</span>
+              </button>
+              
+              {/* Star Button - Under Settings on smaller screens (1400x900 and under) */}
+              <div className="block 2xl:hidden">
+                <StarButton />
+              </div>
+            </div>
           </div>
 
           {/* Theme Gallery Button - Top Right */}
-          <div className="fixed top-6 right-6 z-20">
+          <div className="fixed top-3 right-3 sm:top-4 sm:right-4 md:top-6 md:right-6 z-20">
             <button
               onClick={() => setIsThemeGalleryOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-black/20 hover:bg-black/30 rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 hover:scale-105 group"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-black/20 hover:bg-black/30 rounded-lg sm:rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 hover:scale-105 group"
             >
-              <Palette className="w-5 h-5 text-white/70 group-hover:text-white/90 transition-colors" />
-              <span className="text-sm text-white/80 group-hover:text-white/90 font-medium transition-colors">{currentTheme.name}</span>
+              <Palette className="w-4 h-4 sm:w-5 sm:h-5 text-white/70 group-hover:text-white/90 transition-colors" />
+              <span className="hidden md:inline text-xs sm:text-sm text-white/80 group-hover:text-white/90 font-medium transition-colors">{currentTheme.name}</span>
               <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 animate-pulse" />
             </button>
           </div>
@@ -492,8 +499,8 @@ export default function App() {
             onComplete={handleOnboardingComplete}
           />
           
-          {/* Star Button - Fixed at bottom left */}
-          <div className="fixed bottom-6 left-6 z-20">
+          {/* Star Button - Bottom left on larger screens (1400x900+) */}
+          <div className="hidden 2xl:block fixed bottom-3 left-3 sm:bottom-4 sm:left-4 md:bottom-6 md:left-6 z-20">
             <StarButton />
           </div>
         </div>

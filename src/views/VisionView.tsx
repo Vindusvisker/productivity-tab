@@ -13,8 +13,13 @@ const VisionView: React.FC<VisionViewProps> = ({ userConfig }) => {
     <div className="h-screen pt-28 pb-16 overflow-hidden relative">
       <div className="container mx-auto px-6 max-w-7xl h-full flex flex-col">
         
-        {/* Help Button - Bottom right corner */}
-        <div className="fixed bottom-6 right-6 z-20">
+        {/* Help Button - Under theme button on smaller screens, bottom right on larger */}
+        <div className="hidden 2xl:block fixed bottom-6 right-6 z-20">
+          <VisionHelp />
+        </div>
+        
+        {/* Help Button - Under theme gallery button on smaller screens (1280x900 and under) */}
+        <div className="block 2xl:hidden fixed top-14 sm:top-16 md:top-20 right-3 sm:right-4 md:right-6 z-20">
           <VisionHelp />
         </div>
         

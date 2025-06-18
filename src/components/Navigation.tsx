@@ -71,9 +71,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange, curr
   ];
 
   return (
-    <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50">
+    <div className="fixed top-3 sm:top-4 md:top-6 left-1/2 transform -translate-x-1/2 z-50">
       <div className="flex items-center justify-center">
-        <div className="flex items-center space-x-4 bg-black/20 backdrop-blur-xl rounded-full p-2 border border-white/10 shadow-2xl">
+        <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 bg-black/20 backdrop-blur-xl rounded-full p-1 sm:p-1.5 md:p-2 border border-white/10 shadow-2xl">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -83,7 +83,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange, curr
                 key={item.id}
                 onClick={() => onViewChange(item.id)}
                 className={cn(
-                  "relative flex items-center space-x-2 px-6 py-3 rounded-full text-sm font-medium transition-all duration-500 overflow-hidden group",
+                  "relative flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full text-xs sm:text-sm font-medium transition-all duration-500 overflow-hidden group",
                   isActive 
                     ? "text-white shadow-lg" 
                     : "text-white/70 hover:text-white hover:bg-white/10"
@@ -113,10 +113,10 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange, curr
                   </>
                 )}
                 <Icon className={cn(
-                  "h-4 w-4 transition-transform duration-200 relative z-10",
+                  "h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-200 relative z-10",
                   isActive ? "scale-110" : "group-hover:scale-105"
                 )} />
-                <span className="relative z-10 whitespace-nowrap">{item.label}</span>
+                <span className="hidden sm:inline relative z-10 whitespace-nowrap">{item.label}</span>
               </button>
             );
           })}

@@ -430,19 +430,19 @@ export default function SnusTracker({ userConfig }: SnusTrackerProps) {
 
   return (
     <Card className="bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-5 lg:p-6">
         {/* Header with circular progress */}
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex items-start justify-between mb-4 sm:mb-5 lg:mb-6">
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-1">{getHabitName()} Tracker</h2>
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-white mb-1">{getHabitName()} Tracker</h2>
             <p className={`text-sm ${getStatusColor()}`}>
               {getStatusMessage()}
             </p>
           </div>
           
           {/* Circular Progress Indicator */}
-          <div className="relative w-16 h-16">
-            <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 80 80">
+          <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16">
+            <svg className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 transform -rotate-90" viewBox="0 0 80 80">
               {/* Background circle */}
               <circle
                 cx="40"
@@ -471,7 +471,7 @@ export default function SnusTracker({ userConfig }: SnusTrackerProps) {
             </svg>
             {/* Progress text */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`text-lg font-bold ${getStatusColor()}`}>
+              <span className={`text-sm sm:text-base lg:text-lg font-bold ${getStatusColor()}`}>
                 {dailyCount}
               </span>
             </div>
@@ -479,21 +479,22 @@ export default function SnusTracker({ userConfig }: SnusTrackerProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-3 mb-4">
+        <div className="flex space-x-2 sm:space-x-3 mb-3 sm:mb-4">
           <Button
             onClick={incrementSnus}
             disabled={isProcessing}
-            className="flex-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 hover:text-red-300 rounded-2xl py-3 disabled:opacity-50"
+            className="flex-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 hover:text-red-300 rounded-2xl py-2 sm:py-3 disabled:opacity-50 text-xs sm:text-sm"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            {isProcessing ? 'Adding...' : getActionText()}
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{isProcessing ? 'Adding...' : getActionText()}</span>
+            <span className="sm:hidden">+</span>
           </Button>
           
           <Button
             onClick={decrementSnus}
             disabled={isProcessing || dailyCount <= 0}
             variant="outline"
-            className="bg-gray-800/60 hover:bg-gray-700/60 border-gray-600 text-gray-300 hover:text-white rounded-2xl py-3 disabled:opacity-50"
+            className="bg-gray-800/60 hover:bg-gray-700/60 border-gray-600 text-gray-300 hover:text-white rounded-2xl py-2 sm:py-3 disabled:opacity-50 text-xs sm:text-sm px-3 sm:px-4"
           >
             <span className="text-lg font-bold">−</span>
           </Button>
