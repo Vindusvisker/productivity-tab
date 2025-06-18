@@ -10,7 +10,7 @@ interface VisionViewProps {
 
 const VisionView: React.FC<VisionViewProps> = ({ userConfig }) => {
   return (
-    <div className="h-screen pt-28 pb-16 overflow-hidden relative">
+    <div className="min-h-screen 2xl:h-screen pt-28 pb-16 overflow-auto 2xl:overflow-hidden relative">
       <div className="container mx-auto px-6 max-w-7xl h-full flex flex-col">
         
         {/* Help Button - Under theme button on smaller screens, bottom right on larger */}

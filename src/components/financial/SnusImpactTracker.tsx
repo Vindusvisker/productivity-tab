@@ -294,7 +294,7 @@ export default function SnusImpactTracker({ userConfig }: SnusImpactTrackerProps
 
   return (
     <Card className="bg-black/60 border border-white/10 backdrop-blur-xl h-full overflow-hidden rounded-2xl">
-      <CardContent className="p-3 h-full flex flex-col">
+      <CardContent className="p-3 h-full flex flex-col overflow-y-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
