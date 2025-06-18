@@ -337,6 +337,24 @@ export default function App() {
     }
   };
 
+  // Apply theme to body element for full scrollable background coverage
+  useEffect(() => {
+    if (currentTheme) {
+      // Use !important to override the CSS globals
+      document.body.style.setProperty('background-color', currentTheme.backgroundColor, 'important');
+      document.body.style.setProperty('transition', 'background-color 0.7s ease-out', 'important');
+      // Also apply to html for complete coverage
+      document.documentElement.style.setProperty('background-color', currentTheme.backgroundColor, 'important');
+    }
+    
+    return () => {
+      // Cleanup when component unmounts
+      document.body.style.removeProperty('background-color');
+      document.body.style.removeProperty('transition');
+      document.documentElement.style.removeProperty('background-color');
+    };
+  }, [currentTheme]);
+
   return (
     <>
       {/* Add custom zoom-in animation */}
@@ -363,26 +381,25 @@ export default function App() {
       ) : (
         <div 
           key={currentTheme.id}
-          className="fixed inset-0 overflow-auto transition-all duration-700 ease-out" 
+          className="min-h-screen relative transition-all duration-700 ease-out" 
           style={{ 
-            backgroundColor: currentTheme.backgroundColor,
             animation: 'zoomIn 0.6s ease-out',
             transform: 'scale(1)',
             opacity: 1
           }}
         >
-          {/* Gradient spots */}
+          {/* Gradient spots - Fixed to viewport for consistent positioning */}
           {currentTheme.gradientSpots.length > 0 && (
-            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
               {currentTheme.gradientSpots.map((spotClasses, index) => (
                 <div key={`${currentTheme.id}-spot-${index}`} className={spotClasses} />
               ))}
             </div>
           )}
 
-          {/* Grain texture / Stars / Hex Grid */}
+          {/* Grain texture / Stars / Hex Grid - Fixed to viewport */}
           <div 
-            className="absolute inset-0 pointer-events-none z-1"
+            className="fixed inset-0 pointer-events-none z-1"
             style={{
               opacity: currentTheme.grainOpacity / 100,
               backgroundImage: currentTheme.id === 'space' ? 
