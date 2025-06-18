@@ -10,10 +10,10 @@ export default function ProductivityHelp() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-black/20 hover:bg-black/30 rounded-lg transition-all duration-200 backdrop-blur-sm border border-white/10"
+        className="flex items-center gap-2 px-2 py-1.5 2xl:px-3 2xl:py-2 bg-black/20 hover:bg-black/30 rounded-lg transition-all duration-200 backdrop-blur-sm border border-white/10"
       >
         <HelpCircle className="w-4 h-4 text-white/70" />
-        <span className="text-sm text-white/80 font-medium">How Productivity Works</span>
+        <span className="hidden 2xl:block text-sm text-white/80 font-medium">How Productivity Works</span>
       </button>
 
       {/* Help Modal */}

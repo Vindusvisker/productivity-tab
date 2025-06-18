@@ -349,20 +349,20 @@ export default function FocusTimer() {
   const strokeDashoffset = circumference - (getProgress() / 100) * circumference
 
   return (
-    <Card className="bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
-      <CardContent className="p-8">
+    <Card className="bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden h-full">
+      <CardContent className="p-4 sm:p-6 2xl:p-8 h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-3 sm:mb-4 2xl:mb-6 flex-shrink-0">
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-1">Focus Timer</h2>
-            <p className="text-sm text-gray-400">
+            <h2 className="text-lg sm:text-xl 2xl:text-2xl font-semibold text-white mb-1">Focus Timer</h2>
+            <p className="text-xs sm:text-sm text-gray-400">
               {isBreak ? 'Break Time 🧘' : 'Deep Work Session 🎯'}
             </p>
           </div>
           
           {/* Circular Progress */}
-          <div className="relative w-20 h-20">
-            <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+          <div className="relative w-14 h-14 sm:w-16 sm:h-16 2xl:w-20 2xl:h-20">
+            <svg className="w-14 h-14 sm:w-16 sm:h-16 2xl:w-20 2xl:h-20 transform -rotate-90" viewBox="0 0 100 100">
               <circle
                 cx="50"
                 cy="50"
@@ -388,19 +388,19 @@ export default function FocusTimer() {
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <Clock className={`h-6 w-6 ${isBreak ? 'text-green-400' : 'text-blue-400'}`} />
+              <Clock className={`h-4 w-4 sm:h-5 sm:w-5 2xl:h-6 2xl:w-6 ${isBreak ? 'text-green-400' : 'text-blue-400'}`} />
             </div>
           </div>
         </div>
 
         {/* Timer Display */}
-        <div className="text-center mb-6">
-          <div className={`text-5xl font-light mb-2 ${
+        <div className="text-center mb-3 sm:mb-4 2xl:mb-6 flex-1 flex flex-col justify-center">
+          <div className={`text-3xl sm:text-4xl 2xl:text-5xl font-light mb-2 ${
             isBreak ? 'text-green-400' : 'text-blue-400'
           }`}>
             {formatTime(timeLeft)}
           </div>
-          <div className="text-sm text-gray-400">
+          <div className="text-xs sm:text-sm text-gray-400">
             {isBreak ? 'Time for a break!' : 'Stay focused'}
             {isRunning && (
               <span className="ml-2 text-green-400">• Running in background</span>
@@ -409,39 +409,41 @@ export default function FocusTimer() {
         </div>
 
         {/* Controls */}
-        <div className="flex space-x-3 mb-6">
+        <div className="flex space-x-2 sm:space-x-3 mb-3 sm:mb-4 2xl:mb-6 flex-shrink-0">
           {!isRunning ? (
             <>
               {/* Focus/Break selection when stopped */}
               <Button
                 onClick={startFocus}
-                className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-400 rounded-2xl py-3"
+                className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-400 rounded-2xl py-2 sm:py-2.5 2xl:py-3 text-xs sm:text-sm"
               >
-                <Play className="h-4 w-4 mr-2" />
-                Focus (25min)
+                <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Focus (25min)</span>
+                <span className="sm:hidden">Focus</span>
               </Button>
               <Button
                 onClick={startBreak}
-                className="flex-1 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 text-green-400 rounded-2xl py-3"
+                className="flex-1 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 text-green-400 rounded-2xl py-2 sm:py-2.5 2xl:py-3 text-xs sm:text-sm"
               >
-                <Play className="h-4 w-4 mr-2" />
-                Break (5min)
+                <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Break (5min)</span>
+                <span className="sm:hidden">Break</span>
               </Button>
             </>
           ) : (
             <Button
               onClick={stopTimer}
-              className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 text-orange-400 rounded-2xl py-3"
+              className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 text-orange-400 rounded-2xl py-2 sm:py-2.5 2xl:py-3 text-xs sm:text-sm"
             >
-              <Square className="h-4 w-4 mr-2" />
+              <Square className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               Stop
             </Button>
           )}
         </div>
 
         {/* Sessions Count */}
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-blue-400 mb-1">{sessionsCompleted}</div>
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-3 sm:p-4 text-center flex-shrink-0">
+          <div className="text-lg sm:text-xl 2xl:text-2xl font-bold text-blue-400 mb-1">{sessionsCompleted}</div>
           <div className="text-xs text-gray-400">Focus Sessions Today</div>
           {sessionsCompleted > 0 && (
             <div className="text-xs text-green-400 mt-1">+{sessionsCompleted * 25} XP earned! 🚀</div>

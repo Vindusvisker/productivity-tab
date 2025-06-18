@@ -398,35 +398,35 @@ export default function WeeklyOverview({ userConfig }: WeeklyOverviewProps) {
   }
 
   return (
-    <Card className="bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
-      <CardContent className="p-8">
+    <Card className="bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden h-full">
+      <CardContent className="p-4 sm:p-6 2xl:p-8 h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-3 sm:mb-4 2xl:mb-6 flex-shrink-0">
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-1">This Week</h2>
-            <p className="text-sm text-gray-400">Your progress overview</p>
+            <h2 className="text-lg sm:text-xl 2xl:text-2xl font-semibold text-white mb-1">This Week</h2>
+            <p className="text-xs sm:text-sm text-gray-400">Your progress overview</p>
           </div>
           
           {/* Stats */}
-          <div className="flex space-x-4">
+          <div className="flex space-x-2 sm:space-x-3 2xl:space-x-4">
             <div className="text-center">
-              <div className="text-xl font-bold text-orange-400">{currentStreak}</div>
+              <div className="text-base sm:text-lg 2xl:text-xl font-bold text-orange-400">{currentStreak}</div>
               <div className="text-xs text-gray-400">Day Streak</div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold text-green-400">{getSuccessRate()}%</div>
+              <div className="text-base sm:text-lg 2xl:text-xl font-bold text-green-400">{getSuccessRate()}%</div>
               <div className="text-xs text-gray-400">Success Rate</div>
             </div>
           </div>
         </div>
 
         {/* Weekly Log */}
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-2.5 2xl:space-y-3 flex-1 min-h-0 overflow-y-auto">
           {weekData.map((day, index) => (
             <div
               key={day.date}
               onClick={() => handleDayClick(day)}
-              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all cursor-pointer hover:border-white/20"
+              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 sm:p-3 2xl:p-4 hover:bg-white/10 transition-all cursor-pointer hover:border-white/20 flex-shrink-0"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -496,8 +496,8 @@ export default function WeeklyOverview({ userConfig }: WeeklyOverviewProps) {
 
 
         {/* Power Stats */}
-        <div className="mt-6">
-          <h3 className="text-sm font-bold text-white mb-3 flex items-center">
+        <div className="mt-3 sm:mt-4 2xl:mt-6 flex-shrink-0">
+          <h3 className="text-xs sm:text-sm font-bold text-white mb-2 sm:mb-3 flex items-center">
             <span className="mr-2">⚡</span>
             Power Stats
           </h3>

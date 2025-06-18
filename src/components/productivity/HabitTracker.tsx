@@ -310,20 +310,20 @@ export default function HabitTracker() {
   const strokeDashoffset = circumference - (completionPercentage / 100) * circumference
 
   return (
-    <Card className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
-      <CardContent className="p-8">
+    <Card className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden h-full">
+      <CardContent className="p-4 sm:p-6 2xl:p-8 h-full flex flex-col">
         {/* Header with circular progress */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex items-start justify-between mb-4 sm:mb-6 2xl:mb-8 flex-shrink-0">
           <div>
-            <h2 className="text-3xl font-semibold text-white mb-2">Tasks</h2>
-            <p className="text-gray-400 text-lg">
+            <h2 className="text-xl sm:text-2xl 2xl:text-3xl font-semibold text-white mb-1 sm:mb-2">Tasks</h2>
+            <p className="text-gray-400 text-sm sm:text-base 2xl:text-lg">
               {completedCount === habits.length && habits.length > 0 
                 ? "Perfect day! 🎉" 
                 : "Great start to the day"}
             </p>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3 2xl:space-x-4">
             {/* Edit Mode Toggle */}
             <button
               onClick={() => {
@@ -331,18 +331,18 @@ export default function HabitTracker() {
                 setEditingHabit(null)
                 setNewHabitName('')
               }}
-              className={`p-3 rounded-full transition-all duration-200 ${
+              className={`p-2 sm:p-2.5 2xl:p-3 rounded-full transition-all duration-200 ${
                 isEditMode 
                   ? 'bg-blue-500 text-white' 
                   : 'bg-white/10 text-white/70 hover:bg-white/20'
               }`}
             >
-              <Edit3 className="h-4 w-4" />
+              <Edit3 className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
             
             {/* Circular Progress Indicator */}
-            <div className="relative w-20 h-20">
-              <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 2xl:w-20 2xl:h-20">
+              <svg className="w-14 h-14 sm:w-16 sm:h-16 2xl:w-20 2xl:h-20 transform -rotate-90" viewBox="0 0 100 100">
                 {/* Background circle */}
                 <circle
                   cx="50"
@@ -369,7 +369,7 @@ export default function HabitTracker() {
               </svg>
               {/* Progress text */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-white text-xl font-semibold">
+                <span className="text-white text-sm sm:text-lg 2xl:text-xl font-semibold">
                   {completedCount}/{habits.length}
                 </span>
               </div>
@@ -379,7 +379,7 @@ export default function HabitTracker() {
 
         {/* Add New Habit (Edit Mode) */}
         {isEditMode && (
-          <div className="mb-6 p-4 bg-white/5 rounded-2xl border border-white/10">
+          <div className="mb-3 sm:mb-4 2xl:mb-6 p-3 sm:p-4 bg-white/5 rounded-2xl border border-white/10 flex-shrink-0">
             <div className="flex items-center space-x-3">
               <input
                 type="text"
@@ -400,9 +400,13 @@ export default function HabitTracker() {
           </div>
         )}
 
-        {/* Habit Pills Grid */}
-        <div className={`grid gap-4 ${
+        {/* Habit Pills Grid - Show 6 habits on small screens, 9 on larger screens */}
+        <div className={`grid gap-2 sm:gap-3 2xl:gap-4 ${
           habits.length > 6 ? 'grid-cols-3' : 'grid-cols-2'
+        } ${
+          habits.length > 6 ? 'max-h-32 sm:max-h-40 overflow-y-auto' : 'flex-1 min-h-0'
+        } ${
+          habits.length > 9 ? '2xl:max-h-48' : ''
         }`}>
           {habits.map((habit) => {
             const Icon = iconMap[habit.iconName as keyof typeof iconMap] || Circle

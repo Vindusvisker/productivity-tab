@@ -456,8 +456,8 @@ export default function App() {
                 <span className="hidden sm:inline text-xs sm:text-sm text-white/80 group-hover:text-white/90 font-medium transition-colors">Settings</span>
               </button>
               
-              {/* Star Button - Under Settings on smaller screens (1400x900 and under) */}
-              <div className="block 2xl:hidden">
+              {/* Star Button - Under Settings for all screen sizes */}
+              <div className="block">
                 <StarButton />
               </div>
             </div>
@@ -499,10 +499,7 @@ export default function App() {
             onComplete={handleOnboardingComplete}
           />
           
-          {/* Star Button - Bottom left on larger screens (1400x900+) */}
-          <div className="hidden 2xl:block fixed bottom-3 left-3 sm:bottom-4 sm:left-4 md:bottom-6 md:left-6 z-20">
-            <StarButton />
-          </div>
+
         </div>
       )}
     </>
