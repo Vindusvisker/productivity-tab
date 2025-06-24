@@ -70,6 +70,26 @@ module.exports = (env, argv) => {
             to: 'assets',
             noErrorOnMissing: true,
           },
+          {
+            from: 'favicon*.png',
+            to: '[name][ext]',
+            noErrorOnMissing: true,
+          },
+          {
+            from: 'android-chrome-*.png',
+            to: '[name][ext]',
+            noErrorOnMissing: true,
+          },
+          {
+            from: 'favicon.ico',
+            to: 'favicon.ico',
+            noErrorOnMissing: true,
+          },
+          {
+            from: 'apple-touch-icon.png',
+            to: 'apple-touch-icon.png',
+            noErrorOnMissing: true,
+          },
         ],
       }),
     ].filter(Boolean),

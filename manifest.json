@@ -1,8 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "New Tab Extension",
+  "name": "Dokio - Daily Momentum and Habit Tracker",
   "version": "1.0.0",
-  "description": "A beautiful new tab page built with React",
+  "description": "Transform every new tab into progress - track habits, achieve goals, and build unstoppable momentum",
+  "icons": {
+    "16": "favicon-16x16.png",
+    "32": "favicon-32x32.png",
+    "48": "favicon-32x32.png",
+    "128": "android-chrome-512x512.png"
+  },
   "permissions": [
     "storage",
     "tabs"
